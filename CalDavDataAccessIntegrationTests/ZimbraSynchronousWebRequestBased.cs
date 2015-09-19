@@ -1,4 +1,4 @@
-// This file is Part of CalDavSynchronizer (http://outlookcaldavsynchronizer.sourceforge.net/)
+﻿// This file is Part of CalDavSynchronizer (http://outlookcaldavsynchronizer.sourceforge.net/)
 // Copyright (c) 2015 Gerhard Zehetbauer 
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -15,18 +15,20 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Xml.Serialization;
-using GenSync.EntityRelationManagement;
+using CalDavSynchronizer.Contracts;
 
-namespace CalDavSynchronizer.Implementation.Contacts
+namespace CalDavDataAccessIntegrationTests
 {
-  public class OutlookContactRelationData : IEntityRelationData<string, DateTime, string, string>
+  public class ZimbraSynchronousWebRequestBased : FixtureBase
   {
-    public string AtypeId { get; set; }
-    public DateTime AtypeVersion { get; set; }
+    protected override string ProfileName
+    {
+      get { return "TestCal-Zimbra"; }
+    }
 
-
-    public string BtypeId { get; set; }
-    public string BtypeVersion { get; set; }
+    protected override ServerAdapterType? ServerAdapterTypeOverride
+    {
+      get { return ServerAdapterType.SynchronousWebRequestBased; }
+    }
   }
 }

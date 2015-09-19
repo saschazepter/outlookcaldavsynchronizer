@@ -29,13 +29,13 @@ namespace CalDavSynchronizer.DataAccess
     Task<bool> IsCalendarAccessSupported ();
     Task<bool> IsWriteable ();
 
-    Task<IReadOnlyList<EntityIdWithVersion<Uri, string>>> GetEvents (DateTimeRange? range);
-    Task<IReadOnlyList<EntityIdWithVersion<Uri, string>>> GetTodos (DateTimeRange? range);
-    Task<IReadOnlyList<EntityWithVersion<Uri, string>>> GetEntities (IEnumerable<Uri> eventUrls);
+    Task<IReadOnlyList<EntityIdWithVersion<string, string>>> GetEvents (DateTimeRange? range);
+    Task<IReadOnlyList<EntityIdWithVersion<string, string>>> GetTodos (DateTimeRange? range);
+    Task<IReadOnlyList<EntityWithVersion<string, string>>> GetEntities (IEnumerable<string> eventUrls);
 
-    Task<EntityIdWithVersion<Uri, string>> CreateEntity (string iCalData);
-    
-    Task DeleteEntity (Uri uri);
-    Task<EntityIdWithVersion<Uri, string>> UpdateEntity (Uri url, string iCalData);
+    Task<EntityIdWithVersion<string, string>> CreateEntity (string iCalData);
+
+    Task DeleteEntity (string uri);
+    Task<EntityIdWithVersion<string, string>> UpdateEntity (string url, string iCalData);
   }
 }

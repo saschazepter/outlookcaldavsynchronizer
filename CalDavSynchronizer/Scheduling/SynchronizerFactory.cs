@@ -104,7 +104,7 @@ namespace CalDavSynchronizer.Scheduling
           options.Id.ToString()
           );
 
-      var entityRelationDataAccess = new EntityRelationDataAccess<string, DateTime, OutlookEventRelationData, Uri, string> (storageDataDirectory);
+      var entityRelationDataAccess = new EntityRelationDataAccess<string, DateTime, OutlookEventRelationData, string, string> (storageDataDirectory);
 
       return CreateEventSynchronizer (options, calDavDataAccess, entityRelationDataAccess);
     }
@@ -176,7 +176,7 @@ namespace CalDavSynchronizer.Scheduling
     public ISynchronizer CreateEventSynchronizer (
         Options options,
         ICalDavDataAccess calDavDataAccess,
-        IEntityRelationDataAccess<string, DateTime, Uri, string> entityRelationDataAccess)
+        IEntityRelationDataAccess<string, DateTime, string, string> entityRelationDataAccess)
     {
       var dateTimeRangeProvider =
           options.IgnoreSynchronizationTimeRange ?
@@ -189,7 +189,7 @@ namespace CalDavSynchronizer.Scheduling
           options.OutlookFolderStoreId,
           dateTimeRangeProvider);
 
-      IEntityRepository<IICalendar, Uri, string> btypeRepository = new CalDavRepository (
+      IEntityRepository<IICalendar, string, string> btypeRepository = new CalDavRepository (
           calDavDataAccess,
           new iCalendarSerializer(),
           CalDavRepository.EntityType.Event,
@@ -202,7 +202,7 @@ namespace CalDavSynchronizer.Scheduling
 
       var outlookEventRelationDataFactory = new OutlookEventRelationDataFactory();
 
-      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, AppointmentItemWrapper, Uri, string, IICalendar> (
+      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, AppointmentItemWrapper, string, string, IICalendar> (
           entityMapper,
           atypeRepository,
           btypeRepository,
@@ -210,10 +210,10 @@ namespace CalDavSynchronizer.Scheduling
           ExceptionHandler.Instance
           );
 
-      var btypeIdEqualityComparer = EqualityComparer<Uri>.Default;
+      var btypeIdEqualityComparer = EqualityComparer<string>.Default;
       var atypeIdEqualityComparer = EqualityComparer<string>.Default;
 
-      return new Synchronizer<string, DateTime, AppointmentItemWrapper, Uri, string, IICalendar> (
+      return new Synchronizer<string, DateTime, AppointmentItemWrapper, string, string, IICalendar> (
           atypeRepository,
           btypeRepository,
           InitialEventSyncStateCreationStrategyFactory.Create (
@@ -249,7 +249,7 @@ namespace CalDavSynchronizer.Scheduling
           NullDateTimeRangeProvider.Instance);
 
       var outlookEventRelationDataFactory = new OutlookEventRelationDataFactory();
-      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, TaskItemWrapper, Uri, string, IICalendar> (
+      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, TaskItemWrapper, string, string, IICalendar> (
           new TaskMapper (_outlookSession.Application.TimeZones.CurrentTimeZone.ID),
           atypeRepository,
           btypeRepository,
@@ -261,10 +261,10 @@ namespace CalDavSynchronizer.Scheduling
           options.Id.ToString()
           );
 
-      var btypeIdEqualityComparer = EqualityComparer<Uri>.Default;
+      var btypeIdEqualityComparer = EqualityComparer<string>.Default;
       var atypeIdEqualityComparer = EqualityComparer<string>.Default;
 
-      return new Synchronizer<string, DateTime, TaskItemWrapper, Uri, string, IICalendar> (
+      return new Synchronizer<string, DateTime, TaskItemWrapper, string, string, IICalendar> (
           atypeRepository,
           btypeRepository,
           InitialTaskSyncStateCreationStrategyFactory.Create (
@@ -272,7 +272,7 @@ namespace CalDavSynchronizer.Scheduling
               syncStateFactory.Environment,
               options.SynchronizationMode,
               options.ConflictResolution),
-          new EntityRelationDataAccess<string, DateTime, OutlookEventRelationData, Uri, string> (storageDataDirectory),
+          new EntityRelationDataAccess<string, DateTime, OutlookEventRelationData, string, string> (storageDataDirectory),
           outlookEventRelationDataFactory,
           new InitialTaskEntityMatcher (btypeIdEqualityComparer),
           atypeIdEqualityComparer,
@@ -289,7 +289,7 @@ namespace CalDavSynchronizer.Scheduling
           options.OutlookFolderStoreId);
 
 
-      IEntityRepository<vCard, Uri, string> btypeRepository = new CardDavRepository (
+      IEntityRepository<vCard, string, string> btypeRepository = new CardDavRepository (
           new CardDavDataAccess (
               new Uri (options.CalenderUrl),
               CreateWebDavClient (
@@ -300,14 +300,14 @@ namespace CalDavSynchronizer.Scheduling
 
       var entityRelationDataFactory = new OutlookContactRelationDataFactory();
 
-      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, GenericComObjectWrapper<ContactItem>, Uri, string, vCard> (
+      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, GenericComObjectWrapper<ContactItem>, string, string, vCard> (
           new ContactEntityMapper(),
           atypeRepository,
           btypeRepository,
           entityRelationDataFactory,
           ExceptionHandler.Instance);
 
-      var btypeIdEqualityComparer = EqualityComparer<Uri>.Default;
+      var btypeIdEqualityComparer = EqualityComparer<string>.Default;
       var atypeIdEqulityComparer = EqualityComparer<string>.Default;
 
       var storageDataDirectory = Path.Combine (
@@ -315,9 +315,9 @@ namespace CalDavSynchronizer.Scheduling
           options.Id.ToString()
           );
 
-      var storageDataAccess = new EntityRelationDataAccess<string, DateTime, OutlookContactRelationData, Uri, string> (storageDataDirectory);
+      var storageDataAccess = new EntityRelationDataAccess<string, DateTime, OutlookContactRelationData, string, string> (storageDataDirectory);
 
-      return new Synchronizer<string, DateTime, GenericComObjectWrapper<ContactItem>, Uri, string, vCard> (
+      return new Synchronizer<string, DateTime, GenericComObjectWrapper<ContactItem>, string, string, vCard> (
           atypeRepository,
           btypeRepository,
           InitialContactSyncStateCreationStrategyFactory.Create (

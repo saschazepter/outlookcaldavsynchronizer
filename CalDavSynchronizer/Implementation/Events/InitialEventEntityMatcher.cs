@@ -22,9 +22,9 @@ using GenSync.InitialEntityMatching;
 
 namespace CalDavSynchronizer.Implementation.Events
 {
-  internal class InitialEventEntityMatcher : InitialEntityMatcherByPropertyGrouping<AppointmentItemWrapper, string, DateTime, string, IICalendar, Uri, string, string>
+  internal class InitialEventEntityMatcher : InitialEntityMatcherByPropertyGrouping<AppointmentItemWrapper, string, DateTime, string, IICalendar, string, string, string>
   {
-    public InitialEventEntityMatcher (IEqualityComparer<Uri> btypeIdEqualityComparer)
+    public InitialEventEntityMatcher (IEqualityComparer<string> btypeIdEqualityComparer)
         : base(btypeIdEqualityComparer)
     {
     }

@@ -20,21 +20,13 @@ using GenSync.EntityRelationManagement;
 
 namespace CalDavSynchronizer.Implementation.Events
 {
-  public class OutlookEventRelationData : IEntityRelationData<string, DateTime, Uri, string>
+  public class OutlookEventRelationData : IEntityRelationData<string, DateTime, string, string>
   {
     public string AtypeId { get; set; }
     public DateTime AtypeVersion { get; set; }
 
-    [XmlIgnore]
-    public Uri BtypeId { get; set; }
-
-    [XmlElement ("BtypeId")]
-    public string SerializableBtypeId
-    {
-      get { return BtypeId.ToString(); }
-      set { BtypeId = new Uri (value, UriKind.Relative); }
-    }
-
+    public string BtypeId { get; set; }
+    
     public string BtypeVersion { get; set; }
   }
 }

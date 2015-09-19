@@ -24,10 +24,10 @@ namespace CalDavSynchronizer.DataAccess
 {
   public interface ICardDavDataAccess
   {
-    Task<IReadOnlyList<EntityIdWithVersion<Uri, string>>> GetContacts ();
-    Task<IReadOnlyList<EntityWithVersion<Uri, string>>> GetEntities (IEnumerable<Uri> eventUrls);
-    Task<EntityIdWithVersion<Uri, string>> CreateEntity (string iCalData);
-    Task DeleteEntity (Uri uri);
-    Task<EntityIdWithVersion<Uri, string>> UpdateEntity (Uri url, string iCalData);
+    Task<IReadOnlyList<EntityIdWithVersion<string, string>>> GetContacts ();
+    Task<IReadOnlyList<EntityWithVersion<string, string>>> GetEntities (IEnumerable<string> eventUrls);
+    Task<EntityIdWithVersion<string, string>> CreateEntity (string iCalData);
+    Task DeleteEntity (string uri);
+    Task<EntityIdWithVersion<string, string>> UpdateEntity (string url, string iCalData);
   }
 }

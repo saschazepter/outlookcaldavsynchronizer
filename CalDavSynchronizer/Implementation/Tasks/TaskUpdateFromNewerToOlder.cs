@@ -24,9 +24,9 @@ using GenSync.Synchronization.States;
 namespace CalDavSynchronizer.Implementation.Tasks
 {
   internal class TaskUpdateFromNewerToOlder
-      : UpdateFromNewerToOlder<string, DateTime, TaskItemWrapper, Uri, string, IICalendar>
+      : UpdateFromNewerToOlder<string, DateTime, TaskItemWrapper, string, string, IICalendar>
   {
-    public TaskUpdateFromNewerToOlder (EntitySyncStateEnvironment<string, DateTime, TaskItemWrapper, Uri, string, IICalendar> environment, IEntityRelationData<string, DateTime, Uri, string> knownData, DateTime newA, string newB)
+    public TaskUpdateFromNewerToOlder (EntitySyncStateEnvironment<string, DateTime, TaskItemWrapper, string, string, IICalendar> environment, IEntityRelationData<string, DateTime, string, string> knownData, DateTime newA, string newB)
         : base (environment, knownData, newA, newB)
     {
     }

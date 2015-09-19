@@ -9,6 +9,7 @@ namespace CalDavSynchronizerTestAutomation.EntityMapper
   [TestFixture]
   public class OrganizerFixture
   {
+    [Ignore("Must be executed as Outlook AddIn")]
     [Test]
     [ContainsManualAssert]
     public void TestOrganizerRoundTrip ()

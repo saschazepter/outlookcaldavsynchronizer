@@ -20,9 +20,9 @@ using GenSync.EntityRelationManagement;
 
 namespace CalDavSynchronizer.Implementation.Contacts
 {
-  public class OutlookContactRelationDataFactory : IEntityRelationDataFactory<string, DateTime, Uri, string>
+  public class OutlookContactRelationDataFactory : IEntityRelationDataFactory<string, DateTime, string, string>
   {
-    public IEntityRelationData<string, DateTime, Uri, string> Create (string atypeId, DateTime atypeVersion, Uri btypeId, string btypeVersion)
+    public IEntityRelationData<string, DateTime, string, string> Create (string atypeId, DateTime atypeVersion, string btypeId, string btypeVersion)
     {
       return new OutlookContactRelationData()
              {

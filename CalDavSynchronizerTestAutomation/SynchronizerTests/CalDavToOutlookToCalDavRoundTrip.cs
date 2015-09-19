@@ -30,6 +30,7 @@ END:VCALENDAR
     }
 
     [Test]
+    [Ignore ("Must be executed as Outlook AddIn")]
     public void KeepsUid ()
     {
       var eventData = @"

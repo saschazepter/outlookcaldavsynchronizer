@@ -44,14 +44,14 @@ namespace CalDavSynchronizer.DataAccess
       return IsResourceType ("A", "addressbook");
     }
 
-    public Task<EntityIdWithVersion<Uri, string>> CreateEntity (string iCalData)
+    public Task<EntityIdWithVersion<string, string>> CreateEntity (string iCalData)
     {
       return CreateEntity (string.Format ("{0:D}.vcs", Guid.NewGuid()), iCalData);
     }
 
-    public async Task<IReadOnlyList<EntityIdWithVersion<Uri, string>>> GetContacts ()
+    public async Task<IReadOnlyList<EntityIdWithVersion<string, string>>> GetContacts ()
     {
-      var entities = new List<EntityIdWithVersion<Uri, string>>();
+      var entities = new List<EntityIdWithVersion<string, string>> ();
 
       try
       {
@@ -85,7 +85,7 @@ namespace CalDavSynchronizer.DataAccess
             // the directory is also included in the list. It has a etag of '"None"' and is skipped
             if (String.Compare (eTag, @"""None""", StringComparison.OrdinalIgnoreCase) != 0)
             {
-              var uri = UriHelper.UnescapeRelativeUri (_serverUrl, urlNode.InnerText);
+              var uri = UriHelper.GetResourceName (urlNode.InnerText);
               entities.Add (EntityIdWithVersion.Create (uri, eTag));
             }
           }
@@ -106,7 +106,7 @@ namespace CalDavSynchronizer.DataAccess
       return entities;
     }
 
-    public async Task<IReadOnlyList<EntityWithVersion<Uri, string>>> GetEntities (IEnumerable<Uri> urls)
+    public async Task<IReadOnlyList<EntityWithVersion<string, string>>> GetEntities (IEnumerable<string> urls)
     {
       var requestBody = @" <?xml version=""1.0"" encoding=""utf-8"" ?>
    <C:addressbook-multiget xmlns:D=""DAV:"" xmlns:C=""urn:ietf:params:xml:ns:carddav"">
@@ -131,7 +131,7 @@ namespace CalDavSynchronizer.DataAccess
 
       XmlNodeList responseNodes = responseXml.XmlDocument.SelectNodes ("/D:multistatus/D:response", responseXml.XmlNamespaceManager);
 
-      var entities = new List<EntityWithVersion<Uri, string>>();
+      var entities = new List<EntityWithVersion<string, string>> ();
 
       if (responseNodes == null)
         return entities;
@@ -144,7 +144,7 @@ namespace CalDavSynchronizer.DataAccess
         var dataNode = responseElement.SelectSingleNode ("D:propstat/D:prop/A:address-data", responseXml.XmlNamespaceManager);
         if (urlNode != null && dataNode != null)
         {
-          entities.Add (EntityWithVersion.Create (UriHelper.UnescapeRelativeUri (_serverUrl, urlNode.InnerText), dataNode.InnerText));
+          entities.Add (EntityWithVersion.Create (UriHelper.GetResourceName (urlNode.InnerText), dataNode.InnerText));
         }
       }
 

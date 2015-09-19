@@ -68,7 +68,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
     public static ISynchronizer CreateEventSynchronizer (
         SynchronizationMode mode,
         ICalDavDataAccess calDavDataAccess,
-        IEntityRelationDataAccess<string, DateTime, Uri, string> entityRelationDataAccess = null,
+        IEntityRelationDataAccess<string, DateTime, string, string> entityRelationDataAccess = null,
         Action<Options> optionsModifier = null)
     {
       var options = new Options()
@@ -88,7 +88,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
       return s_synchronizerFactory.CreateEventSynchronizer (
           options,
           calDavDataAccess,
-          entityRelationDataAccess ?? MockRepository.GenerateStub<IEntityRelationDataAccess<string, DateTime, Uri, string>>());
+          entityRelationDataAccess ?? MockRepository.GenerateStub<IEntityRelationDataAccess<string, DateTime, string, string>> ());
     }
 
 
@@ -126,7 +126,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
 
     public static string SyncCalDavToOutlookAndBackToCalDav (string eventData)
     {
-      var entityRelationStorage = new EntityRelationStorage<string, DateTime, IEntityRelationData<string, DateTime, Uri, string>, Uri, string>();
+      var entityRelationStorage = new EntityRelationStorage<string, DateTime, IEntityRelationData<string, DateTime, string, string>, string, string> ();
 
       SyncCalDavToOutlook (eventData, entityRelationStorage);
 
@@ -138,26 +138,26 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
                             BtypeId = relation.BtypeId,
                             BtypeVersion = relation.BtypeVersion
                         };
-      entityRelationStorage.SaveEntityRelationData (new List<IEntityRelationData<string, DateTime, Uri, string>>() { newRelation });
+      entityRelationStorage.SaveEntityRelationData (new List<IEntityRelationData<string, DateTime, string, string>> () { newRelation });
 
       return SyncOutlookToCalDav_EventsExistsInCalDav (eventData, entityRelationStorage);
     }
 
-    public static void SyncCalDavToOutlook (string eventData, IEntityRelationDataAccess<string, DateTime, Uri, string> entityRelationDataAccess)
+    public static void SyncCalDavToOutlook (string eventData, IEntityRelationDataAccess<string, DateTime, string, string> entityRelationDataAccess)
     {
       var calDavDataAccess = MockRepository.GenerateMock<ICalDavDataAccess>();
 
-      var entityUri = new Uri ("/e1", UriKind.Relative);
+      var entityUri = "e1";
 
       calDavDataAccess
           .Expect (r => r.GetEvents (null))
           .IgnoreArguments()
-          .Return (Task.FromResult<IReadOnlyList<EntityIdWithVersion<Uri, string>>> (
+          .Return (Task.FromResult<IReadOnlyList<EntityIdWithVersion<string, string>>> (
               new[] { EntityIdWithVersion.Create (entityUri, "v1") }));
 
       calDavDataAccess
-          .Expect (r => r.GetEntities (Arg<ICollection<Uri>>.List.Equal (new[] { entityUri })))
-          .Return (Task.FromResult<IReadOnlyList<EntityWithVersion<Uri, string>>> (
+          .Expect (r => r.GetEntities (Arg<ICollection<string>>.List.Equal (new[] { entityUri })))
+          .Return (Task.FromResult<IReadOnlyList<EntityWithVersion<string, string>>> (
               new[] { EntityWithVersion.Create (entityUri, eventData) }));
 
       var synchronizer = OutlookTestContext.CreateEventSynchronizer (
@@ -185,7 +185,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
     }
 
     public static List<string> SyncOutlookToCalDav_CalDavIsEmpty (
-        IEntityRelationDataAccess<string, DateTime, Uri, string> entityRelationDataAccess = null,
+        IEntityRelationDataAccess<string, DateTime, string, string> entityRelationDataAccess = null,
         Action<Options> optionsModifier = null)
     {
       var calDavEvents = new List<string>();
@@ -196,13 +196,13 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
       calDavDataAccess
           .Expect (r => r.GetEvents (null))
           .IgnoreArguments()
-          .Return (Task.FromResult<IReadOnlyList<EntityIdWithVersion<Uri, string>>> (
-              new EntityIdWithVersion<Uri, string>[] { }));
+          .Return (Task.FromResult<IReadOnlyList<EntityIdWithVersion<string, string>>> (
+              new EntityIdWithVersion<string, string>[] { }));
       calDavDataAccess
           .Expect (r => r.CreateEntity (null))
           .IgnoreArguments()
           .Return (Task.FromResult (
-              EntityIdWithVersion.Create (new Uri ("http://bla.com"), "blubb")))
+              EntityIdWithVersion.Create ("bla.ics", "blubb")))
           .WhenCalled (a => calDavEvents.Add ((string) a.Arguments[0]));
       ISynchronizer synchronizer = CreateEventSynchronizer (
           SynchronizationMode.ReplicateOutlookIntoServer,
@@ -215,14 +215,14 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
 
     public static string SyncOutlookToCalDav_EventsExistsInCalDav (string existingEventData, string existingAppointmentId)
     {
-      var entityRelationStorage = new EntityRelationStorage<string, DateTime, IEntityRelationData<string, DateTime, Uri, string>, Uri, string>();
-      entityRelationStorage.SaveEntityRelationData (new List<IEntityRelationData<string, DateTime, Uri, string>>()
+      var entityRelationStorage = new EntityRelationStorage<string, DateTime, IEntityRelationData<string, DateTime, string, string>, string, string> ();
+      entityRelationStorage.SaveEntityRelationData (new List<IEntityRelationData<string, DateTime, string, string>> ()
                                                     {
                                                         new OutlookEventRelationData()
                                                         {
                                                             AtypeId = existingAppointmentId,
                                                             AtypeVersion = new DateTime (1),
-                                                            BtypeId = new Uri ("/e1", UriKind.Relative),
+                                                            BtypeId = "e1",
                                                             BtypeVersion = "v1"
                                                         }
                                                     });
@@ -230,27 +230,27 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
       return SyncOutlookToCalDav_EventsExistsInCalDav (existingEventData, entityRelationStorage);
     }
 
-    public static string SyncOutlookToCalDav_EventsExistsInCalDav (string existingEventData, IEntityRelationDataAccess<string, DateTime, Uri, string> entityRelationDataAccess = null)
+    public static string SyncOutlookToCalDav_EventsExistsInCalDav (string existingEventData, IEntityRelationDataAccess<string, DateTime, string, string> entityRelationDataAccess = null)
     {
       string roundTrippedData = null;
       ICalDavDataAccess calDavDataAccess = MockRepository.GenerateMock<ICalDavDataAccess>();
-      var entityUri = new Uri ("/e1", UriKind.Relative);
+      var entityUri = "e1";
       calDavDataAccess
           .Expect (r => r.GetEvents (null))
           .IgnoreArguments()
-          .Return (Task.FromResult<IReadOnlyList<EntityIdWithVersion<Uri, string>>> (
+          .Return (Task.FromResult<IReadOnlyList<EntityIdWithVersion<string, string>>> (
               new[] { EntityIdWithVersion.Create (entityUri, "v1") }));
 
       calDavDataAccess
-          .Expect (r => r.GetEntities (Arg<ICollection<Uri>>.List.Equal (new[] { entityUri })))
-          .Return (Task.FromResult<IReadOnlyList<EntityWithVersion<Uri, string>>> (
+          .Expect (r => r.GetEntities (Arg<ICollection<string>>.List.Equal (new[] { entityUri })))
+          .Return (Task.FromResult<IReadOnlyList<EntityWithVersion<string, string>>> (
               new[] { EntityWithVersion.Create (entityUri, existingEventData) }));
 
       calDavDataAccess
-          .Expect (r => r.UpdateEntity (new Uri ("http://bla.com"), null))
+          .Expect (r => r.UpdateEntity ("http://bla.com", null))
           .IgnoreArguments()
-          .Return (Task.FromResult<EntityIdWithVersion<Uri, string>> (
-              EntityIdWithVersion.Create (new Uri ("http://bla.com"), "blubb")))
+          .Return (Task.FromResult<EntityIdWithVersion<string, string>> (
+              EntityIdWithVersion.Create ("http://bla.com", "blubb")))
           .WhenCalled (a => { roundTrippedData = (string) a.Arguments[1]; });
 
       ISynchronizer synchronizer = OutlookTestContext.CreateEventSynchronizer (

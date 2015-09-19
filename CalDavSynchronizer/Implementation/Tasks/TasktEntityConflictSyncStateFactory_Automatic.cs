@@ -25,14 +25,14 @@ using GenSync.Synchronization.States;
 namespace CalDavSynchronizer.Implementation.Tasks
 {
   internal class TaskConflictInitialSyncStateCreationStrategyAutomatic
-      : ConflictInitialSyncStateCreationStrategyAutomatic<string, DateTime, TaskItemWrapper, Uri, string, IICalendar>
+      : ConflictInitialSyncStateCreationStrategyAutomatic<string, DateTime, TaskItemWrapper, string, string, IICalendar>
   {
-    public TaskConflictInitialSyncStateCreationStrategyAutomatic (EntitySyncStateEnvironment<string, DateTime, TaskItemWrapper, Uri, string, IICalendar> environment)
+    public TaskConflictInitialSyncStateCreationStrategyAutomatic (EntitySyncStateEnvironment<string, DateTime, TaskItemWrapper, string, string, IICalendar> environment)
         : base (environment)
     {
     }
 
-    protected override IEntitySyncState<string, DateTime, TaskItemWrapper, Uri, string, IICalendar> Create_FromNewerToOlder (IEntityRelationData<string, DateTime, Uri, string> knownData, DateTime newA, string newB)
+    protected override IEntitySyncState<string, DateTime, TaskItemWrapper, string, string, IICalendar> Create_FromNewerToOlder (IEntityRelationData<string, DateTime, string, string> knownData, DateTime newA, string newB)
     {
       return new TaskUpdateFromNewerToOlder (
           _environment,

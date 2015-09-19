@@ -31,7 +31,7 @@ using log4net;
 
 namespace CalDavSynchronizer.Implementation
 {
-  public class CalDavRepository : IEntityRepository<IICalendar, Uri, string>
+  public class CalDavRepository : IEntityRepository<IICalendar, string, string>
   {
     private static readonly ILog s_logger = LogManager.GetLogger (MethodInfo.GetCurrentMethod().DeclaringType);
 
@@ -54,7 +54,7 @@ namespace CalDavSynchronizer.Implementation
       _dateTimeRangeProvider = dateTimeRangeProvider;
     }
 
-    public Task<IReadOnlyList<EntityIdWithVersion<Uri, string>>> GetVersions ()
+    public Task<IReadOnlyList<EntityIdWithVersion<string, string>>> GetVersions ()
     {
       using (AutomaticStopwatch.StartInfo (s_logger, "CalDavRepository.GetVersions"))
       {
@@ -71,10 +71,10 @@ namespace CalDavSynchronizer.Implementation
       }
     }
 
-    public async Task<IReadOnlyList<EntityWithVersion<Uri, IICalendar>>> Get (ICollection<Uri> ids)
+    public async Task<IReadOnlyList<EntityWithVersion<string, IICalendar>>> Get (ICollection<string> ids)
     {
       if (ids.Count == 0)
-        return new EntityWithVersion<Uri, IICalendar>[] { };
+        return new EntityWithVersion<string, IICalendar>[] { };
 
       using (AutomaticStopwatch.StartInfo (s_logger, string.Format ("CalDavRepository.Get ({0} entitie(s))", ids.Count)))
       {
@@ -83,20 +83,20 @@ namespace CalDavSynchronizer.Implementation
       }
     }
 
-    public void Cleanup (IReadOnlyDictionary<Uri, IICalendar> entities)
+    public void Cleanup (IReadOnlyDictionary<string, IICalendar> entities)
     {
       // nothing to do
     }
 
-    private Task<IReadOnlyList<EntityWithVersion<Uri, IICalendar>>> ParallelDeserialize (IReadOnlyList<EntityWithVersion<Uri, string>> serializedEntities)
+    private Task<IReadOnlyList<EntityWithVersion<string, IICalendar>>> ParallelDeserialize (IReadOnlyList<EntityWithVersion<string, string>> serializedEntities)
     {
       return Task.Factory.StartNew (() =>
       {
-        var result = new List<EntityWithVersion<Uri, IICalendar>>();
+        var result = new List<EntityWithVersion<string, IICalendar>> ();
 
         Parallel.ForEach (
             serializedEntities,
-            () => Tuple.Create (new iCalendarSerializer(), new List<Tuple<Uri, IICalendar>>()),
+            () => Tuple.Create (new iCalendarSerializer (), new List<Tuple<string, IICalendar>> ()),
             (serialized, loopState, threadLocal) =>
             {
               IICalendar calendar;
@@ -114,13 +114,13 @@ namespace CalDavSynchronizer.Implementation
               }
             });
 
-        IReadOnlyList<EntityWithVersion<Uri, IICalendar>> readOnlyResult = result;
+        IReadOnlyList<EntityWithVersion<string, IICalendar>> readOnlyResult = result;
         return readOnlyResult;
       });
     }
 
 
-    public Task Delete (Uri entityId)
+    public Task Delete (string entityId)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
@@ -128,7 +128,7 @@ namespace CalDavSynchronizer.Implementation
       }
     }
 
-    public Task<EntityIdWithVersion<Uri, string>> Update (Uri entityId, IICalendar entityToUpdate, Func<IICalendar, IICalendar> entityModifier)
+    public Task<EntityIdWithVersion<string, string>> Update (string entityId, IICalendar entityToUpdate, Func<IICalendar, IICalendar> entityModifier)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
@@ -137,7 +137,7 @@ namespace CalDavSynchronizer.Implementation
       }
     }
 
-    public async Task<EntityIdWithVersion<Uri, string>> Create (Func<IICalendar, IICalendar> entityInitializer)
+    public async Task<EntityIdWithVersion<string, string>> Create (Func<IICalendar, IICalendar> entityInitializer)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
@@ -153,7 +153,7 @@ namespace CalDavSynchronizer.Implementation
       return _calendarSerializer.SerializeToString (calendar);
     }
 
-    private static bool TryDeserializeCalendar (string iCalData, out IICalendar calendar, Uri uriOfCalendarForLogging, IStringSerializer calendarSerializer)
+    private static bool TryDeserializeCalendar (string iCalData, out IICalendar calendar, string uriOfCalendarForLogging, IStringSerializer calendarSerializer)
     {
       calendar = null;
       try

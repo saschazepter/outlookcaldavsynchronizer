@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -162,12 +163,12 @@ namespace CalDavSynchronizer.DataAccess
           );
     }
 
-    public Task<EntityIdWithVersion<Uri, string>> UpdateEntity (Uri url, string contents)
+    public Task<EntityIdWithVersion<string, string>> UpdateEntity (string url, string contents)
     {
       return UpdateEntity (url, string.Empty, contents);
     }
 
-    private async Task<EntityIdWithVersion<Uri, string>> UpdateEntity (Uri url, string etag, string contents)
+    private async Task<EntityIdWithVersion<string, string>> UpdateEntity (string url, string etag, string contents)
     {
       s_logger.DebugFormat ("Updating entity '{0}'", url);
 
@@ -222,10 +223,10 @@ namespace CalDavSynchronizer.DataAccess
         version = await GetEtag (effectiveEventUrl);
       }
 
-      return new EntityIdWithVersion<Uri, string> (UriHelper.GetUnescapedPath (effectiveEventUrl), version);
+      return new EntityIdWithVersion<string, string> (UriHelper.GetResourceName (effectiveEventUrl), version);
     }
 
-    protected async Task<EntityIdWithVersion<Uri, string>> CreateEntity (string name, string content)
+    protected async Task<EntityIdWithVersion<string, string>> CreateEntity (string name, string content)
     {
       var eventUrl = new Uri (_serverUrl, name);
 
@@ -275,15 +276,15 @@ namespace CalDavSynchronizer.DataAccess
         version = await GetEtag (effectiveEventUrl);
       }
 
-      return new EntityIdWithVersion<Uri, string> (UriHelper.GetUnescapedPath (effectiveEventUrl), version);
+      return new EntityIdWithVersion<string, string> (UriHelper.GetResourceName (effectiveEventUrl), version);
     }
 
-    public Task DeleteEntity (Uri uri)
+    public Task DeleteEntity (string uri)
     {
       return DeleteEntity (uri, string.Empty);
     }
 
-    private async Task DeleteEntity (Uri uri, string etag)
+    private async Task DeleteEntity (string uri, string etag)
     {
       s_logger.DebugFormat ("Deleting entity '{0}'", uri);
 
@@ -327,22 +328,17 @@ namespace CalDavSynchronizer.DataAccess
       }
     }
 
-    /// <summary>
-    /// Since Uri.Compare() cannot compare relative Uris and ignoring escapes, all Uris have to be unescaped when entering CalDavSynchronizer
-    /// </summary>
+   
     protected static class UriHelper
     {
-      public static Uri GetUnescapedPath (Uri absoluteUri)
+      public static string GetResourceName (Uri absoluteUri)
       {
-        return new Uri (absoluteUri.GetComponents (UriComponents.Path | UriComponents.KeepDelimiter, UriFormat.Unescaped), UriKind.Relative);
+        return Path.GetFileName (absoluteUri.AbsolutePath);
       }
 
-      public static Uri UnescapeRelativeUri (Uri baseUri, string relativeUriString)
+      public static string GetResourceName (string relativeUriString)
       {
-        var relativeUri = new Uri (relativeUriString, UriKind.Relative);
-        var aboluteUri = new Uri (baseUri, relativeUri);
-        var unescapedRelativeUri = new Uri (aboluteUri.GetComponents (UriComponents.Path | UriComponents.KeepDelimiter, UriFormat.Unescaped), UriKind.Relative);
-        return unescapedRelativeUri;
+        return Path.GetFileName (relativeUriString);
       }
     }
   }

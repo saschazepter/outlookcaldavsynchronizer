@@ -26,13 +26,13 @@ using Thought.vCards;
 namespace CalDavSynchronizer.Implementation.Contacts
 {
   internal class OutlookCardDavUpdateFromNewerToOlder
-      : UpdateFromNewerToOlder<string, DateTime, GenericComObjectWrapper<ContactItem>, Uri, string, vCard>
+      : UpdateFromNewerToOlder<string, DateTime, GenericComObjectWrapper<ContactItem>, string, string, vCard>
   {
     private static readonly ILog s_logger = LogManager.GetLogger (System.Reflection.MethodInfo.GetCurrentMethod().DeclaringType);
 
     public OutlookCardDavUpdateFromNewerToOlder (
-        EntitySyncStateEnvironment<string, DateTime, GenericComObjectWrapper<ContactItem>, Uri, string, vCard> environment,
-        IEntityRelationData<string, DateTime, Uri, string> knownData,
+        EntitySyncStateEnvironment<string, DateTime, GenericComObjectWrapper<ContactItem>, string, string, vCard> environment,
+        IEntityRelationData<string, DateTime, string, string> knownData,
         DateTime newA,
         string newB)
         : base (environment, knownData, newA, newB)

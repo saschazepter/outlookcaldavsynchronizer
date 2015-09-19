@@ -22,9 +22,9 @@ using GenSync.InitialEntityMatching;
 
 namespace CalDavSynchronizer.Implementation.Tasks
 {
-  internal class InitialTaskEntityMatcher : InitialEntityMatcherByPropertyGrouping<TaskItemWrapper, string, DateTime, string, IICalendar, Uri, string, string>
+  internal class InitialTaskEntityMatcher : InitialEntityMatcherByPropertyGrouping<TaskItemWrapper, string, DateTime, string, IICalendar, string, string, string>
   {
-    public InitialTaskEntityMatcher (IEqualityComparer<Uri> btypeIdEqualityComparer)
+    public InitialTaskEntityMatcher (IEqualityComparer<string> btypeIdEqualityComparer)
         : base(btypeIdEqualityComparer)
     {
     }

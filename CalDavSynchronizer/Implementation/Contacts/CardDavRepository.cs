@@ -30,7 +30,7 @@ using Thought.vCards;
 
 namespace CalDavSynchronizer.Implementation.Contacts
 {
-  public class CardDavRepository : IEntityRepository<vCard, Uri, string>
+  public class CardDavRepository : IEntityRepository<vCard, string, string>
   {
     private static readonly ILog s_logger = LogManager.GetLogger (MethodInfo.GetCurrentMethod().DeclaringType);
 
@@ -43,7 +43,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       _vCardWriter = new vCardStandardWriter();
     }
 
-    public async Task<IReadOnlyList<EntityIdWithVersion<Uri, string>>> GetVersions ()
+    public async Task<IReadOnlyList<EntityIdWithVersion<string, string>>> GetVersions ()
     {
       using (AutomaticStopwatch.StartInfo (s_logger, "CardDavRepository.GetVersions"))
       {
@@ -51,10 +51,10 @@ namespace CalDavSynchronizer.Implementation.Contacts
       }
     }
 
-    public async Task<IReadOnlyList<EntityWithVersion<Uri, vCard>>> Get (ICollection<Uri> ids)
+    public async Task<IReadOnlyList<EntityWithVersion<string, vCard>>> Get (ICollection<string> ids)
     {
       if (ids.Count == 0)
-        return new EntityWithVersion<Uri, vCard>[] { };
+        return new EntityWithVersion<string, vCard>[] { };
 
       using (AutomaticStopwatch.StartInfo (s_logger, string.Format ("CardDavRepository.Get ({0} entitie(s))", ids.Count)))
       {
@@ -63,18 +63,18 @@ namespace CalDavSynchronizer.Implementation.Contacts
       }
     }
 
-    public void Cleanup (IReadOnlyDictionary<Uri, vCard> entities)
+    public void Cleanup (IReadOnlyDictionary<string, vCard> entities)
     {
       // nothing to do
     }
 
-    private IReadOnlyList<EntityWithVersion<Uri, vCard>> ParallelDeserialize (IReadOnlyList<EntityWithVersion<Uri, string>> serializedEntities)
+    private IReadOnlyList<EntityWithVersion<string, vCard>> ParallelDeserialize (IReadOnlyList<EntityWithVersion<string, string>> serializedEntities)
     {
-      var result = new List<EntityWithVersion<Uri, vCard>>();
+      var result = new List<EntityWithVersion<string, vCard>> ();
 
       Parallel.ForEach (
           serializedEntities,
-          () => Tuple.Create (new vCardStandardReader(), new List<Tuple<Uri, vCard>>()),
+          () => Tuple.Create (new vCardStandardReader (), new List<Tuple<string, vCard>> ()),
           (serialized, loopState, threadLocal) =>
           {
             vCard vcard;
@@ -96,7 +96,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
     }
 
 
-    public Task Delete (Uri entityId)
+    public Task Delete (string entityId)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
@@ -104,7 +104,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       }
     }
 
-    public Task<EntityIdWithVersion<Uri, string>> Update (Uri entityId, vCard entityToUpdate, Func<vCard, vCard> entityModifier)
+    public Task<EntityIdWithVersion<string, string>> Update (string entityId, vCard entityToUpdate, Func<vCard, vCard> entityModifier)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
@@ -116,7 +116,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       }
     }
 
-    public async Task<EntityIdWithVersion<Uri, string>> Create (Func<vCard, vCard> entityInitializer)
+    public async Task<EntityIdWithVersion<string, string>> Create (Func<vCard, vCard> entityInitializer)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
@@ -137,7 +137,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       }
     }
 
-    private static bool TryDeserialize (string iCalData, out vCard vcard, Uri uriOfCalendarForLogging, vCardStandardReader deserializer)
+    private static bool TryDeserialize (string iCalData, out vCard vcard, string uriOfCalendarForLogging, vCardStandardReader deserializer)
     {
       vcard = null;
       try
