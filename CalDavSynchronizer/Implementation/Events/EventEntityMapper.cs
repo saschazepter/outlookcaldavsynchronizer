@@ -181,13 +181,39 @@ namespace CalDavSynchronizer.Implementation.Events
         MapRecurrance1To2 (source, target, startIcalTimeZone, endIcalTimeZone);
 
       
-      target.Class = CommonEntityMapper.MapPrivacy1To2 (source.Sensitivity);
+      target.Class = MapPrivacy1To2 (source.Sensitivity, _configuration.MapPrivate);
 
       MapReminder1To2 (source, target);
 
       MapCategories1To2 (source, target);
 
       target.Properties.Add (MapTransparency1To2 (source.BusyStatus));
+    }
+
+    private string MapPrivacy1To2 (OlSensitivity value, SensitivityPrivateMapping mapPrivate)
+    {
+      switch (value)
+      {
+        case OlSensitivity.olNormal:
+          return "PUBLIC";
+        case OlSensitivity.olPersonal:
+          return "PRIVATE"; // not sure
+        case OlSensitivity.olPrivate:
+          switch (mapPrivate)
+          {
+            case SensitivityPrivateMapping.Private:
+            case SensitivityPrivateMapping.None:
+              return "PRIVATE";
+            case SensitivityPrivateMapping.Confidential:
+              return "CONFIDENTIAL";
+            case SensitivityPrivateMapping.Public:
+              return "PUBLIC";
+          }
+          break;
+        case OlSensitivity.olConfidential:
+          return "CONFIDENTIAL";
+      }
+      throw new NotImplementedException (string.Format ("Mapping for value '{0}' not implemented.", value));
     }
 
     private CalendarProperty MapTransparency1To2 (OlBusyStatus value)

@@ -36,6 +36,7 @@ namespace CalDavSynchronizer.Contracts
     public bool UseEventCategoryColorAndMapFromCalendarColor { get; set; }
     public OlCategoryColor EventCategoryColor { get; set; }
     public OlCategoryShortcutKey CategoryShortcutKey { get; set; }
+    public SensitivityPrivateMapping MapPrivate { get; set; }
 
     [XmlIgnore]
     public bool UseEventCategoryAsFilter
@@ -54,6 +55,7 @@ namespace CalDavSynchronizer.Contracts
       UseEventCategoryColorAndMapFromCalendarColor = false;
       EventCategoryColor = OlCategoryColor.olCategoryColorNone;
       CategoryShortcutKey = OlCategoryShortcutKey.olCategoryShortcutKeyNone;
+      MapPrivate = SensitivityPrivateMapping.Private;
     }
 
     public override IConfigurationForm<MappingConfigurationBase> CreateConfigurationForm (IConfigurationFormFactory factory)

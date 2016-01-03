@@ -43,6 +43,7 @@ namespace CalDavSynchronizer.Implementation.Events
     private readonly EventMappingConfiguration _configuration;
 
     public const string PR_MESSAGE_CLASS_DASLFILTER = "@SQL=\"http://schemas.microsoft.com/mapi/proptag/0x001A001E\" = 'IPM.Appointment'";
+    private const string PR_SENSITIVITY_DASLFILTER = "Not(\"http://schemas.microsoft.com/exchange/sensitivity-long\" = 2)";
 
     public OutlookEventRepository (
       NameSpace mapiNameSpace, 
@@ -137,6 +138,10 @@ namespace CalDavSynchronizer.Implementation.Events
       if (_configuration.UseEventCategoryAsFilter)
       {
         AddCategoryFilter (filterBuilder, _configuration.EventCategory);
+      }
+      if (_configuration.MapPrivate == SensitivityPrivateMapping.None)
+      {
+        filterBuilder.Append (" And " + PR_SENSITIVITY_DASLFILTER);
       }
       s_logger.InfoFormat("Using Outlook DASL filter: {0}", filterBuilder.ToString());
 

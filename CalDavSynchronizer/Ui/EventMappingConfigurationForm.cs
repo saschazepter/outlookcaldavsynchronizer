@@ -39,6 +39,7 @@ namespace CalDavSynchronizer.Ui
                                                                                    new Item<ReminderMapping> (ReminderMapping.@false, "No"),
                                                                                    new Item<ReminderMapping> (ReminderMapping.JustUpcoming, "Just upcoming reminders")
                                                                                };
+
     private readonly IList<Item<OlCategoryShortcutKey>> _availableShortcutKeys = new List<Item<OlCategoryShortcutKey>>()
                                                                                {
                                                                                    new Item<OlCategoryShortcutKey> (OlCategoryShortcutKey.olCategoryShortcutKeyNone, "None"),
@@ -54,6 +55,15 @@ namespace CalDavSynchronizer.Ui
                                                                                    new Item<OlCategoryShortcutKey> (OlCategoryShortcutKey.olCategoryShortcutKeyCtrlF11, "Ctrl+F11"),
                                                                                    new Item<OlCategoryShortcutKey> (OlCategoryShortcutKey.olCategoryShortcutKeyCtrlF12, "Ctrl+F12")
                                                                                };
+
+    private readonly IList<Item<SensitivityPrivateMapping>> _availablePrivateMappings = new List<Item<SensitivityPrivateMapping>>()
+                                                                               {
+                                                                                   new Item<SensitivityPrivateMapping> (SensitivityPrivateMapping.Private, "PRIVATE"),
+                                                                                   new Item<SensitivityPrivateMapping> (SensitivityPrivateMapping.Confidential, "CONFIDENTIAL"),
+                                                                                   new Item<SensitivityPrivateMapping> (SensitivityPrivateMapping.Public, "PUBLIC"),
+                                                                                   new Item<SensitivityPrivateMapping> (SensitivityPrivateMapping.None, "Don't map")
+                                                                               };
+
     private readonly Func<ICalDavDataAccess> _calDavDataAccessFactory;
 
     public EventMappingConfigurationForm (Func<ICalDavDataAccess> calDavDataAccessFactory)
@@ -61,6 +71,7 @@ namespace CalDavSynchronizer.Ui
       InitializeComponent ();
       Item.BindComboBox (_mapReminderComboBox, _availableReminderMappings);
       Item.BindComboBox (_categoryShortcutKeycomboBox, _availableShortcutKeys);
+      Item.BindComboBox (_mapPrivateComboBox, _availablePrivateMappings);
 
       _calDavDataAccessFactory = calDavDataAccessFactory;
 
@@ -100,7 +111,8 @@ namespace CalDavSynchronizer.Ui
           EventCategory = _categoryTextBox.Text,
           UseEventCategoryColorAndMapFromCalendarColor = _mapColorCheckBox.Checked ,
           EventCategoryColor =  _categoryColorPicker.SelectedValue,
-          CategoryShortcutKey = (OlCategoryShortcutKey) _categoryShortcutKeycomboBox.SelectedValue
+          CategoryShortcutKey = (OlCategoryShortcutKey) _categoryShortcutKeycomboBox.SelectedValue,
+          MapPrivate = (SensitivityPrivateMapping) _mapPrivateComboBox.SelectedValue
         };
       }
       set
@@ -115,6 +127,7 @@ namespace CalDavSynchronizer.Ui
         _categoryColorPicker.SelectedValue = value.EventCategoryColor;
         _mapColorCheckBox.Checked = value.UseEventCategoryColorAndMapFromCalendarColor;
         _categoryShortcutKeycomboBox.SelectedValue = value.CategoryShortcutKey;
+        _mapPrivateComboBox.SelectedValue = value.MapPrivate;
         UpdateCategoryColorControlsEnabled ();
         UpdateSchedulingControlsEnabled();
       }

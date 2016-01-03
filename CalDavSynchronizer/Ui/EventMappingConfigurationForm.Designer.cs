@@ -49,6 +49,8 @@
       this._scheduleAgentClientCheckBox = new System.Windows.Forms.CheckBox();
       this._createInUTCCheckBox = new System.Windows.Forms.CheckBox();
       this._toolTip = new System.Windows.Forms.ToolTip(this.components);
+      this.label4 = new System.Windows.Forms.Label();
+      this._mapPrivateComboBox = new System.Windows.Forms.ComboBox();
       this._categoryColorPicker = new CalDavSynchronizer.Ui.ColorPicker();
       this._outlookGroupBox.SuspendLayout();
       this.groupBox1.SuspendLayout();
@@ -58,7 +60,7 @@
       // 
       this._cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
       this._cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-      this._cancelButton.Location = new System.Drawing.Point(624, 413);
+      this._cancelButton.Location = new System.Drawing.Point(624, 447);
       this._cancelButton.Margin = new System.Windows.Forms.Padding(4);
       this._cancelButton.Name = "_cancelButton";
       this._cancelButton.Size = new System.Drawing.Size(100, 28);
@@ -69,7 +71,7 @@
       // _okButton
       // 
       this._okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-      this._okButton.Location = new System.Drawing.Point(516, 413);
+      this._okButton.Location = new System.Drawing.Point(516, 447);
       this._okButton.Margin = new System.Windows.Forms.Padding(4);
       this._okButton.Name = "_okButton";
       this._okButton.Size = new System.Drawing.Size(100, 28);
@@ -147,6 +149,8 @@
       // 
       this._outlookGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+      this._outlookGroupBox.Controls.Add(this._mapPrivateComboBox);
+      this._outlookGroupBox.Controls.Add(this.label4);
       this._outlookGroupBox.Controls.Add(this.label3);
       this._outlookGroupBox.Controls.Add(this._categoryShortcutKeycomboBox);
       this._outlookGroupBox.Controls.Add(this._calendarColorSetButton);
@@ -159,7 +163,7 @@
       this._outlookGroupBox.Margin = new System.Windows.Forms.Padding(4);
       this._outlookGroupBox.Name = "_outlookGroupBox";
       this._outlookGroupBox.Padding = new System.Windows.Forms.Padding(4);
-      this._outlookGroupBox.Size = new System.Drawing.Size(708, 149);
+      this._outlookGroupBox.Size = new System.Drawing.Size(708, 183);
       this._outlookGroupBox.TabIndex = 7;
       this._outlookGroupBox.TabStop = false;
       this._outlookGroupBox.Text = "Outlook settings";
@@ -188,7 +192,7 @@
       // _calendarColorSetButton
       // 
       this._calendarColorSetButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-      this._calendarColorSetButton.Location = new System.Drawing.Point(573, 64);
+      this._calendarColorSetButton.Location = new System.Drawing.Point(573, 98);
       this._calendarColorSetButton.Margin = new System.Windows.Forms.Padding(4);
       this._calendarColorSetButton.Name = "_calendarColorSetButton";
       this._calendarColorSetButton.Size = new System.Drawing.Size(125, 28);
@@ -200,7 +204,7 @@
       // _calendarColorRefreshButton
       // 
       this._calendarColorRefreshButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-      this._calendarColorRefreshButton.Location = new System.Drawing.Point(467, 64);
+      this._calendarColorRefreshButton.Location = new System.Drawing.Point(467, 98);
       this._calendarColorRefreshButton.Margin = new System.Windows.Forms.Padding(4);
       this._calendarColorRefreshButton.Name = "_calendarColorRefreshButton";
       this._calendarColorRefreshButton.Size = new System.Drawing.Size(99, 28);
@@ -277,6 +281,27 @@
       this._toolTip.InitialDelay = 500;
       this._toolTip.ReshowDelay = 100;
       // 
+      // label4
+      // 
+      this.label4.AutoSize = true;
+      this.label4.Location = new System.Drawing.Point(9, 151);
+      this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+      this.label4.Name = "label4";
+      this.label4.Size = new System.Drawing.Size(192, 17);
+      this.label4.TabIndex = 18;
+      this.label4.Text = "Map private Appointments to:";
+      // 
+      // _mapPrivateComboBox
+      // 
+      this._mapPrivateComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+      this._mapPrivateComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+      this._mapPrivateComboBox.FormattingEnabled = true;
+      this._mapPrivateComboBox.Location = new System.Drawing.Point(299, 148);
+      this._mapPrivateComboBox.Margin = new System.Windows.Forms.Padding(4);
+      this._mapPrivateComboBox.Name = "_mapPrivateComboBox";
+      this._mapPrivateComboBox.Size = new System.Drawing.Size(267, 24);
+      this._mapPrivateComboBox.TabIndex = 19;
+      // 
       // _categoryColorPicker
       // 
       this._categoryColorPicker.BackColor = System.Drawing.Color.White;
@@ -297,7 +322,7 @@
       this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.CancelButton = this._cancelButton;
-      this.ClientSize = new System.Drawing.Size(740, 456);
+      this.ClientSize = new System.Drawing.Size(740, 490);
       this.Controls.Add(this._createInUTCCheckBox);
       this.Controls.Add(this.groupBox1);
       this.Controls.Add(this._outlookGroupBox);
@@ -342,5 +367,7 @@
     private System.Windows.Forms.CheckBox _scheduleAgentClientCheckBox;
     private System.Windows.Forms.CheckBox _createInUTCCheckBox;
     private System.Windows.Forms.ToolTip _toolTip;
+    private System.Windows.Forms.ComboBox _mapPrivateComboBox;
+    private System.Windows.Forms.Label label4;
   }
 }

@@ -228,6 +228,7 @@
     <Compile Include="Contracts\GeneralOption.cs" />
     <Compile Include="Contracts\ProfileEntry.cs" />
     <Compile Include="Contracts\ProxyOptions.cs" />
+    <Compile Include="Contracts\SensitivityPrivateMapping.cs" />
     <Compile Include="Contracts\ServerAdapterType.cs" />
     <Compile Include="DataAccess\HttpClientBasedClient\HttpResponseHeadersAdapter.cs" />
     <Compile Include="DataAccess\HttpUtility.cs" />
