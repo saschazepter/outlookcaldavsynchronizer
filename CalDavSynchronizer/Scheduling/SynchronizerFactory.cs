@@ -563,7 +563,7 @@ namespace CalDavSynchronizer.Scheduling
 
       var mappingParameters = GetMappingParameters<ContactMappingConfiguration> (options);
 
-      var entityMapper = new GoogleContactEntityMapper (mappingParameters);
+      var entityMapper = new GoogleContactEntityMapper (contactFacade, mappingParameters);
 
       var entityRelationDataFactory = new GoogleContactRelationDataFactory ();
 

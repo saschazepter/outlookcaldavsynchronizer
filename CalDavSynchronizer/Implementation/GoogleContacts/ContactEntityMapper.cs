@@ -16,24 +16,21 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Diagnostics.SymbolStore;
-using System.Globalization;
-using System.Linq;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
-using System.Xaml;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using GenSync.EntityMapping;
 using GenSync.Logging;
 using Google.Contacts;
+using Google.GData.Client;
 using Google.GData.Contacts;
 using Google.GData.Extensions;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
-using Thought.vCards;
+using Exception = System.Exception;
 
 namespace CalDavSynchronizer.Implementation.GoogleContacts
 {
@@ -44,13 +41,14 @@ namespace CalDavSynchronizer.Implementation.GoogleContacts
     private const string PR_EMAIL1ADDRESS = "http://schemas.microsoft.com/mapi/id/{00062004-0000-0000-C000-000000000046}/8084001F";
     private const string PR_EMAIL2ADDRESS = "http://schemas.microsoft.com/mapi/id/{00062004-0000-0000-C000-000000000046}/8094001F";
     private const string PR_EMAIL3ADDRESS = "http://schemas.microsoft.com/mapi/id/{00062004-0000-0000-C000-000000000046}/80a4001F";
-    private const string PR_USER_X509_CERTIFICATE = "http://schemas.microsoft.com/mapi/proptag/0x3A701102";
     private const string PR_ATTACH_DATA_BIN = "http://schemas.microsoft.com/mapi/proptag/0x37010102";
 
     private readonly ContactMappingConfiguration _configuration;
+    private readonly ContactsRequest _contactFacade;
 
-    public GoogleContactEntityMapper (ContactMappingConfiguration configuration)
+    public GoogleContactEntityMapper (ContactsRequest contactFacade, ContactMappingConfiguration configuration)
     {
+      _contactFacade = contactFacade;
       _configuration = configuration;
     }
 
@@ -132,10 +130,52 @@ namespace CalDavSynchronizer.Implementation.GoogleContacts
         target.ContactEntry.Birthday = null;
       }
 
+      if (_configuration.MapContactPhoto)
+        MapPhoto1To2 (source.Inner, target, logger);
+
       target.Content = !string.IsNullOrEmpty(source.Inner.Body) ? 
                         System.Security.SecurityElement.Escape (source.Inner.Body) : null;
 
       return target;
+    }
+
+    private void MapPhoto1To2 (ContactItem source, Contact target, IEntityMappingLogger logger)
+    {
+      if (source.HasPicture)
+      {
+        foreach (var att in source.Attachments.ToSafeEnumerable<Attachment>())
+        {
+          if (att.DisplayName == "ContactPicture.jpg")
+          {
+            using (var oPa = GenericComObjectWrapper.Create(att.PropertyAccessor))
+            {
+              try
+              {
+                byte[] rawAttachmentData = (byte[])oPa.Inner.GetProperty(PR_ATTACH_DATA_BIN);
+                Stream photoStream = new MemoryStream(rawAttachmentData);
+                _contactFacade.Update(target);
+                _contactFacade.SetPhoto(target,photoStream);
+              }
+              catch (GDataRequestException ex)
+              {
+                // Etags mismatch: handle the exception.
+                s_logger.Warn("Could not update google contact photo.", ex);
+                logger.LogMappingWarning("Could not update google contact photo.", ex);
+              }
+              catch (COMException ex)
+              {
+                s_logger.Warn("Could not get property PR_ATTACH_DATA_BIN to export picture for contact.", ex);
+                logger.LogMappingWarning("Could not get property PR_ATTACH_DATA_BIN to export picture for contact.", ex);
+              }
+              catch (System.UnauthorizedAccessException ex)
+              {
+                s_logger.Warn("Could not access PR_ATTACH_DATA_BIN to export picture for contact.", ex);
+                logger.LogMappingWarning("Could not get property PR_ATTACH_DATA_BIN to export picture for contact.", ex);
+              }
+            }
+          }
+        }
+      }
     }
 
     private static void MapEmailAddresses1To2 (ContactItem source, Contact target, IEntityMappingLogger logger)
@@ -520,9 +560,42 @@ namespace CalDavSynchronizer.Implementation.GoogleContacts
         }
       }
 
+      if (_configuration.MapContactPhoto)
+        MapPhoto2To1 (source,target.Inner, logger);
+
       target.Inner.Body = source.Content;
 
       return target;
+    }
+
+    private void MapPhoto2To1 (Contact source, ContactItem target, IEntityMappingLogger logger)
+    {
+      if (source.ContactEntry.PhotoEtag != null)
+      {
+        try
+        {
+          using (Stream photoStream = _contactFacade.Service.Query(source.PhotoUri))
+          {
+            if (photoStream != null)
+            {
+              string picturePath = Path.GetTempPath() + @"\Contact_" + target.EntryID + ".jpg";
+              using (FileStream fs = new FileStream(picturePath, FileMode.Create))
+              {
+                photoStream.CopyTo(fs);
+                fs.Flush();
+              }
+
+              target.AddPicture(picturePath);
+              File.Delete(picturePath);
+            }
+          }
+        }
+        catch (Exception ex)
+        {
+          s_logger.Warn ("Could not read google contact photo.", ex);
+          logger.LogMappingWarning ("Could not read google contact photo.", ex);
+        }
+      }
     }
 
     private void MapPhoneNumbers2To1 (Contact source, ContactItem target)

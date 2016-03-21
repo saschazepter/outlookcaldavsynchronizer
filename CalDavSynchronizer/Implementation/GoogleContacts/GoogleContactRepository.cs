@@ -85,7 +85,7 @@ namespace CalDavSynchronizer.Implementation.GoogleContacts
 
     private static Uri GetContactUrl (string entityId)
     {
-      return new Uri (Uri.UriSchemeHttps + "://" + new Uri (entityId).GetComponents (UriComponents.HttpRequestUrl & ~UriComponents.Scheme, UriFormat.Unescaped));
+      return new Uri (Uri.UriSchemeHttps + "://" + new Uri (entityId.Replace("base","full")).GetComponents (UriComponents.HttpRequestUrl & ~UriComponents.Scheme, UriFormat.Unescaped));
     }
   }
 }
