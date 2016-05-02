@@ -372,11 +372,11 @@ namespace CalDavSynchronizer.Scheduling
 
       var outlookEventRelationDataFactory = new OutlookEventRelationDataFactory();
 
-      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, AppointmentItemWrapper, WebResourceName, string, IICalendar> (
+      var syncStateFactory = new EventSyncStateFactory (
           entityMapper,
           outlookEventRelationDataFactory,
-          ExceptionHandler.Instance
-          );
+          ExceptionHandler.Instance,
+          options.EmailAddress);
 
       var btypeIdEqualityComparer = WebResourceName.Comparer;
       var atypeIdEqualityComparer = EqualityComparer<string>.Default;

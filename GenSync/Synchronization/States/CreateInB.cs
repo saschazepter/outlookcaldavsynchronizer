@@ -26,15 +26,15 @@ using log4net;
 
 namespace GenSync.Synchronization.States
 {
-  internal class CreateInB<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity, TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity> :
+  public class CreateInB<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity, TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity> :
       StateBase<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity, TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity>
   {
     // ReSharper disable once StaticFieldInGenericType
     private static readonly ILog s_logger = LogManager.GetLogger (MethodInfo.GetCurrentMethod().DeclaringType);
 
-    private readonly TAtypeEntityId _aId;
-    private readonly TAtypeEntityVersion _aVersion;
-    private TAtypeEntity _aEntity;
+    protected readonly TAtypeEntityId _aId;
+    protected readonly TAtypeEntityVersion _aVersion;
+    protected TAtypeEntity _aEntity;
     private IEntitySyncState<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity, TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity> _nextStateAfterJobExecution;
 
 
