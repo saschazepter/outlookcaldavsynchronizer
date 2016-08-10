@@ -441,7 +441,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       }
       else if (alarm.Trigger.DateTime != null)
       {
-        var reminderTime = TimeZoneInfo.ConvertTimeFromUtc (alarm.Trigger.DateTime.UTC, _localTimeZoneInfo);
+        var reminderTime = TimeZoneInfo.ConvertTimeFromUtc (alarm.Trigger.DateTime.AsUtc, _localTimeZoneInfo);
  
         if (_configuration.MapReminder == ReminderMapping.JustUpcoming && reminderTime < DateTime.Now) return;
         target.Inner.ReminderSet = true;
