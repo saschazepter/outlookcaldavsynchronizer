@@ -19,7 +19,6 @@ using System.Linq;
 using System.Windows.Forms;
 using CalDavSynchronizer.Implementation;
 using CalDavSynchronizer.Ui.ConnectionTests;
-using CalDavSynchronizer.Ui.Options.ViewModels;
 using Microsoft.Office.Interop.Outlook;
 
 namespace CalDavSynchronizer.Ui.Options

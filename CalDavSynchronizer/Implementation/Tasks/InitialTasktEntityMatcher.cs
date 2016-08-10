@@ -18,19 +18,19 @@ using System;
 using System.Collections.Generic;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
-using DDay.iCal;
 using GenSync.InitialEntityMatching;
+using Ical.Net.Interfaces;
 
 namespace CalDavSynchronizer.Implementation.Tasks
 {
-  internal class InitialTaskEntityMatcher : InitialEntityMatcherByPropertyGrouping<TaskItemWrapper, string, DateTime, string, IICalendar, WebResourceName, string, string>
+  internal class InitialTaskEntityMatcher : InitialEntityMatcherByPropertyGrouping<TaskItemWrapper, string, DateTime, string, ICalendar, WebResourceName, string, string>
   {
     public InitialTaskEntityMatcher (IEqualityComparer<WebResourceName> btypeIdEqualityComparer)
         : base (btypeIdEqualityComparer)
     {
     }
 
-    protected override bool AreEqual (TaskItemWrapper atypeEntity, IICalendar btypeEntity)
+    protected override bool AreEqual (TaskItemWrapper atypeEntity, ICalendar btypeEntity)
     {
       var task = btypeEntity.Todos[0];
 
@@ -104,7 +104,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       return (atypeEntity.Inner.Subject ?? string.Empty).ToLower();
     }
 
-    protected override string GetBtypePropertyValue (IICalendar btypeEntity)
+    protected override string GetBtypePropertyValue (ICalendar btypeEntity)
     {
       return (btypeEntity.Todos[0].Summary ?? string.Empty).ToLower();
     }

@@ -16,8 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
@@ -35,8 +33,6 @@ using CalDavSynchronizer.Implementation.Tasks;
 using CalDavSynchronizer.Implementation.TimeRangeFiltering;
 using CalDavSynchronizer.Synchronization;
 using CalDavSynchronizer.Utilities;
-using DDay.iCal;
-using DDay.iCal.Serialization.iCalendar;
 using GenSync.EntityRelationManagement;
 using GenSync.EntityRepositories;
 using GenSync.Logging;
@@ -44,7 +40,9 @@ using GenSync.ProgressReport;
 using GenSync.Synchronization;
 using GenSync.Synchronization.StateFactories;
 using Google.Apis.Tasks.v1.Data;
-using Google.Contacts;
+using Ical.Net;
+using Ical.Net.Interfaces;
+using Ical.Net.Serialization.iCalendar.Serializers;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
 using Thought.vCards;
@@ -354,9 +352,9 @@ namespace CalDavSynchronizer.Scheduling
           _daslFilterProvider,
           new InvitationChecker (options.EmailAddress, _outlookSession.Application.Version));
 
-      IEntityRepository<IICalendar, WebResourceName, string, IEventSynchronizationContext> btypeRepository = new CalDavRepository<IEventSynchronizationContext> (
+      IEntityRepository<ICalendar, WebResourceName, string, IEventSynchronizationContext> btypeRepository = new CalDavRepository<IEventSynchronizationContext> (
           calDavDataAccess,
-          new iCalendarSerializer(),
+          new CalendarSerializer(),
           CalDavRepository.EntityType.Event,
           dateTimeRangeProvider,
           options.ServerAdapterType == ServerAdapterType.WebDavHttpClientBasedWithGoogleOAuth);
@@ -369,7 +367,7 @@ namespace CalDavSynchronizer.Scheduling
 
       var outlookEventRelationDataFactory = new OutlookEventRelationDataFactory();
 
-      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, AppointmentItemWrapper, WebResourceName, string, IICalendar> (
+      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, AppointmentItemWrapper, WebResourceName, string, ICalendar> (
           entityMapper,
           outlookEventRelationDataFactory,
           ExceptionHandler.Instance
@@ -381,12 +379,12 @@ namespace CalDavSynchronizer.Scheduling
       var aTypeWriteRepository = BatchEntityRepositoryAdapter.Create (atypeRepository);
       var bTypeWriteRepository = BatchEntityRepositoryAdapter.Create (btypeRepository);
 
-      var synchronizer = new Synchronizer<string, DateTime, AppointmentItemWrapper, WebResourceName, string, IICalendar, IEventSynchronizationContext> (
+      var synchronizer = new Synchronizer<string, DateTime, AppointmentItemWrapper, WebResourceName, string, ICalendar, IEventSynchronizationContext> (
           atypeRepository,
           btypeRepository,
           aTypeWriteRepository,
           bTypeWriteRepository,
-          InitialSyncStateCreationStrategyFactory<string, DateTime, AppointmentItemWrapper, WebResourceName, string, IICalendar>.Create (
+          InitialSyncStateCreationStrategyFactory<string, DateTime, AppointmentItemWrapper, WebResourceName, string, ICalendar>.Create (
               syncStateFactory,
               syncStateFactory.Environment,
               options.SynchronizationMode,
@@ -448,13 +446,13 @@ namespace CalDavSynchronizer.Scheduling
 
       var btypeRepository = new CalDavRepository<int> (
           calDavDataAccess,
-          new iCalendarSerializer(),
+          new CalendarSerializer(),
           CalDavRepository.EntityType.Todo,
           NullDateTimeRangeProvider.Instance,
           false);
 
       var outlookEventRelationDataFactory = new OutlookEventRelationDataFactory();
-      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar> (
+      var syncStateFactory = new EntitySyncStateFactory<string, DateTime, TaskItemWrapper, WebResourceName, string, ICalendar> (
           new TaskMapper (_outlookSession.Application.TimeZones.CurrentTimeZone.ID, mappingParameters),
           outlookEventRelationDataFactory,
           ExceptionHandler.Instance);
@@ -467,12 +465,12 @@ namespace CalDavSynchronizer.Scheduling
       var atypeWriteRepository = BatchEntityRepositoryAdapter.Create (atypeRepository);
       var btypeWriteRepository = BatchEntityRepositoryAdapter.Create (btypeRepository);
 
-      var synchronizer = new Synchronizer<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar, int> (
+      var synchronizer = new Synchronizer<string, DateTime, TaskItemWrapper, WebResourceName, string, ICalendar, int> (
           atypeRepository,
           btypeRepository,
           atypeWriteRepository,
           btypeWriteRepository,
-          InitialSyncStateCreationStrategyFactory<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar>.Create (
+          InitialSyncStateCreationStrategyFactory<string, DateTime, TaskItemWrapper, WebResourceName, string, ICalendar>.Create (
               syncStateFactory,
               syncStateFactory.Environment,
               options.SynchronizationMode,

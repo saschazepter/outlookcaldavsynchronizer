@@ -14,11 +14,10 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System;
+
 using System.IO;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Utilities;
-using Microsoft.Win32;
 
 namespace CalDavSynchronizer.DataAccess
 {

@@ -24,7 +24,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using CalDavSynchronizer.Contracts;
-using CalDavSynchronizer.Ui.Options.ViewModels.Mapping;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
 

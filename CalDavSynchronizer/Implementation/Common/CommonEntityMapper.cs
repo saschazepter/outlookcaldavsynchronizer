@@ -18,7 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using DDay.iCal;
+using Ical.Net.DataTypes;
+using Ical.Net.Interfaces.DataTypes;
 using Microsoft.Office.Interop.Outlook;
 
 namespace CalDavSynchronizer.Implementation.Common

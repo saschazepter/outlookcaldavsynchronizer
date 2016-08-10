@@ -17,13 +17,11 @@
 
 using System;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using CalDavSynchronizer.Implementation.Common;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using GenSync.Logging;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
-using Exception = System.Exception;
 
 namespace CalDavSynchronizer.Implementation.Events
 {

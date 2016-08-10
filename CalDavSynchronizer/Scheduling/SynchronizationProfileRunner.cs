@@ -16,7 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -26,11 +25,9 @@ using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Diagnostics;
 using CalDavSynchronizer.Reports;
 using CalDavSynchronizer.Synchronization;
-using CalDavSynchronizer.Utilities;
 using CalDavSynchronizer.Ui.ConnectionTests;
 using GenSync;
 using GenSync.Logging;
-using GenSync.Synchronization;
 using log4net;
 
 namespace CalDavSynchronizer.Scheduling

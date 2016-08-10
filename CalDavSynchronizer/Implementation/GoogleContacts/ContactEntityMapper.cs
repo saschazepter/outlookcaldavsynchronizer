@@ -16,15 +16,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Diagnostics.SymbolStore;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
-using System.Xaml;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Implementation.Common;
 using CalDavSynchronizer.Implementation.ComWrappers;
@@ -35,8 +32,6 @@ using Google.GData.Contacts;
 using Google.GData.Extensions;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
-using Thought.vCards;
-using Exception = System.Exception;
 
 namespace CalDavSynchronizer.Implementation.GoogleContacts
 {

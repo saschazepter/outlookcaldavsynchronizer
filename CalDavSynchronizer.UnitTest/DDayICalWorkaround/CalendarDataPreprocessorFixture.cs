@@ -14,11 +14,12 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System;
+
 using System.IO;
 using CalDavSynchronizer.DDayICalWorkaround;
-using DDay.iCal;
-using DDay.iCal.Serialization.iCalendar;
+using Ical.Net;
+using Ical.Net.Interfaces;
+using Ical.Net.Serialization.iCalendar.Serializers;
 using NUnit.Framework;
 
 namespace CalDavSynchronizer.UnitTest.DDayICalWorkaround
@@ -438,11 +439,11 @@ END:VCALENDAR
     }
 
 
-    private static IICalendar DeserializeICalendar (string iCalData)
+    private static ICalendar DeserializeICalendar (string iCalData)
     {
       using (var reader = new StringReader (iCalData))
       {
-        var calendarCollection = (iCalendarCollection) new iCalendarSerializer().Deserialize (reader);
+        var calendarCollection = (CalendarCollection) new CalendarSerializer().Deserialize (reader);
         return calendarCollection[0];
       }
     }

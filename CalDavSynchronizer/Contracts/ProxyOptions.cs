@@ -20,7 +20,6 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Serialization;
-using CalDavSynchronizer.Implementation;
 using CalDavSynchronizer.Utilities;
 using log4net;
 

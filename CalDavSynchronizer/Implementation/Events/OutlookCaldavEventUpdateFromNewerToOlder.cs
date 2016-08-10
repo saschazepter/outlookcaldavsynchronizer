@@ -17,17 +17,17 @@
 using System;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
-using DDay.iCal;
 using GenSync.EntityRelationManagement;
 using GenSync.Synchronization;
 using GenSync.Synchronization.States;
+using Ical.Net.Interfaces;
 
 namespace CalDavSynchronizer.Implementation.Events
 {
   internal class OutlookCaldavEventUpdateFromNewerToOlder
-      : UpdateFromNewerToOlder<string, DateTime, AppointmentItemWrapper, WebResourceName, string, IICalendar>
+      : UpdateFromNewerToOlder<string, DateTime, AppointmentItemWrapper, WebResourceName, string, ICalendar>
   {
-    public OutlookCaldavEventUpdateFromNewerToOlder (EntitySyncStateEnvironment<string, DateTime, AppointmentItemWrapper, WebResourceName, string, IICalendar> environment, IEntityRelationData<string, DateTime, WebResourceName, string> knownData, DateTime newA, string newB)
+    public OutlookCaldavEventUpdateFromNewerToOlder (EntitySyncStateEnvironment<string, DateTime, AppointmentItemWrapper, WebResourceName, string, ICalendar> environment, IEntityRelationData<string, DateTime, WebResourceName, string> knownData, DateTime newA, string newB)
         : base (environment, knownData, newA, newB)
     {
     }
@@ -42,7 +42,7 @@ namespace CalDavSynchronizer.Implementation.Events
         if (evt.LastModified == null)
           return false;
 
-        return _aEntity.Inner.LastModificationTime.ToUniversalTime() >= evt.LastModified.UTC;
+        return _aEntity.Inner.LastModificationTime.ToUniversalTime() >= evt.LastModified.AsUtc;
       }
     }
   }

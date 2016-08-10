@@ -14,10 +14,10 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System;
+
 using CalDavSynchronizerTestAutomation.Infrastructure;
-using DDay.iCal;
 using GenSync.Logging;
+using Ical.Net;
 using Microsoft.Office.Interop.Outlook;
 using NUnit.Framework;
 
@@ -87,7 +87,7 @@ END:VCALENDAR
 
         inspector.Close (OlInspectorClose.olDiscard);
 
-        var newCalendar = OutlookTestContext.EntityMapper.Map1To2 (outlookEvent, new iCalendar(), NullEntitySynchronizationLogger.Instance);
+        var newCalendar = OutlookTestContext.EntityMapper.Map1To2 (outlookEvent, new Calendar(), NullEntitySynchronizationLogger.Instance);
 
         Assert.That (newCalendar.Events[0].Organizer.CommonName, Is.EqualTo ("Test Account"));
         Assert.That (newCalendar.Events[0].Organizer.Value.ToString(), Is.EqualTo ("mailto:tw13test@technikum-wien.at"));

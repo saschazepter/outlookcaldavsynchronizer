@@ -17,23 +17,23 @@
 using System;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
-using DDay.iCal;
 using GenSync.EntityRelationManagement;
 using GenSync.Synchronization;
 using GenSync.Synchronization.StateCreationStrategies.ConflictStrategies;
 using GenSync.Synchronization.States;
+using Ical.Net.Interfaces;
 
 namespace CalDavSynchronizer.Implementation.Tasks
 {
   internal class TaskConflictInitialSyncStateCreationStrategyAutomatic
-      : ConflictInitialSyncStateCreationStrategyAutomatic<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar>
+      : ConflictInitialSyncStateCreationStrategyAutomatic<string, DateTime, TaskItemWrapper, WebResourceName, string, ICalendar>
   {
-    public TaskConflictInitialSyncStateCreationStrategyAutomatic (EntitySyncStateEnvironment<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar> environment)
+    public TaskConflictInitialSyncStateCreationStrategyAutomatic (EntitySyncStateEnvironment<string, DateTime, TaskItemWrapper, WebResourceName, string, ICalendar> environment)
         : base (environment)
     {
     }
 
-    protected override IEntitySyncState<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar> Create_FromNewerToOlder (IEntityRelationData<string, DateTime, WebResourceName, string> knownData, DateTime newA, string newB)
+    protected override IEntitySyncState<string, DateTime, TaskItemWrapper, WebResourceName, string, ICalendar> Create_FromNewerToOlder (IEntityRelationData<string, DateTime, WebResourceName, string> knownData, DateTime newA, string newB)
     {
       return new TaskUpdateFromNewerToOlder (
           _environment,

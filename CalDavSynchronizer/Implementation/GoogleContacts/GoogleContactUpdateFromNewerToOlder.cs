@@ -16,14 +16,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using GenSync.EntityRelationManagement;
 using GenSync.Synchronization;
 using GenSync.Synchronization.States;
-using Google.Contacts;
 using log4net;
-using Thought.vCards;
 
 namespace CalDavSynchronizer.Implementation.GoogleContacts
 {

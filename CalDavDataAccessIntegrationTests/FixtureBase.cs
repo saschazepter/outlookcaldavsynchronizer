@@ -18,17 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using CalDavSynchronizer;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.TimeRangeFiltering;
 using CalDavSynchronizer.Scheduling;
-using DDay.iCal;
-using DDay.iCal.Serialization.iCalendar;
 using GenSync;
+using Ical.Net;
+using Ical.Net.DataTypes;
+using Ical.Net.Interfaces;
+using Ical.Net.Serialization.iCalendar.Serializers;
 using NUnit.Framework;
 
 namespace CalDavDataAccessIntegrationTests
@@ -36,7 +36,7 @@ namespace CalDavDataAccessIntegrationTests
   [TestFixture]
   public abstract class FixtureBase
   {
-    private static readonly iCalendarSerializer _calendarSerializer = new iCalendarSerializer();
+    private static readonly CalendarSerializer _calendarSerializer = new CalendarSerializer();
 
     private ICalDavDataAccess _calDavDataAccess;
 
@@ -109,11 +109,11 @@ namespace CalDavDataAccessIntegrationTests
       for (int i = 1; i <= 5; i++)
       {
         var iCalendar = CreateEntity (i);
-        uids.Add (iCalendar.Events[0].UID);
+        uids.Add (iCalendar.Events[0].Uid);
         entitiesWithVersion.Add (
             await _calDavDataAccess.CreateEntity (
                 SerializeCalendar (
-                    iCalendar), iCalendar.Events[0].UID));
+                    iCalendar), iCalendar.Events[0].Uid));
       }
 
       var queriedEntitesWithVersion = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)));
@@ -125,7 +125,7 @@ namespace CalDavDataAccessIntegrationTests
           entitiesWithVersion.Select (e => e.Id));
 
       var updatedCalendar = CreateEntity (600);
-      updatedCalendar.Events[0].UID = uids[1];
+      updatedCalendar.Events[0].Uid = uids[1];
       var updated = await _calDavDataAccess.TryUpdateEntity (
           entitiesWithVersion[1].Id,
           entitiesWithVersion[1].Version,
@@ -136,7 +136,7 @@ namespace CalDavDataAccessIntegrationTests
           Is.EqualTo (2));
 
       var updatedRevertedCalendar = CreateEntity (2);
-      updatedRevertedCalendar.Events[0].UID = uids[1];
+      updatedRevertedCalendar.Events[0].Uid = uids[1];
       var updateReverted = await _calDavDataAccess.TryUpdateEntity (
           updated.Id,
           updated.Version,
@@ -183,11 +183,11 @@ namespace CalDavDataAccessIntegrationTests
       for (int i = 1; i <= 5; i++)
       {
         var iCalendar = CreateEntity (i);
-        uids.Add (iCalendar.Events[0].UID);
+        uids.Add (iCalendar.Events[0].Uid);
         entitiesWithVersion.Add (
             await _calDavDataAccess.CreateEntity (
                 SerializeCalendar (
-                    iCalendar), iCalendar.Events[0].UID));
+                    iCalendar), iCalendar.Events[0].Uid));
       }
 
       var queriedEntitesWithVersion = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)));
@@ -199,7 +199,7 @@ namespace CalDavDataAccessIntegrationTests
           entitiesWithVersion.Select (e => e.Id));
 
       var updatedCalendar = CreateEntity (600);
-      updatedCalendar.Events[0].UID = uids[1];
+      updatedCalendar.Events[0].Uid = uids[1];
       var updated = await _calDavDataAccess.TryUpdateEntity (
           entitiesWithVersion[1].Id,
           entitiesWithVersion[1].Version,
@@ -246,7 +246,7 @@ namespace CalDavDataAccessIntegrationTests
       var calendar = CreateEntity (1);
       var v = await _calDavDataAccess.CreateEntity (
           SerializeCalendar (calendar),
-          calendar.Events[0].UID);
+          calendar.Events[0].Uid);
       calendar.Events[0].Summary += "xxx";
       var v2 = await _calDavDataAccess.TryUpdateEntity (
           v.Id,
@@ -268,7 +268,7 @@ namespace CalDavDataAccessIntegrationTests
       var calendar = CreateEntity (1);
       var v = await _calDavDataAccess.CreateEntity (
           SerializeCalendar (calendar),
-          calendar.Events[0].UID);
+          calendar.Events[0].Uid);
 
       calendar.Events[0].Summary += "xxx";
 
@@ -326,29 +326,29 @@ namespace CalDavDataAccessIntegrationTests
     }
 
 
-    private iCalendar CreateEntity (int startInHundretDays)
+    private Calendar CreateEntity (int startInHundretDays)
     {
-      var calendar = new iCalendar();
+      var calendar = new Calendar();
       var evt = new Event();
       calendar.Events.Add (evt);
-      evt.Start = new iCalDateTime (DateTime.Now.AddDays (startInHundretDays * 100));
-      evt.End = new iCalDateTime (DateTime.Now.AddDays (startInHundretDays * 100).AddHours (1));
+      evt.Start = new CalDateTime (DateTime.Now.AddDays (startInHundretDays * 100));
+      evt.End = new CalDateTime (DateTime.Now.AddDays (startInHundretDays * 100).AddHours (1));
       evt.Summary = "Event" + startInHundretDays;
 
       return calendar;
     }
 
 
-    public static IICalendar DeserializeCalendar (string iCalData)
+    public static ICalendar DeserializeCalendar (string iCalData)
     {
       using (var reader = new StringReader (iCalData))
       {
-        var calendarCollection = (iCalendarCollection) _calendarSerializer.Deserialize (reader);
+        var calendarCollection = (CalendarCollection) _calendarSerializer.Deserialize (reader);
         return calendarCollection[0];
       }
     }
 
-    public static string SerializeCalendar (IICalendar calendar)
+    public static string SerializeCalendar (ICalendar calendar)
     {
       return _calendarSerializer.SerializeToString (calendar);
     }

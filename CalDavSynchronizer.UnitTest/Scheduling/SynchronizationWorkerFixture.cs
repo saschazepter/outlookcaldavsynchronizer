@@ -16,8 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.ChangeWatching;
@@ -27,7 +25,6 @@ using CalDavSynchronizer.Scheduling;
 using CalDavSynchronizer.Synchronization;
 using GenSync;
 using GenSync.Logging;
-using GenSync.Synchronization;
 using NUnit.Framework;
 using Rhino.Mocks;
 

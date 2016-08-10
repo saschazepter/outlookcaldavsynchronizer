@@ -19,11 +19,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using DDay.iCal;
+using Ical.Net;
+using Ical.Net.DataTypes;
+using Ical.Net.Interfaces.Components;
 using log4net;
+using Calendar = System.Globalization.Calendar;
 
 namespace CalDavSynchronizer.DDayICalWorkaround
 {
@@ -31,8 +32,9 @@ namespace CalDavSynchronizer.DDayICalWorkaround
   {
     private static readonly ILog s_logger = LogManager.GetLogger (MethodInfo.GetCurrentMethod().DeclaringType);
 
-    public static void FixTimeZoneDSTRRules(TimeZoneInfo tz, DDay.iCal.iCalTimeZone iCalTz)
+    public static void FixTimeZoneDSTRRules(TimeZoneInfo tz, VTimeZone iCalTz)
     {
+      /*
       var adjustments = tz.GetAdjustmentRules();
       foreach (var tziItems in iCalTz.TimeZoneInfos)
       {
@@ -61,10 +63,10 @@ namespace CalDavSynchronizer.DDayICalWorkaround
             }
           }
         }
-      }
+      }*/
     }
 
-    private static iCalDateTime CalcTransitionStart(TimeZoneInfo.TransitionTime transition, int year)
+    private static CalDateTime CalcTransitionStart(TimeZoneInfo.TransitionTime transition, int year)
     {
       // For non-fixed date rules, get local calendar
       Calendar cal = CultureInfo.CurrentCulture.Calendar;
@@ -86,7 +88,7 @@ namespace CalDavSynchronizer.DDayICalWorkaround
       if (transitionDay > cal.GetDaysInMonth(year, transition.Month))
         transitionDay -= 7;
 
-      return new iCalDateTime(new DateTime( year, transition.Month, transitionDay,
+      return new CalDateTime(new DateTime( year, transition.Month, transitionDay,
                                             transition.TimeOfDay.Hour, transition.TimeOfDay.Minute, transition.TimeOfDay.Second));
     }
 

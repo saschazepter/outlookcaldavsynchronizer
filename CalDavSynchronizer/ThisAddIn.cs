@@ -16,15 +16,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Reflection;
-using System.Windows.Forms;
 using CalDavSynchronizer.Scheduling;
 using CalDavSynchronizer.Utilities;
 using log4net;
 using log4net.Config;
-using Microsoft.Office.Core;
 using Microsoft.Office.Tools.Ribbon;
 using Microsoft.Office.Interop.Outlook;
-using CalDavSynchronizer.Ui;
 using Exception = System.Exception;
 
 namespace CalDavSynchronizer

@@ -16,24 +16,17 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Configuration;
 using System.Linq;
 using System.Reflection;
 using System.Security;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Input;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.OAuth.Google;
 using CalDavSynchronizer.Scheduling;
 using CalDavSynchronizer.Ui.Options.ViewModels;
 using CalDavSynchronizer.Utilities;
-using Google.Apis.Tasks.v1.Data;
 using log4net;
-using Microsoft.Office.Interop.Outlook;
-using Exception = System.Exception;
 
 namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
 {

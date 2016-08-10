@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using GenSync.InitialEntityMatching;
-using Microsoft.Office.Interop.Outlook;
 using Thought.vCards;
 
 namespace CalDavSynchronizer.Implementation.Contacts

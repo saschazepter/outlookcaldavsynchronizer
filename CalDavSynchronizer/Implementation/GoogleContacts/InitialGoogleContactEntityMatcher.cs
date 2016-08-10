@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using GenSync.InitialEntityMatching;
-using Google.Contacts;
 
 namespace CalDavSynchronizer.Implementation.GoogleContacts
 {

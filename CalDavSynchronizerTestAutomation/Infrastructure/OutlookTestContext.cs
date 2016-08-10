@@ -29,15 +29,14 @@ using CalDavSynchronizer.Implementation.Events;
 using CalDavSynchronizer.Implementation.TimeRangeFiltering;
 using CalDavSynchronizer.Scheduling;
 using CalDavSynchronizer.Synchronization;
-using DDay.iCal;
-using DDay.iCal.Serialization.iCalendar;
 using GenSync;
 using GenSync.EntityMapping;
 using GenSync.EntityRelationManagement;
-using GenSync.EntityRepositories;
 using GenSync.Logging;
 using GenSync.ProgressReport;
-using GenSync.Synchronization;
+using Ical.Net;
+using Ical.Net.Interfaces;
+using Ical.Net.Serialization.iCalendar.Serializers;
 using Microsoft.Office.Interop.Outlook;
 using Rhino.Mocks;
 using Application = System.Windows.Forms.Application;
@@ -47,7 +46,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
   public static class OutlookTestContext
   {
     private static EventEntityMapper s_entityMapper;
-    private static readonly iCalendarSerializer _calendarSerializer = new iCalendarSerializer();
+    private static readonly CalendarSerializer _calendarSerializer = new CalendarSerializer();
     private static NameSpace s_mapiNameSpace;
     private static string s_outlookFolderEntryId;
     private static string s_outlookFolderStoreId;
@@ -119,7 +118,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
     }
 
 
-    public static IEntityMapper<AppointmentItemWrapper, IICalendar> EntityMapper
+    public static IEntityMapper<AppointmentItemWrapper, ICalendar> EntityMapper
     {
       get { return s_entityMapper; }
     }
@@ -129,16 +128,16 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
       get { return s_outlookEventRepository; }
     }
 
-    public static IICalendar DeserializeICalendar (string iCalData)
+    public static ICalendar DeserializeICalendar (string iCalData)
     {
       using (var reader = new StringReader (iCalData))
       {
-        var calendarCollection = (iCalendarCollection) _calendarSerializer.Deserialize (reader);
+        var calendarCollection = (CalendarCollection) _calendarSerializer.Deserialize (reader);
         return calendarCollection[0];
       }
     }
 
-    public static string SerializeICalendar (IICalendar calendar)
+    public static string SerializeICalendar (ICalendar calendar)
     {
       return _calendarSerializer.SerializeToString (calendar);
     }

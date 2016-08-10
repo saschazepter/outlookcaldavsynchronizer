@@ -16,7 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Text.RegularExpressions;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Utilities;
 using log4net;

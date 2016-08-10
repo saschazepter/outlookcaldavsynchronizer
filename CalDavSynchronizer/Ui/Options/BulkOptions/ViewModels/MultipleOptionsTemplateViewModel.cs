@@ -17,21 +17,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Configuration;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using CalDavSynchronizer.Contracts;
-using CalDavSynchronizer.DataAccess;
-using CalDavSynchronizer.Implementation;
-using CalDavSynchronizer.Scheduling;
 using CalDavSynchronizer.Ui.Options.ResourceSelection.ViewModels;
 using CalDavSynchronizer.Ui.Options.ViewModels;
-using CalDavSynchronizer.Ui.Options.ViewModels.Mapping;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
 using Exception = System.Exception;

@@ -14,18 +14,11 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System;
+
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
-using System.Globalization;
-using System.Data;
 using System.Reflection;
-using CalDavSynchronizer.DataAccess;
 using log4net;
-using ColorMine;
 using ColorMine.ColorSpaces;
 using Microsoft.Office.Interop.Outlook;
 

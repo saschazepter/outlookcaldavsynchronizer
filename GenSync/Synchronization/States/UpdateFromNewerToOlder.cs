@@ -16,7 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Reflection;
-using System.Threading.Tasks;
 using GenSync.EntityRelationManagement;
 using GenSync.Logging;
 using log4net;

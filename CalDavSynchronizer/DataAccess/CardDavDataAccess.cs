@@ -22,7 +22,6 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using System.Xml;
-using CalDavSynchronizer.Implementation.TimeRangeFiltering;
 using GenSync;
 using log4net;
 

@@ -17,7 +17,6 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection.Emit;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Scheduling;

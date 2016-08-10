@@ -16,7 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using CalDavSynchronizer.DataAccess;
-using CalDavSynchronizer.Implementation.Events;
 using GenSync.EntityRelationManagement;
 
 namespace CalDavSynchronizer.Implementation.Contacts

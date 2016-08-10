@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -28,7 +26,6 @@ using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Http;
 using Google.Apis.Services;
 using Google.Apis.Tasks.v1;
-using Google.Apis.Tasks.v1.Data;
 using Google.Contacts;
 using Google.GData.Client;
 using Google.GData.Contacts;

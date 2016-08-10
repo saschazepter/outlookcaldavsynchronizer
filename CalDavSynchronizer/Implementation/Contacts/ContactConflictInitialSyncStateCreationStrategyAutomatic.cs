@@ -21,7 +21,6 @@ using GenSync.EntityRelationManagement;
 using GenSync.Synchronization;
 using GenSync.Synchronization.StateCreationStrategies.ConflictStrategies;
 using GenSync.Synchronization.States;
-using Microsoft.Office.Interop.Outlook;
 using Thought.vCards;
 
 namespace CalDavSynchronizer.Implementation.Contacts

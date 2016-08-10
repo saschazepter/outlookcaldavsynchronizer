@@ -17,8 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CalDavSynchronizer.DataAccess;
-using CalDavSynchronizer.Implementation;
 using GenSync;
 using GenSync.Logging;
 using GenSync.Synchronization;

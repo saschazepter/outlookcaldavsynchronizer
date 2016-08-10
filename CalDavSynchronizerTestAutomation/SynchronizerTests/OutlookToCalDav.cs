@@ -97,8 +97,8 @@ namespace CalDavSynchronizerTestAutomation.SynchronizerTests
       var exeption2Event = calendar.Events.Single (e => e.Summary == "Ex 2");
 
       CollectionAssert.AreEquivalent (expectedSequenceNumbers, calendar.Events.Select (e => e.Sequence));
-      Assert.That (exeption1Event.UID, Is.EqualTo (masterEvent.UID));
-      Assert.That (exeption2Event.UID, Is.EqualTo (masterEvent.UID));
+      Assert.That (exeption1Event.Uid, Is.EqualTo (masterEvent.Uid));
+      Assert.That (exeption2Event.Uid, Is.EqualTo (masterEvent.Uid));
 
       using (var masterAppointment = OutlookTestContext.GetOutlookEvent (appointmentId))
       {

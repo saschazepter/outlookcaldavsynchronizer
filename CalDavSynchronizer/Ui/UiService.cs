@@ -16,21 +16,16 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using System.Windows.Media.Imaging;
-using CalDavSynchronizer.DataAccess;
-using CalDavSynchronizer.Implementation.ComWrappers;
 using CalDavSynchronizer.Properties;
 using CalDavSynchronizer.Ui.Options.ViewModels;
 using CalDavSynchronizer.Ui.Options.Views;
-using CalDavSynchronizer.Ui.Reports;
 using CalDavSynchronizer.Ui.Reports.ViewModels;
 using CalDavSynchronizer.Ui.Reports.Views;
 using CalDavSynchronizer.Ui.SystrayNotification.ViewModels;
 using CalDavSynchronizer.Ui.SystrayNotification.Views;
-using Microsoft.Office.Interop.Outlook;
 
 namespace CalDavSynchronizer.Ui
 {

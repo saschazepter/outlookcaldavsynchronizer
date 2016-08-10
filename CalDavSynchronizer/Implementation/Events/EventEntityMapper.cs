@@ -24,19 +24,23 @@ using System.Runtime.InteropServices;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using CalDavSynchronizer.Implementation.Common;
-using DDay.iCal;
 using GenSync.EntityMapping;
 using GenSync.Logging;
+using Ical.Net;
+using Ical.Net.DataTypes;
+using Ical.Net.ExtensionMethods;
+using Ical.Net.General;
+using Ical.Net.Interfaces;
+using Ical.Net.Interfaces.Components;
+using Ical.Net.Interfaces.DataTypes;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
 using NodaTime;
 using Exception = Microsoft.Office.Interop.Outlook.Exception;
-using Period = DDay.iCal.Period;
-using RecurrencePattern = DDay.iCal.RecurrencePattern;
 
 namespace CalDavSynchronizer.Implementation.Events
 {
-  public class EventEntityMapper : IEntityMapper<AppointmentItemWrapper, IICalendar>
+  public class EventEntityMapper : IEntityMapper<AppointmentItemWrapper, ICalendar>
   {
     private static readonly ILog s_logger = LogManager.GetLogger (MethodInfo.GetCurrentMethod().DeclaringType);
 
@@ -72,12 +76,12 @@ namespace CalDavSynchronizer.Implementation.Events
       _outlookMajorVersion = Convert.ToInt32 (outlookMajorVersionString);
     }
 
-    public IICalendar Map1To2 (AppointmentItemWrapper sourceWrapper, IICalendar existingTargetCalender, IEntityMappingLogger logger)
+    public ICalendar Map1To2 (AppointmentItemWrapper sourceWrapper, ICalendar existingTargetCalender, IEntityMappingLogger logger)
     {
-      var newTargetCalender = new iCalendar();
+      var newTargetCalender = new Ical.Net.Calendar();
 
-      iCalTimeZone startIcalTimeZone = null;
-      iCalTimeZone endIcalTimeZone = null;
+      VTimeZone startIcalTimeZone = null;
+      VTimeZone endIcalTimeZone = null;
 
       if (!_configuration.CreateEventsInUTC)
       {
@@ -96,7 +100,7 @@ namespace CalDavSynchronizer.Implementation.Events
           }
 
           var startTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById (startTimeZoneID);
-          startIcalTimeZone = iCalTimeZone.FromSystemTimeZone (startTimeZoneInfo, new DateTime (1970, 1, 1), false);
+          startIcalTimeZone = VTimeZone.FromSystemTimeZone (startTimeZoneInfo, new DateTime (1970, 1, 1), false);
           DDayICalWorkaround.CalendarDataPreprocessor.FixTimeZoneDSTRRules (startTimeZoneInfo, startIcalTimeZone);
           newTargetCalender.TimeZones.Add (startIcalTimeZone);
 
@@ -104,7 +108,7 @@ namespace CalDavSynchronizer.Implementation.Events
           {
             var endTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById (endTimeZoneID);
 
-            endIcalTimeZone = iCalTimeZone.FromSystemTimeZone (endTimeZoneInfo, new DateTime (1970, 1, 1), false);
+            endIcalTimeZone = VTimeZone.FromSystemTimeZone (endTimeZoneInfo, new DateTime (1970, 1, 1), false);
             DDayICalWorkaround.CalendarDataPreprocessor.FixTimeZoneDSTRRules (endTimeZoneInfo, endIcalTimeZone);
             newTargetCalender.TimeZones.Add (endIcalTimeZone);
           }
@@ -120,14 +124,14 @@ namespace CalDavSynchronizer.Implementation.Events
         }
       }
 
-      var existingTargetEvent = existingTargetCalender.Events.FirstOrDefault (e => e.RecurrenceID == null);
+      var existingTargetEvent = existingTargetCalender.Events.FirstOrDefault (e => e.RecurrenceId == null);
 
       var newTargetEvent = new Event();
 
       if (existingTargetEvent != null)
-        newTargetEvent.UID = existingTargetEvent.UID;
+        newTargetEvent.Uid = existingTargetEvent.Uid;
       else if (_configuration.UseGlobalAppointmentID)
-        newTargetEvent.UID = sourceWrapper.Inner.GlobalAppointmentID;
+        newTargetEvent.Uid = sourceWrapper.Inner.GlobalAppointmentID;
 
       newTargetCalender.Events.Add (newTargetEvent);
 
@@ -143,14 +147,14 @@ namespace CalDavSynchronizer.Implementation.Events
       return newTargetCalender;
     }
 
-    private void Map1To2 (AppointmentItem source, IEvent target, bool isRecurrenceException, iCalTimeZone startIcalTimeZone, iCalTimeZone endIcalTimeZone, IEntityMappingLogger logger)
+    private void Map1To2 (AppointmentItem source, IEvent target, bool isRecurrenceException, VTimeZone startIcalTimeZone, VTimeZone endIcalTimeZone, IEntityMappingLogger logger)
     {
       if (source.AllDayEvent)
       {
         // Outlook's AllDayEvent relates to Start and not not StartUtc!!!
-        target.Start = new iCalDateTime (source.Start);
+        target.Start = new CalDateTime (source.Start);
         target.Start.HasTime = false;
-        target.End = new iCalDateTime (source.End);
+        target.End = new CalDateTime (source.End);
         target.End.HasTime = false;
         target.IsAllDay = true;
       }
@@ -158,15 +162,15 @@ namespace CalDavSynchronizer.Implementation.Events
       {
         if (_configuration.CreateEventsInUTC || startIcalTimeZone == null || endIcalTimeZone == null)
         {
-          target.Start = new iCalDateTime (source.StartUTC) { IsUniversalTime = true };
-          target.DTEnd = new iCalDateTime (source.EndUTC) { IsUniversalTime = true };
+          target.Start = new CalDateTime (source.StartUTC) { IsUniversalTime = true };
+          target.End = new CalDateTime (source.EndUTC) { IsUniversalTime = true };
         }
         else
         {
-          target.Start = new iCalDateTime (source.StartInStartTimeZone);
-          target.Start.SetTimeZone (startIcalTimeZone);
-          target.DTEnd = new iCalDateTime (source.EndInEndTimeZone);
-          target.End.SetTimeZone (endIcalTimeZone);
+          target.Start = new CalDateTime (source.StartInStartTimeZone);
+          target.Start.TzId = startIcalTimeZone.TzId;
+          target.End = new CalDateTime (source.EndInEndTimeZone);
+          target.End.TzId = endIcalTimeZone.TzId;
         }
         target.IsAllDay = false;
       }
@@ -525,14 +529,14 @@ namespace CalDavSynchronizer.Implementation.Events
       }
     }
 
-    private void MapRecurrance1To2 (AppointmentItem source, IEvent target, iCalTimeZone startIcalTimeZone, iCalTimeZone endIcalTimeZone, IEntityMappingLogger logger)
+    private void MapRecurrance1To2 (AppointmentItem source, IEvent target, VTimeZone startIcalTimeZone, VTimeZone endIcalTimeZone, IEntityMappingLogger logger)
     {
       if (source.IsRecurring)
       {
         using (var sourceRecurrencePatternWrapper = GenericComObjectWrapper.Create (source.GetRecurrencePattern()))
         {
           var sourceRecurrencePattern = sourceRecurrencePatternWrapper.Inner;
-          IRecurrencePattern targetRecurrencePattern = new RecurrencePattern();
+          Ical.Net.DataTypes.RecurrencePattern targetRecurrencePattern = new Ical.Net.DataTypes.RecurrencePattern();
           if (!sourceRecurrencePattern.NoEndDate)
           {
             targetRecurrencePattern.Count = sourceRecurrencePattern.Occurrences;
@@ -625,7 +629,7 @@ namespace CalDavSynchronizer.Implementation.Events
                 {
                   var targetException = new Event();
                   target.Calendar.Events.Add (targetException);
-                  targetException.UID = target.UID;
+                  targetException.Uid = target.Uid;
                   Map1To2 (wrapper.Inner, targetException, true, startIcalTimeZone, endIcalTimeZone, logger);
 
                   // check if new exception is already present in target
@@ -642,14 +646,14 @@ namespace CalDavSynchronizer.Implementation.Events
 
                       if (!el.Period.StartTime.HasTime)
                       {
-                        iCalDateTime exDate = new iCalDateTime (el.Period.StartTime.Date);
+                        CalDateTime exDate = new CalDateTime (el.Period.StartTime.Date);
                         exDate.HasTime = false;
                         targetExList.Add (exDate);
                         targetExList.Parameters.Add ("VALUE", "DATE");
                       }
                       else
                       {
-                        targetExList.Add (new iCalDateTime (el.Period.StartTime.UTC) { IsUniversalTime = true });
+                        targetExList.Add (new CalDateTime (el.Period.StartTime.AsUtc) { IsUniversalTime = true });
                       }
                       if (!targetExceptionDatesByDate.ContainsKey (el.Period.StartTime.Date))
                         targetExceptionDatesByDate.Add (el.Period.StartTime.Date, targetExList);
@@ -659,8 +663,8 @@ namespace CalDavSynchronizer.Implementation.Events
                   if (source.AllDayEvent)
                   {
                     // Outlook's AllDayEvent relates to Start and not not StartUtc!!!
-                    targetException.RecurrenceID = new iCalDateTime (sourceException.OriginalDate);
-                    targetException.RecurrenceID.HasTime = false;
+                    targetException.RecurrenceId = new CalDateTime (sourceException.OriginalDate);
+                    targetException.RecurrenceId.HasTime = false;
                   }
                   else
                   {
@@ -668,7 +672,7 @@ namespace CalDavSynchronizer.Implementation.Events
                     LocalDateTime localExDateTime = LocalDateTime.FromDateTime (sourceException.OriginalDate);
                     ZonedDateTime zonedExDateTime = tz.AtLeniently (localExDateTime);
                     var originalDateUtc = zonedExDateTime.ToDateTimeUtc(); 
-                    targetException.RecurrenceID = new iCalDateTime (originalDateUtc) { IsUniversalTime = true };
+                    targetException.RecurrenceId = new CalDateTime (originalDateUtc) { IsUniversalTime = true };
                   }
                 }
               }
@@ -691,7 +695,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
                 if (source.AllDayEvent)
                 {
-                  iCalDateTime exDate = new iCalDateTime (sourceException.OriginalDate);
+                  CalDateTime exDate = new CalDateTime (sourceException.OriginalDate);
                   exDate.HasTime = false;
                   targetExList.Add (exDate);
                   targetExList.Parameters.Add ("VALUE", "DATE");
@@ -705,7 +709,7 @@ namespace CalDavSynchronizer.Implementation.Events
                   }
                   var timeZone = TimeZoneInfo.FindSystemTimeZoneById (startTimeZoneID);
                   var originalDateUtc = TimeZoneInfo.ConvertTimeToUtc (sourceException.OriginalDate, timeZone);
-                  iCalDateTime exDate = new iCalDateTime (originalDateUtc.Add (source.StartInStartTimeZone.TimeOfDay)) { IsUniversalTime = true };
+                  CalDateTime exDate = new CalDateTime (originalDateUtc.Add (source.StartInStartTimeZone.TimeOfDay)) { IsUniversalTime = true };
 
                   targetExList.Add (exDate);
                 }
@@ -728,7 +732,7 @@ namespace CalDavSynchronizer.Implementation.Events
           var targetRecurrencePattern = targetRecurrencePatternWrapper.Inner;
           if (source.RecurrenceRules.Count > 1)
           {
-            s_logger.WarnFormat ("Event '{0}' contains more than one recurrence rule. Since outlook supports only one rule, all except the first one will be ignored.", source.UID);
+            s_logger.WarnFormat ("Event '{0}' contains more than one recurrence rule. Since outlook supports only one rule, all except the first one will be ignored.", source.Uid);
             logger.LogMappingWarning ("Event contains more than one recurrence rule. Since outlook supports only one rule, all except the first one will be ignored.");
           }
           var sourceRecurrencePattern = source.RecurrenceRules[0];
@@ -755,7 +759,7 @@ namespace CalDavSynchronizer.Implementation.Events
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursMonthNth;
                 if (sourceRecurrencePattern.ByWeekNo.Count > 1)
                 {
-                  s_logger.WarnFormat ("Event '{0}' contains more than one week in a monthly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Event '{0}' contains more than one week in a monthly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Event contains more than one week in a monthly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.");
                 }
                 else if (sourceRecurrencePattern.ByWeekNo.Count > 0)
@@ -777,7 +781,7 @@ namespace CalDavSynchronizer.Implementation.Events
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursMonthly;
                 if (sourceRecurrencePattern.ByMonthDay.Count > 1)
                 {
-                  s_logger.WarnFormat ("Event '{0}' contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Event '{0}' contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Event contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.");
                 }
                 try
@@ -786,8 +790,8 @@ namespace CalDavSynchronizer.Implementation.Events
                 }
                 catch (COMException ex)
                 {
-                  s_logger.Warn ($"Recurring event '{source.UID}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
-                  logger.LogMappingWarning ($"Recurring event '{source.UID}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
+                  s_logger.Warn ($"Recurring event '{source.Uid}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
+                  logger.LogMappingWarning ($"Recurring event '{source.Uid}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
                 }
               }
               else
@@ -801,7 +805,7 @@ namespace CalDavSynchronizer.Implementation.Events
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursYearNth;
                 if (sourceRecurrencePattern.ByMonth.Count > 1)
                 {
-                  s_logger.WarnFormat ("Event '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Event '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Event contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.");
                 }
                 if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
@@ -814,7 +818,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
                 if (sourceRecurrencePattern.ByWeekNo.Count > 1)
                 {
-                  s_logger.WarnFormat ("Event '{0}' contains more than one week in a yearly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Event '{0}' contains more than one week in a yearly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Event contains more than one week in a yearly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.");
                 }
                 targetRecurrencePattern.Instance = sourceRecurrencePattern.ByWeekNo[0];
@@ -826,7 +830,7 @@ namespace CalDavSynchronizer.Implementation.Events
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursYearly;
                 if (sourceRecurrencePattern.ByMonth.Count > 1)
                 {
-                  s_logger.WarnFormat ("Event '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Event '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Event contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.");
                 }
                 if (sourceRecurrencePattern.ByMonth[0] != targetRecurrencePattern.MonthOfYear)
@@ -842,7 +846,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
                 if (sourceRecurrencePattern.ByMonthDay.Count > 1)
                 {
-                  s_logger.WarnFormat ("Event '{0}' contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Event '{0}' contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Event contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.");
                 }
                 if (sourceRecurrencePattern.ByMonthDay[0] != targetRecurrencePattern.DayOfMonth)
@@ -853,8 +857,8 @@ namespace CalDavSynchronizer.Implementation.Events
                   }
                   catch (COMException ex)
                   {
-                    s_logger.Warn ($"Recurring event '{source.UID}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
-                    logger.LogMappingWarning ($"Recurring event '{source.UID}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
+                    s_logger.Warn ($"Recurring event '{source.Uid}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
+                    logger.LogMappingWarning ($"Recurring event '{source.Uid}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
                   }
                 }
               }
@@ -863,7 +867,7 @@ namespace CalDavSynchronizer.Implementation.Events
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursYearNth;
                 if (sourceRecurrencePattern.ByMonth.Count > 1)
                 {
-                  s_logger.WarnFormat ("Event '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Event '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Event contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.");
                 }
                 if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
@@ -887,7 +891,7 @@ namespace CalDavSynchronizer.Implementation.Events
               }
               break;
             default:
-              s_logger.WarnFormat ("Recurring event '{0}' contains the Frequency '{1}', which is not supported by outlook. Ignoring recurrence rule.", source.UID, sourceRecurrencePattern.Frequency);
+              s_logger.WarnFormat ("Recurring event '{0}' contains the Frequency '{1}', which is not supported by outlook. Ignoring recurrence rule.", source.Uid, sourceRecurrencePattern.Frequency);
               logger.LogMappingWarning ($"Recurring event contains the Frequency '{sourceRecurrencePattern.Frequency}', which is not supported by outlook. Ignoring recurrence rule.");
               targetWrapper.Inner.ClearRecurrencePattern();
               break;
@@ -900,7 +904,7 @@ namespace CalDavSynchronizer.Implementation.Events
           }
           catch (COMException ex)
           {
-            s_logger.Warn ($"Recurring event '{source.UID}' contains the Interval '{sourceRecurrencePattern.Interval}', which is not supported by outlook. Ignoring interval.", ex);
+            s_logger.Warn ($"Recurring event '{source.Uid}' contains the Interval '{sourceRecurrencePattern.Interval}', which is not supported by outlook. Ignoring interval.", ex);
             logger.LogMappingWarning ($"Recurring event contains the Interval '{sourceRecurrencePattern.Interval}', which is not supported by outlook. Ignoring interval.", ex);
           }
 
@@ -970,13 +974,13 @@ namespace CalDavSynchronizer.Implementation.Events
           // to prevent skipping of occurences while moving (outlook throws exception when skipping occurences), moving has to be done in two steps
           // first move all exceptions which are preponed from earliest to latest
           MapRecurrenceExceptions2To1 (
-              exceptions.Where (e => e.Start.UTC < e.RecurrenceID.Date).OrderBy (e => e.Start.UTC),
+              exceptions.Where (e => e.Start.AsUtc < e.RecurrenceId.Date).OrderBy (e => e.Start.AsUtc),
               targetWrapper,
               targetRecurrencePattern,
               logger);
           // then move all exceptions which are postponed or are not moved from last to first
           MapRecurrenceExceptions2To1 (
-              exceptions.Where (e => e.Start.UTC >= e.RecurrenceID.Date).OrderByDescending (e => e.Start.UTC),
+              exceptions.Where (e => e.Start.AsUtc >= e.RecurrenceId.Date).OrderByDescending (e => e.Start.AsUtc),
               targetWrapper,
               targetRecurrencePattern,
               logger);
@@ -1004,13 +1008,13 @@ namespace CalDavSynchronizer.Implementation.Events
           NodaTime.DateTimeZone startZone = NodaTime.DateTimeZoneProviders.Bcl[startTimeZoneID];
           DateTime originalStart;
 
-          if (recurranceException.RecurrenceID.IsUniversalTime)
+          if (recurranceException.RecurrenceId.IsUniversalTime)
           {
-            originalStart = NodaTime.Instant.FromDateTimeUtc (recurranceException.RecurrenceID.Value).InZone (startZone).ToDateTimeUnspecified().Date;
+            originalStart = NodaTime.Instant.FromDateTimeUtc (recurranceException.RecurrenceId.Value).InZone (startZone).ToDateTimeUnspecified().Date;
           }
           else
           {
-            originalStart = recurranceException.RecurrenceID.Date;
+            originalStart = recurranceException.RecurrenceId.Date;
           }
 
           var originalExDate = NodaTime.LocalDateTime.FromDateTime (originalStart.Add (targetWrapper.Inner.StartInStartTimeZone.TimeOfDay));
@@ -1084,9 +1088,13 @@ namespace CalDavSynchronizer.Implementation.Events
           attendee.Role = MapAttendeeType1To2 ((OlMeetingRecipientType) recipient.Type);
           if ((OlMeetingRecipientType) recipient.Type == OlMeetingRecipientType.olResource)
             attendee.Type = "RESOURCE";
+<<<<<<< HEAD
           attendee.RSVP = true;
           if (_configuration.ScheduleAgentClient)
             attendee.Parameters.Add ("SCHEDULE-AGENT", "CLIENT");
+=======
+          attendee.Rsvp = true;
+>>>>>>> Merge master into temp/upgrade-ical.NET
           target.Attendees.Add (attendee);
         }
         else
@@ -1206,7 +1214,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
     private const int s_mailtoSchemaLength = 7; // length of "mailto:"
 
-    public AppointmentItemWrapper Map2To1 (IICalendar sourceCalendar, AppointmentItemWrapper target, IEntityMappingLogger logger)
+    public AppointmentItemWrapper Map2To1 (ICalendar sourceCalendar, AppointmentItemWrapper target, IEntityMappingLogger logger)
     {
       IEvent sourceMasterEvent = null;
       IReadOnlyCollection<IEvent> sourceExceptionEvents;
@@ -1225,7 +1233,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
         foreach (var sourceEvent in sourceEvents)
         {
-          if (sourceEvent.RecurrenceID == null)
+          if (sourceEvent.RecurrenceId == null)
             sourceMasterEvent = sourceEvent;
           else
             sourceExceptionEventsList.Add (sourceEvent);
@@ -1246,16 +1254,16 @@ namespace CalDavSynchronizer.Implementation.Events
       return Map2To1 (sourceMasterEvent, sourceExceptionEvents, target, false, logger);
     }
 
-    private void AddMasterEvent (IICalendar calendar)
+    private void AddMasterEvent (ICalendar calendar)
     {
       if (calendar.Events.Count < 2)
         throw new ArgumentException ("Calendar has to contain at least two events", nameof (calendar));
 
-      var sortedEvents = calendar.Events.OrderBy (e => e.RecurrenceID).ToArray();
+      var sortedEvents = calendar.Events.OrderBy (e => e.RecurrenceId).ToArray();
 
       var masterEvent = new Event();
       var firstException = sortedEvents[0];
-      masterEvent.Start = firstException.RecurrenceID;
+      masterEvent.Start = firstException.RecurrenceId;
       masterEvent.Summary = firstException.Summary;
       masterEvent.Location = firstException.Location;
       masterEvent.Class = firstException.Class;
@@ -1271,14 +1279,14 @@ namespace CalDavSynchronizer.Implementation.Events
                           (first, second) => new
                                              {
                                                  Event = second,
-                                                 DistanceFromMasterInDays = (int) Math.Round ((second.RecurrenceID.Value - first.RecurrenceID.Value).TotalDays, MidpointRounding.AwayFromZero)
+                                                 DistanceFromMasterInDays = (int) Math.Round ((second.RecurrenceId.Value - first.RecurrenceId.Value).TotalDays, MidpointRounding.AwayFromZero)
                                              }))
               .ToArray();
 
       var intervalInDays = GreatestCommonDivisor (sortedExceptionsWithDistance.Select (d => d.DistanceFromMasterInDays));
 
       var numberOfEceptions = sortedExceptionsWithDistance.Last().DistanceFromMasterInDays / intervalInDays +1;
-      masterEvent.RecurrenceRules.Add (new RecurrencePattern (FrequencyType.Daily, intervalInDays)
+      masterEvent.RecurrenceRules.Add (new Ical.Net.DataTypes.RecurrencePattern(FrequencyType.Daily, intervalInDays)
                                        {
                                            Count = numberOfEceptions
                                        });
@@ -1293,12 +1301,12 @@ namespace CalDavSynchronizer.Implementation.Events
         if (sortedExceptionsWithDistance[currentExceptionIndex].DistanceFromMasterInDays == currentDistanceFromMasterInDays)
         {
           // The recurrence Id has to be set, since the original value was rounded to calculate the interval
-          sortedExceptionsWithDistance[currentExceptionIndex].Event.RecurrenceID = originalDate;
+          sortedExceptionsWithDistance[currentExceptionIndex].Event.RecurrenceId = originalDate;
           currentExceptionIndex++;
         }
         else
         {
-          exDates.Add (new Period (originalDate));
+          exDates.Add (new Ical.Net.DataTypes.Period(originalDate));
         }
       }
 
@@ -1352,12 +1360,12 @@ namespace CalDavSynchronizer.Implementation.Events
       {
         targetWrapper.Inner.AllDayEvent = false;
 
-        if (!string.IsNullOrEmpty (source.Start.TZID))
+        if (!string.IsNullOrEmpty (source.Start.TzId))
         {
           try
           {
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById (source.Start.TZID);
-            targetWrapper.Inner.StartTimeZone = targetWrapper.Inner.Application.TimeZones[source.Start.TZID];
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById (source.Start.TzId);
+            targetWrapper.Inner.StartTimeZone = targetWrapper.Inner.Application.TimeZones[source.Start.TzId];
           }
           catch (COMException ex)
           {
@@ -1366,7 +1374,7 @@ namespace CalDavSynchronizer.Implementation.Events
           }
           catch (TimeZoneNotFoundException)
           {
-            targetWrapper.Inner.StartTimeZone = targetWrapper.Inner.Application.TimeZones[TimeZoneMapper.IanaToWindows (source.Start.TZID) ?? _localTimeZoneInfo.Id];
+            targetWrapper.Inner.StartTimeZone = targetWrapper.Inner.Application.TimeZones[TimeZoneMapper.IanaToWindows (source.Start.TzId) ?? _localTimeZoneInfo.Id];
           }
         }
 
@@ -1379,14 +1387,14 @@ namespace CalDavSynchronizer.Implementation.Events
           targetWrapper.Inner.StartInStartTimeZone = source.Start.Value;
         }
 
-        if (source.DTEnd != null)
+        if (source.End != null)
         {
-          if (!string.IsNullOrEmpty (source.DTEnd.TZID))
+          if (!string.IsNullOrEmpty (source.End.TzId))
           {
             try
             {
-              var tzi = TimeZoneInfo.FindSystemTimeZoneById (source.DTEnd.TZID);
-              targetWrapper.Inner.EndTimeZone = targetWrapper.Inner.Application.TimeZones[source.DTEnd.TZID];
+              var tzi = TimeZoneInfo.FindSystemTimeZoneById (source.End.TzId);
+              targetWrapper.Inner.EndTimeZone = targetWrapper.Inner.Application.TimeZones[source.End.TzId];
             }
             catch (COMException ex)
             {
@@ -1395,19 +1403,19 @@ namespace CalDavSynchronizer.Implementation.Events
             }
             catch (TimeZoneNotFoundException)
             {
-              targetWrapper.Inner.EndTimeZone = targetWrapper.Inner.Application.TimeZones[TimeZoneMapper.IanaToWindows (source.DTEnd.TZID) ?? _localTimeZoneInfo.Id];
+              targetWrapper.Inner.EndTimeZone = targetWrapper.Inner.Application.TimeZones[TimeZoneMapper.IanaToWindows (source.End.TzId) ?? _localTimeZoneInfo.Id];
             }
           }
 
           try
           {
-            if (source.DTEnd.IsUniversalTime)
+            if (source.End.IsUniversalTime)
             {
-              targetWrapper.Inner.EndUTC = source.DTEnd.Value;
+              targetWrapper.Inner.EndUTC = source.End.Value;
             }
             else
             {
-              targetWrapper.Inner.EndInEndTimeZone = source.DTEnd.Value;
+              targetWrapper.Inner.EndInEndTimeZone = source.End.Value;
             }
           }
           catch (COMException ex)
@@ -1421,7 +1429,7 @@ namespace CalDavSynchronizer.Implementation.Events
             }
             else
             {
-              targetWrapper.Inner.EndUTC = source.Start.AddDays (1).UTC;
+              targetWrapper.Inner.EndUTC = source.Start.AddDays (1).AsUtc;
             }
           }
         }
@@ -1432,7 +1440,7 @@ namespace CalDavSynchronizer.Implementation.Events
         }
         else
         {
-          targetWrapper.Inner.EndUTC = source.Start.AddDays (1).UTC;
+          targetWrapper.Inner.EndUTC = source.Start.AddDays (1).AsUtc;
         }
       }
 

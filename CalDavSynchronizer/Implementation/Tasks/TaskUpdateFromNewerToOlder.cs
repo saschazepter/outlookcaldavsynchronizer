@@ -17,17 +17,17 @@
 using System;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
-using DDay.iCal;
 using GenSync.EntityRelationManagement;
 using GenSync.Synchronization;
 using GenSync.Synchronization.States;
+using Ical.Net.Interfaces;
 
 namespace CalDavSynchronizer.Implementation.Tasks
 {
   internal class TaskUpdateFromNewerToOlder
-      : UpdateFromNewerToOlder<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar>
+      : UpdateFromNewerToOlder<string, DateTime, TaskItemWrapper, WebResourceName, string, ICalendar>
   {
-    public TaskUpdateFromNewerToOlder (EntitySyncStateEnvironment<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar> environment, IEntityRelationData<string, DateTime, WebResourceName, string> knownData, DateTime newA, string newB)
+    public TaskUpdateFromNewerToOlder (EntitySyncStateEnvironment<string, DateTime, TaskItemWrapper, WebResourceName, string, ICalendar> environment, IEntityRelationData<string, DateTime, WebResourceName, string> knownData, DateTime newA, string newB)
         : base (environment, knownData, newA, newB)
     {
     }
@@ -41,7 +41,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
         if (todo.LastModified == null)
           return false;
 
-        return _aEntity.Inner.LastModificationTime.ToUniversalTime() >= todo.LastModified.UTC;
+        return _aEntity.Inner.LastModificationTime.ToUniversalTime() >= todo.LastModified.AsUtc;
       }
     }
   }

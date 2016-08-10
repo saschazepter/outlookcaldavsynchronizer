@@ -21,10 +21,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
-using DDay.iCal;
 using GenSync.EntityRelationManagement;
 using GenSync.EntityRepositories;
 using GenSync.Logging;
+using Ical.Net.Interfaces;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
 
@@ -36,12 +36,12 @@ namespace CalDavSynchronizer.Implementation.Events
 
     private readonly Dictionary<string, int> _hashesById = new Dictionary<string, int> ();
     private readonly OutlookEventRepository _outlookRepository;
-    private readonly IEntityRepository<IICalendar, WebResourceName, string, IEventSynchronizationContext> _btypeRepository;
+    private readonly IEntityRepository<ICalendar, WebResourceName, string, IEventSynchronizationContext> _btypeRepository;
     private readonly IEntityRelationDataAccess<string, DateTime, WebResourceName, string> _entityRelationDataAccess;
 
     public DuplicateEventCleaner (
       OutlookEventRepository outlookRepository, 
-      IEntityRepository<IICalendar, WebResourceName, string, IEventSynchronizationContext> btypeRepository, 
+      IEntityRepository<ICalendar, WebResourceName, string, IEventSynchronizationContext> btypeRepository, 
       IEntityRelationDataAccess<string, DateTime, WebResourceName, string> entityRelationDataAccess)
     {
       if (outlookRepository == null)

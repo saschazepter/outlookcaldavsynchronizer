@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Configuration;
 using System.Net;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DataAccess;

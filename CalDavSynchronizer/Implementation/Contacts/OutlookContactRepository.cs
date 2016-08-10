@@ -20,7 +20,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Implementation.ComWrappers;
-using CalDavSynchronizer.Implementation.TimeRangeFiltering;
 using GenSync;
 using GenSync.EntityRepositories;
 using GenSync.Logging;

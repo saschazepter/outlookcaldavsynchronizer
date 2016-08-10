@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -23,17 +22,21 @@ using System.Runtime.InteropServices;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using CalDavSynchronizer.Implementation.Common;
-using DDay.iCal;
 using GenSync.EntityMapping;
 using GenSync.Logging;
+using Ical.Net;
+using Ical.Net.DataTypes;
+using Ical.Net.General;
+using Ical.Net.Interfaces;
+using Ical.Net.Interfaces.Components;
+using Ical.Net.Interfaces.DataTypes;
 using log4net;
 using Microsoft.Office.Interop.Outlook;
-using Exception = Microsoft.Office.Interop.Outlook.Exception;
-using RecurrencePattern = DDay.iCal.RecurrencePattern;
+using RecurrencePattern = Ical.Net.DataTypes.RecurrencePattern;
 
 namespace CalDavSynchronizer.Implementation.Tasks
 {
-  internal class TaskMapper : IEntityMapper<TaskItemWrapper, IICalendar>
+  internal class TaskMapper : IEntityMapper<TaskItemWrapper, ICalendar>
   {
     private static readonly ILog s_logger = LogManager.GetLogger (MethodInfo.GetCurrentMethod().DeclaringType);
     private readonly DateTime _dateNull;
@@ -47,20 +50,20 @@ namespace CalDavSynchronizer.Implementation.Tasks
       _configuration = configuration;
     }
 
-    public IICalendar Map1To2 (TaskItemWrapper source, IICalendar existingTargetCalender, IEntityMappingLogger logger)
+    public ICalendar Map1To2 (TaskItemWrapper source, ICalendar existingTargetCalender, IEntityMappingLogger logger)
     {
-      var newTargetCalender = new iCalendar();
-      var localIcalTimeZone = iCalTimeZone.FromSystemTimeZone (_localTimeZoneInfo, new DateTime (1970, 1, 1), true);
+      var newTargetCalender = new Ical.Net.Calendar();
+      var localIcalTimeZone = VTimeZone.FromSystemTimeZone (_localTimeZoneInfo, new DateTime (1970, 1, 1), true);
      
       DDayICalWorkaround.CalendarDataPreprocessor.FixTimeZoneDSTRRules (_localTimeZoneInfo, localIcalTimeZone);
       newTargetCalender.TimeZones.Add (localIcalTimeZone);
 
-      var existingTargetTodo = existingTargetCalender.Todos.FirstOrDefault (e => e.RecurrenceID == null);
+      var existingTargetTodo = existingTargetCalender.Todos.FirstOrDefault (e => e.RecurrenceId == null);
 
       var newTargetTodo = new Todo();
 
       if (existingTargetTodo != null)
-        newTargetTodo.UID = existingTargetTodo.UID;
+        newTargetTodo.Uid = existingTargetTodo.Uid;
 
       newTargetCalender.Todos.Add (newTargetTodo);
 
@@ -76,7 +79,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       return newTargetCalender;
     }
 
-    public void Map1To2 (TaskItemWrapper source, ITodo target, iCalTimeZone localIcalTimeZone)
+    public void Map1To2 (TaskItemWrapper source, ITodo target, VTimeZone localIcalTimeZone)
     {
       target.Summary = source.Inner.Subject;
 
@@ -85,21 +88,21 @@ namespace CalDavSynchronizer.Implementation.Tasks
 
       if (source.Inner.StartDate != _dateNull)
       {
-        target.Start = new iCalDateTime (source.Inner.StartDate.Year, source.Inner.StartDate.Month, source.Inner.StartDate.Day, true);
-        target.Start.SetTimeZone (localIcalTimeZone);
+        target.Start = new CalDateTime (source.Inner.StartDate.Year, source.Inner.StartDate.Month, source.Inner.StartDate.Day);
+        target.Start.TzId = localIcalTimeZone.TzId;
       }
 
       if (source.Inner.DueDate != _dateNull)
       {
-        target.Due = new iCalDateTime (source.Inner.DueDate.Year, source.Inner.DueDate.Month, source.Inner.DueDate.Day, 23, 59, 59);
-        target.Due.SetTimeZone (localIcalTimeZone);
+        target.Due = new CalDateTime (source.Inner.DueDate.Year, source.Inner.DueDate.Month, source.Inner.DueDate.Day, 23, 59, 59);
+        target.Due.TzId = localIcalTimeZone.TzId;
         // Workaround for a bug in DDay.iCal, according to RFC5545 DUE must not occur together with DURATION
         target.Properties.Remove (new CalendarProperty ("DURATION"));
       }
 
       if (source.Inner.Complete && source.Inner.DateCompleted != _dateNull)
       {
-        target.Completed = new iCalDateTime (source.Inner.DateCompleted.ToUniversalTime()) { IsUniversalTime = true, HasTime = true};
+        target.Completed = new CalDateTime (source.Inner.DateCompleted.ToUniversalTime()) { IsUniversalTime = true, HasTime = true};
       }
 
       target.PercentComplete = source.Inner.PercentComplete;
@@ -217,7 +220,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       }
     }
 
-    private void MapRecurrance1To2 (TaskItem source, ITodo target, iCalTimeZone localIcalTimeZone)
+    private void MapRecurrance1To2 (TaskItem source, ITodo target, VTimeZone localIcalTimeZone)
     {
       if (source.IsRecurring)
       {
@@ -296,7 +299,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       }
     }
 
-    public TaskItemWrapper Map2To1 (IICalendar sourceCalendar, TaskItemWrapper target, IEntityMappingLogger logger)
+    public TaskItemWrapper Map2To1 (ICalendar sourceCalendar, TaskItemWrapper target, IEntityMappingLogger logger)
     {
       var source = sourceCalendar.Todos[0];
       return Map2To1 (source, target, logger);
@@ -415,14 +418,14 @@ namespace CalDavSynchronizer.Implementation.Tasks
 
       if (source.Alarms.Count > 1)
       {
-        s_logger.WarnFormat ("Task '{0}' contains multiple alarms. Ignoring all except first.", source.UID);
+        s_logger.WarnFormat ("Task '{0}' contains multiple alarms. Ignoring all except first.", source.Uid);
         logger.LogMappingWarning ("Task contains multiple alarms. Ignoring all except first.");
       }
       var alarm = source.Alarms[0];
 
       if (alarm.Trigger.IsRelative && alarm.Trigger.Related == TriggerRelation.Start && alarm.Trigger.Duration.HasValue && source.Start != null)
       {
-        var reminderTime = TimeZoneInfo.ConvertTimeFromUtc (source.Start.UTC, _localTimeZoneInfo).Add (alarm.Trigger.Duration.Value);
+        var reminderTime = TimeZoneInfo.ConvertTimeFromUtc (source.Start.AsUtc, _localTimeZoneInfo).Add (alarm.Trigger.Duration.Value);
 
         if (_configuration.MapReminder == ReminderMapping.JustUpcoming && reminderTime < DateTime.Now) return;
         target.Inner.ReminderSet = true;
@@ -430,7 +433,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       }
       else if (alarm.Trigger.IsRelative && alarm.Trigger.Related == TriggerRelation.End && alarm.Trigger.Duration.HasValue && source.Due != null)
       {
-        var reminderTime = TimeZoneInfo.ConvertTimeFromUtc (source.Due.UTC, _localTimeZoneInfo).Add (alarm.Trigger.Duration.Value);
+        var reminderTime = TimeZoneInfo.ConvertTimeFromUtc (source.Due.AsUtc, _localTimeZoneInfo).Add (alarm.Trigger.Duration.Value);
 
         if (_configuration.MapReminder == ReminderMapping.JustUpcoming && reminderTime < DateTime.Now) return;
         target.Inner.ReminderSet = true;
@@ -446,7 +449,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       }
       else
       {
-        s_logger.WarnFormat ("Task '{0}' alarm is not supported. Ignoring.", source.UID);
+        s_logger.WarnFormat ("Task '{0}' alarm is not supported. Ignoring.", source.Uid);
         logger.LogMappingWarning ("Task alarm is not supported. Ignoring.");
       }
     }
@@ -460,7 +463,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
           var targetRecurrencePattern = targetRecurrencePatternWrapper.Inner;
           if (source.RecurrenceRules.Count > 1)
           {
-            s_logger.WarnFormat ("Task '{0}' contains more than one recurrence rule. Since outlook supports only one rule, all except the first one will be ignored.", source.UID);
+            s_logger.WarnFormat ("Task '{0}' contains more than one recurrence rule. Since outlook supports only one rule, all except the first one will be ignored.", source.Uid);
             logger.LogMappingWarning ("Task contains more than one recurrence rule. Since outlook supports only one rule, all except the first one will be ignored.");
           }
           var sourceRecurrencePattern = source.RecurrenceRules[0];
@@ -487,7 +490,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursMonthNth;
                 if (sourceRecurrencePattern.ByWeekNo.Count > 1)
                 {
-                  s_logger.WarnFormat ("Task '{0}' contains more than one week in a monthly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Task '{0}' contains more than one week in a monthly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Task contains more than one week in a monthly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.");
                 }
                 else if (sourceRecurrencePattern.ByWeekNo.Count > 0)
@@ -509,7 +512,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursMonthly;
                 if (sourceRecurrencePattern.ByMonthDay.Count > 1)
                 {
-                  s_logger.WarnFormat ("Task '{0}' contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Task '{0}' contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Task contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.");
                 }
                 try
@@ -518,8 +521,8 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 }
                 catch (COMException ex)
                 {
-                  s_logger.Warn ($"Recurring task '{source.UID}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
-                  logger.LogMappingWarning ($"Recurring task '{source.UID}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
+                  s_logger.Warn ($"Recurring task '{source.Uid}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
+                  logger.LogMappingWarning ($"Recurring task '{source.Uid}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
                 }
               }
               else
@@ -533,7 +536,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursYearNth;
                 if (sourceRecurrencePattern.ByMonth.Count > 1)
                 {
-                  s_logger.WarnFormat ("Task '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Task '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Task contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.");
                 }
                 if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
@@ -546,7 +549,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
 
                 if (sourceRecurrencePattern.ByWeekNo.Count > 1)
                 {
-                  s_logger.WarnFormat ("Task '{0}' contains more than one week in a yearly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Task '{0}' contains more than one week in a yearly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Task contains more than one week in a yearly recurrence rule. Since outlook supports only one week, all except the first one will be ignored.");
                 }
                 targetRecurrencePattern.Instance = sourceRecurrencePattern.ByWeekNo[0];
@@ -558,7 +561,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursYearly;
                 if (sourceRecurrencePattern.ByMonth.Count > 1)
                 {
-                  s_logger.WarnFormat ("Task '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Task '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Task contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.");
                 }
                 if (sourceRecurrencePattern.ByMonth[0] != targetRecurrencePattern.MonthOfYear)
@@ -574,7 +577,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
 
                 if (sourceRecurrencePattern.ByMonthDay.Count > 1)
                 {
-                  s_logger.WarnFormat ("Task '{0}' contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Task '{0}' contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Task contains more than one days in a monthly recurrence rule. Since outlook supports only one day, all except the first one will be ignored.");
                 }
                 if (sourceRecurrencePattern.ByMonthDay[0] != targetRecurrencePattern.DayOfMonth)
@@ -585,8 +588,8 @@ namespace CalDavSynchronizer.Implementation.Tasks
                   }
                   catch (COMException ex)
                   {
-                    s_logger.Warn ($"Recurring task '{source.UID}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
-                    logger.LogMappingWarning ($"Recurring task '{source.UID}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
+                    s_logger.Warn ($"Recurring task '{source.Uid}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
+                    logger.LogMappingWarning ($"Recurring task '{source.Uid}' contains invalid BYMONTHDAY '{sourceRecurrencePattern.ByMonthDay[0]}', which will be ignored.", ex);
                   }
                 }
               }
@@ -595,7 +598,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 targetRecurrencePattern.RecurrenceType = OlRecurrenceType.olRecursYearNth;
                 if (sourceRecurrencePattern.ByMonth.Count > 1)
                 {
-                  s_logger.WarnFormat ("Task '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.UID);
+                  s_logger.WarnFormat ("Task '{0}' contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.", source.Uid);
                   logger.LogMappingWarning ("Task contains more than one months in a yearly recurrence rule. Since outlook supports only one month, all except the first one will be ignored.");
                 }
                 if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
@@ -619,7 +622,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
               }
               break;
             default:
-              s_logger.WarnFormat ("Recurring task '{0}' contains the Frequency '{1}', which is not supported by outlook. Ignoring recurrence rule.", source.UID, sourceRecurrencePattern.Frequency);
+              s_logger.WarnFormat ("Recurring task '{0}' contains the Frequency '{1}', which is not supported by outlook. Ignoring recurrence rule.", source.Uid, sourceRecurrencePattern.Frequency);
               logger.LogMappingWarning ($"Recurring task contains the Frequency '{sourceRecurrencePattern.Frequency}', which is not supported by outlook. Ignoring recurrence rule.");
               targetWrapper.Inner.ClearRecurrencePattern();
               break;
@@ -632,7 +635,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
           }
           catch (COMException ex)
           {
-            s_logger.Warn (string.Format ("Recurring task '{0}' contains the Interval '{1}', which is not supported by outlook. Ignoring interval.", source.UID, sourceRecurrencePattern.Interval), ex);
+            s_logger.Warn (string.Format ("Recurring task '{0}' contains the Interval '{1}', which is not supported by outlook. Ignoring interval.", source.Uid, sourceRecurrencePattern.Interval), ex);
             logger.LogMappingWarning ($"Recurring task contains the Interval '{sourceRecurrencePattern.Interval}', which is not supported by outlook. Ignoring interval.", ex);
           }
 

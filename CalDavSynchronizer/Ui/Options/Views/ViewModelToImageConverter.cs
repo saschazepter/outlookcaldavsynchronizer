@@ -17,11 +17,8 @@
 using System;
 using System.Globalization;
 using System.Windows.Data;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using CalDavSynchronizer.Utilities;
 using Microsoft.Office.Interop.Outlook;
-using System.Linq;
 using CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels;
 using CalDavSynchronizer.Ui.Options.ViewModels;
 

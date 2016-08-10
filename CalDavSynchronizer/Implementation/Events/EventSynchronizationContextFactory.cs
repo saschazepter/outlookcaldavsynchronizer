@@ -16,28 +16,25 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.using System;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
-using DDay.iCal;
 using GenSync.EntityRelationManagement;
 using GenSync.EntityRepositories;
 using GenSync.Synchronization;
+using Ical.Net.Interfaces;
 
 namespace CalDavSynchronizer.Implementation.Events
 {
   public class EventSynchronizationContextFactory : ISynchronizationContextFactory<IEventSynchronizationContext>
   {
     private readonly OutlookEventRepository _outlookRepository;
-    private readonly IEntityRepository<IICalendar, WebResourceName, string, IEventSynchronizationContext> _btypeRepository;
+    private readonly IEntityRepository<ICalendar, WebResourceName, string, IEventSynchronizationContext> _btypeRepository;
     private readonly IEntityRelationDataAccess<string, DateTime, WebResourceName, string> _entityRelationDataAccess;
     private readonly bool _cleanupDuplicateEvents;
 
     public EventSynchronizationContextFactory(
       OutlookEventRepository outlookRepository,
-      IEntityRepository<IICalendar, WebResourceName, string, IEventSynchronizationContext> btypeRepository,
+      IEntityRepository<ICalendar, WebResourceName, string, IEventSynchronizationContext> btypeRepository,
       IEntityRelationDataAccess<string, DateTime, WebResourceName, string> entityRelationDataAccess,
       bool cleanupDuplicateEvents)
     {

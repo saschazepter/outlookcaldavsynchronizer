@@ -18,19 +18,19 @@ using System;
 using System.Collections.Generic;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
-using DDay.iCal;
 using GenSync.InitialEntityMatching;
+using Ical.Net.Interfaces;
 
 namespace CalDavSynchronizer.Implementation.Events
 {
-  internal class InitialEventEntityMatcher : InitialEntityMatcherByPropertyGrouping<AppointmentItemWrapper, string, DateTime, string, IICalendar, WebResourceName, string, string>
+  internal class InitialEventEntityMatcher : InitialEntityMatcherByPropertyGrouping<AppointmentItemWrapper, string, DateTime, string, ICalendar, WebResourceName, string, string>
   {
     public InitialEventEntityMatcher (IEqualityComparer<WebResourceName> btypeIdEqualityComparer)
         : base (btypeIdEqualityComparer)
     {
     }
 
-    protected override bool AreEqual (AppointmentItemWrapper atypeEntity, IICalendar btypeEntity)
+    protected override bool AreEqual (AppointmentItemWrapper atypeEntity, ICalendar btypeEntity)
     {
       var evt = btypeEntity.Events[0];
 
@@ -53,28 +53,28 @@ namespace CalDavSynchronizer.Implementation.Events
           {
             if (evt.Start.Value == atypeEntity.Inner.StartUTC)
             {
-              if (evt.DTEnd == null)
+              if (evt.End == null)
                 return evt.Start.Value == atypeEntity.Inner.EndUTC;
               else
               {
-                if (evt.DTEnd.IsUniversalTime)
-                  return evt.DTEnd.Value == atypeEntity.Inner.EndUTC;
+                if (evt.End.IsUniversalTime)
+                  return evt.End.Value == atypeEntity.Inner.EndUTC;
                 else
-                  return evt.DTEnd.Value == atypeEntity.Inner.EndInEndTimeZone;
+                  return evt.End.Value == atypeEntity.Inner.EndInEndTimeZone;
               }
             }
             else return false;
           }
           else if (evt.Start.Value == atypeEntity.Inner.StartInStartTimeZone)
           {
-            if (evt.DTEnd == null)
+            if (evt.End == null)
               return evt.Start.Value == atypeEntity.Inner.EndInEndTimeZone;
             else
             {
-              if (evt.DTEnd.IsUniversalTime)
-                return evt.DTEnd.Value == atypeEntity.Inner.EndUTC;
+              if (evt.End.IsUniversalTime)
+                return evt.End.Value == atypeEntity.Inner.EndUTC;
               else
-                return evt.DTEnd.Value == atypeEntity.Inner.EndInEndTimeZone;
+                return evt.End.Value == atypeEntity.Inner.EndInEndTimeZone;
             }
           }
           else
@@ -89,7 +89,7 @@ namespace CalDavSynchronizer.Implementation.Events
       return (atypeEntity.Inner.Subject != null ? atypeEntity.Inner.Subject.ToLower() : string.Empty);
     }
 
-    protected override string GetBtypePropertyValue (IICalendar btypeEntity)
+    protected override string GetBtypePropertyValue (ICalendar btypeEntity)
     {
       return (btypeEntity.Events[0].Summary != null ? btypeEntity.Events[0].Summary.ToLower() : string.Empty);
     }

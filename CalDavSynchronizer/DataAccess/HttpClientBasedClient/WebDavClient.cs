@@ -22,7 +22,6 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 using log4net;
 
 namespace CalDavSynchronizer.DataAccess.HttpClientBasedClient

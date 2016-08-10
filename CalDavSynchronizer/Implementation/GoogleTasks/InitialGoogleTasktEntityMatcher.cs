@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using CalDavSynchronizer.Implementation.ComWrappers;
-using DDay.iCal;
 using GenSync.InitialEntityMatching;
 using Google.Apis.Tasks.v1.Data;
 

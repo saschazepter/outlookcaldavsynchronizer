@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GenSync;
 using Google.Contacts;
-using Google.GData.Client;
 using Google.GData.Contacts;
 
 namespace CalDavSynchronizer.Implementation.GoogleContacts

@@ -14,14 +14,9 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using CalDavSynchronizer.Ui.Options.ViewModels;
-using CalDavSynchronizer.Ui.Reports;
 using CalDavSynchronizer.Ui.Reports.ViewModels;
-using CalDavSynchronizer.Ui.SystrayNotification.ViewModels;
 
 namespace CalDavSynchronizer.Ui
 {
