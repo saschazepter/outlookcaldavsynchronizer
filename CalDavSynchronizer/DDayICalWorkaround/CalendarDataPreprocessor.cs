@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Ical.Net;
 using Ical.Net.DataTypes;
+using Ical.Net.ExtensionMethods;
 using Ical.Net.Interfaces.Components;
 using log4net;
 using Calendar = System.Globalization.Calendar;
@@ -32,8 +33,83 @@ namespace CalDavSynchronizer.DDayICalWorkaround
   {
     private static readonly ILog s_logger = LogManager.GetLogger (MethodInfo.GetCurrentMethod().DeclaringType);
 
+    private static void AddTimeZone(TimeZoneInfo tzi, DateTime earliest, ref VTimeZone vTimeZone)
+    {
+      foreach (var adjustmentRule in tzi.GetAdjustmentRules().Where(r => r.DateEnd > earliest))
+      {
+        var delta = adjustmentRule.DaylightDelta;
+        var stdOffset = new UtcOffset(tzi.BaseUtcOffset);
+        var daylightOffset = new UtcOffset(tzi.BaseUtcOffset + delta);
+        var recurence = GetRecurrencePattern(adjustmentRule.DaylightTransitionEnd, adjustmentRule.DateStart.Year);
+        var vTzinfoStandard = new CalendarComponent
+        {
+          Name = "STANDARD"
+        };
+        //magic strings
+        vTzinfoStandard.Properties.Set("TZNAME", tzi.StandardName);
+        vTzinfoStandard.Properties.Set("TZOFFSETFROM", daylightOffset);
+        vTzinfoStandard.Properties.Set("TZOFFSETTO", stdOffset);
+        vTzinfoStandard.Properties.Set("RRULE", recurence);
+        vTzinfoStandard.Properties.Set("DTSTART", new CalDateTime(
+                    new DateTime(adjustmentRule.DateStart.Year, adjustmentRule.DaylightTransitionEnd.Month, adjustmentRule.DaylightTransitionEnd.Day,
+                        adjustmentRule.DaylightTransitionEnd.TimeOfDay.Hour, adjustmentRule.DaylightTransitionEnd.TimeOfDay.Minute,
+                        adjustmentRule.DaylightTransitionEnd.TimeOfDay.Second).AddDays(1)));
+
+        // Add the "standard" time rule to the time zone
+        vTimeZone.AddChild(vTzinfoStandard);
+
+        if (tzi.SupportsDaylightSavingTime)
+        {
+          recurence = GetRecurrencePattern(adjustmentRule.DaylightTransitionStart, adjustmentRule.DateStart.Year);
+          var vTzinfoDaylight = new CalendarComponent
+          {
+            Name = "DAYLIGHT",
+          };
+          vTzinfoStandard.Properties.Set("TZNAME", tzi.DaylightName);
+          vTzinfoDaylight.Properties.Set("TZOFFSETFROM", new UtcOffset(tzi.BaseUtcOffset));
+          vTzinfoDaylight.Properties.Set("TZOFFSETTO", new UtcOffset(tzi.BaseUtcOffset + delta));
+          vTzinfoDaylight.Properties.Set("RRULE", recurence);
+          vTzinfoDaylight.Properties.Set("DTSTART", new CalDateTime(new DateTime(adjustmentRule.DateStart.Year, adjustmentRule.DaylightTransitionStart.Month,
+                  adjustmentRule.DaylightTransitionStart.Day, adjustmentRule.DaylightTransitionStart.TimeOfDay.Hour,
+                  adjustmentRule.DaylightTransitionStart.TimeOfDay.Minute, adjustmentRule.DaylightTransitionStart.TimeOfDay.Second))
+          );
+
+          vTimeZone.AddChild(vTzinfoDaylight);
+        }
+      }
+
+    }
+    private static RecurrencePattern GetRecurrencePattern(TimeZoneInfo.TransitionTime transition, int year)
+    {
+
+      var recurrence = new RecurrencePattern();
+      recurrence.Frequency = FrequencyType.Yearly;
+      recurrence.ByMonth.Add(transition.Month);
+      recurrence.ByHour.Add(transition.TimeOfDay.Hour);
+      recurrence.ByMinute.Add(transition.TimeOfDay.Minute);
+
+      if (transition.IsFixedDateRule)
+      {
+        recurrence.ByMonthDay.Add(transition.Day);
+      }
+      else
+      {
+        if (transition.Week != 5)
+        {
+          recurrence.ByDay.Add(new WeekDay(transition.DayOfWeek, transition.Week));
+        }
+        else
+        {
+          recurrence.ByDay.Add(new WeekDay(transition.DayOfWeek, -1));
+        }
+      }
+
+      return recurrence;
+    }
+  
     public static void FixTimeZoneDSTRRules(TimeZoneInfo tz, VTimeZone iCalTz)
     {
+      AddTimeZone(tz, new DateTime(1970,1,1),ref iCalTz);
       /*
       var adjustments = tz.GetAdjustmentRules();
       foreach (var tziItems in iCalTz.TimeZoneInfos)
