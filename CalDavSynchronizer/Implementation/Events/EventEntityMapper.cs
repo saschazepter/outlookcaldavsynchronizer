@@ -810,8 +810,8 @@ namespace CalDavSynchronizer.Implementation.Events
                 }
                 if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
                 {
-                  s_logger.Warn ($"Recurring event '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
-                  logger.LogMappingWarning ($"Recurring event '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                  s_logger.Warn ($"Recurring event '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                  logger.LogMappingWarning ($"Recurring event '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
                 }
                 else
                   targetRecurrencePattern.MonthOfYear = sourceRecurrencePattern.ByMonth[0];
@@ -837,8 +837,8 @@ namespace CalDavSynchronizer.Implementation.Events
                 {
                   if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
                   {
-                    s_logger.Warn ($"Recurring event '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
-                    logger.LogMappingWarning ($"Recurring event '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                    s_logger.Warn ($"Recurring event '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                    logger.LogMappingWarning ($"Recurring event '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
                   }
                   else
                     targetRecurrencePattern.MonthOfYear = sourceRecurrencePattern.ByMonth[0];
@@ -872,8 +872,8 @@ namespace CalDavSynchronizer.Implementation.Events
                 }
                 if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
                 {
-                  s_logger.Warn ($"Recurring event '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
-                  logger.LogMappingWarning ($"Recurring event '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                  s_logger.Warn ($"Recurring event '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                  logger.LogMappingWarning ($"Recurring event '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
                 }
                 else
                   targetRecurrencePattern.MonthOfYear = sourceRecurrencePattern.ByMonth[0];
@@ -1088,13 +1088,9 @@ namespace CalDavSynchronizer.Implementation.Events
           attendee.Role = MapAttendeeType1To2 ((OlMeetingRecipientType) recipient.Type);
           if ((OlMeetingRecipientType) recipient.Type == OlMeetingRecipientType.olResource)
             attendee.Type = "RESOURCE";
-<<<<<<< HEAD
-          attendee.RSVP = true;
           if (_configuration.ScheduleAgentClient)
             attendee.Parameters.Add ("SCHEDULE-AGENT", "CLIENT");
-=======
           attendee.Rsvp = true;
->>>>>>> Merge master into temp/upgrade-ical.NET
           target.Attendees.Add (attendee);
         }
         else

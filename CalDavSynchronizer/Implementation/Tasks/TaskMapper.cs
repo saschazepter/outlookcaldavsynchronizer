@@ -541,8 +541,8 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 }
                 if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
                 {
-                  s_logger.Warn ($"Recurring task '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
-                  logger.LogMappingWarning ($"Recurring task '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                  s_logger.Warn ($"Recurring task '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                  logger.LogMappingWarning ($"Recurring task '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
                 }
                 else
                   targetRecurrencePattern.MonthOfYear = sourceRecurrencePattern.ByMonth[0];
@@ -568,8 +568,8 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 {
                   if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
                   {
-                    s_logger.Warn ($"Recurring task '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
-                    logger.LogMappingWarning ($"Recurring task '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                    s_logger.Warn ($"Recurring task '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                    logger.LogMappingWarning ($"Recurring task '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
                   }
                   else
                     targetRecurrencePattern.MonthOfYear = sourceRecurrencePattern.ByMonth[0];
@@ -603,8 +603,8 @@ namespace CalDavSynchronizer.Implementation.Tasks
                 }
                 if (sourceRecurrencePattern.ByMonth[0] < 1 || sourceRecurrencePattern.ByMonth[0] > 12)
                 {
-                  s_logger.Warn ($"Recurring task '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
-                  logger.LogMappingWarning ($"Recurring task '{source.UID}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                  s_logger.Warn ($"Recurring task '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
+                  logger.LogMappingWarning ($"Recurring task '{source.Uid}' contains invalid BYMONTH '{sourceRecurrencePattern.ByMonth[0]}', which will be ignored.");
                 }
                 else
                   targetRecurrencePattern.MonthOfYear = sourceRecurrencePattern.ByMonth[0];
