@@ -37,6 +37,9 @@ namespace CalDavSynchronizer.Implementation
     private const string c_contactFilterLike = "@SQL=\"http://schemas.microsoft.com/mapi/proptag/0x001A001E\" like 'IPM.Contact%'";
     private const string c_contactFilterExact = "@SQL=\"http://schemas.microsoft.com/mapi/proptag/0x001A001E\" = 'IPM.Contact'";
 
+    private const string c_meetingItemFilterCistartswith = "@SQL=\"http://schemas.microsoft.com/mapi/proptag/0x001A001E\" ci_startswith 'IPM.Schedule.Meeting'";
+    private const string c_meetingItemFilterLike = "@SQL=\"http://schemas.microsoft.com/mapi/proptag/0x001A001E\" like 'IPM.Schedule.Meeting%'";
+
     private string _appointmentFilter;
     private string _taskFilter;
     private string _contactFilter;
@@ -69,5 +72,8 @@ namespace CalDavSynchronizer.Implementation
       isInstantSearchEnabled ? _taskFilter : _doIncludeCustomMessageClasses ? c_taskFilterLike : c_taskFilterExact;
     public string GetContactFilter (bool isInstantSearchEnabled) => 
       isInstantSearchEnabled ? _contactFilter : _doIncludeCustomMessageClasses ? c_contactFilterLike : c_contactFilterExact;
+
+    public string GetMeetingItemFilter (bool isInstantSearchEnabled) =>
+      isInstantSearchEnabled ? c_meetingItemFilterCistartswith : c_meetingItemFilterLike;
   }
 }

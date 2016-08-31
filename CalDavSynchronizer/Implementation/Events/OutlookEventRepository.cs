@@ -83,6 +83,58 @@ namespace CalDavSynchronizer.Implementation.Events
       return GenericComObjectWrapper.Create ((Folder) _mapiNameSpace.GetFolderFromID (_folderId, _folderStoreId));
     }
 
+    private GenericComObjectWrapper<Folder> CreateInboxWrapper()
+    {
+      return GenericComObjectWrapper.Create((Folder) _mapiNameSpace.GetDefaultFolder (OlDefaultFolders.olFolderInbox));
+    }
+
+    private void DeleteAssociatedMeetingItem (AppointmentItem appointment)
+    {
+      using (var folderWrapper = CreateInboxWrapper())
+      {
+        bool isInstantSearchEnabled = false;
+
+        try
+        {
+          using (var store = GenericComObjectWrapper.Create (folderWrapper.Inner.Store))
+          {
+            if (store.Inner != null)
+              isInstantSearchEnabled = store.Inner.IsInstantSearchEnabled;
+          }
+        }
+        catch (COMException)
+        {
+          s_logger.Info ("Can't access IsInstantSearchEnabled property of store, defaulting to false.");
+        }
+
+        var filterBuilder = new StringBuilder (_daslFilterProvider.GetMeetingItemFilter(isInstantSearchEnabled));
+        filterBuilder.AppendFormat (" And \"urn:schemas:httpmail:subject\" = '{0}'",appointment.Subject);
+        filterBuilder.AppendFormat (" And \"urn:schemas:calendar:dtstart\" = '{0}' And \"urn:schemas:calendar:dtend\" = '{1}'", 
+                                    ToOutlookDateString (appointment.StartUTC), ToOutlookDateString (appointment.EndUTC));
+
+        using (var itemsWrapper = GenericComObjectWrapper.Create (folderWrapper.Inner.Items))
+        {
+          using (var itemsFilterWrapper = GenericComObjectWrapper.Create (itemsWrapper.Inner.Restrict (filterBuilder.ToString())))
+          {
+            foreach (var item in itemsFilterWrapper.Inner)
+            {
+              if (item is MeetingItem)
+              {
+                using (var meetingItemWrapper = GenericComObjectWrapper.Create (item as MeetingItem))
+                {
+                  if (meetingItemWrapper.Inner.SenderName == appointment.Organizer)
+                  {
+                    meetingItemWrapper.Inner.Delete();
+                    s_logger.InfoFormat ("Deleting matching MeetingItem for Appointment '{0}' with EntryID '{1}'", appointment.Subject, appointment.EntryID);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetVersions (IEnumerable<IdWithAwarenessLevel<string>> idsOfEntitiesToQuery, IEventSynchronizationContext context)
     {
       var result = new List<EntityVersion<string, DateTime>>();
@@ -309,6 +361,10 @@ namespace CalDavSynchronizer.Implementation.Events
     {
       entityToUpdate = await entityModifier (entityToUpdate);
       entityToUpdate.Inner.Save();
+
+      if (entityToUpdate.Inner.MeetingStatus == OlMeetingStatus.olMeetingReceived)
+        DeleteAssociatedMeetingItem (entityToUpdate.Inner);
+
       context.AnnounceAppointment (entityToUpdate.Inner);
       return new EntityVersion<string, DateTime> (entityToUpdate.Inner.EntryID, entityToUpdate.Inner.LastModificationTime);
     }
@@ -343,6 +399,10 @@ namespace CalDavSynchronizer.Implementation.Events
         using (var initializedWrapper = await entityInitializer (newAppointmentItemWrapper))
         {
           initializedWrapper.SaveAndReload();
+
+          if (initializedWrapper.Inner.MeetingStatus == OlMeetingStatus.olMeetingReceived)
+            DeleteAssociatedMeetingItem(initializedWrapper.Inner);
+
           context.AnnounceAppointment (initializedWrapper.Inner);
           var result = new EntityVersion<string, DateTime> (initializedWrapper.Inner.EntryID, initializedWrapper.Inner.LastModificationTime);
           return result;
