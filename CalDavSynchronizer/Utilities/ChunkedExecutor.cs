@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalDavSynchronizer.Utilities
@@ -34,7 +35,8 @@ namespace CalDavSynchronizer.Utilities
     public async Task<TExecutionContext> ExecuteAsync<TItem, TExecutionContext>(
       TExecutionContext executionContext,
       IEnumerable<TItem> items,
-      Func<List<TItem>, TExecutionContext, Task> processChunk)
+      Func<List<TItem>, TExecutionContext, CancellationToken, Task> processChunk,
+      CancellationToken cancellationToken)
     {
       var enumerator = items.GetEnumerator();
       var chunkItems = new List<TItem>();
@@ -44,7 +46,7 @@ namespace CalDavSynchronizer.Utilities
         chunkItems.Clear();
         itemsAvaliable = FillChunkList(enumerator, chunkItems);
         if (chunkItems.Count > 0)
-          await processChunk(chunkItems, executionContext);
+          await processChunk(chunkItems, executionContext, cancellationToken);
       }
 
       return executionContext;
@@ -55,11 +57,12 @@ namespace CalDavSynchronizer.Utilities
       IEnumerable<TItem> items,
       Action<List<TItem>, TExecutionContext> processChunk)
     {
-      return ExecuteAsync(executionContext, items, (chunk, context) =>
+      return ExecuteAsync(executionContext, items, (chunk, context, ct) =>
       {
         processChunk(chunk, context);
         return Task.FromResult(0);
-      }).Result;
+      },
+      CancellationToken.None).Result;
     }
 
     private bool FillChunkList<T> (IEnumerator<T> enumerator, List<T> list)

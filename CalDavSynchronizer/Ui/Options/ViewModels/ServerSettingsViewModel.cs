@@ -18,6 +18,7 @@ using System;
 using System.Reflection;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using CalDavSynchronizer.Ui.Options.Models;
@@ -119,7 +120,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       _testConnectionCommand.SetCanExecute(false);
       try
       {
-        CalenderUrl = await _optionTasks.TestWebDavConnection(_model);
+        CalenderUrl = await _optionTasks.TestWebDavConnection(_model, CancellationToken.None);
       }
       catch (Exception x)
       {
@@ -141,7 +142,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       _createDavResourceCommand.SetCanExecute(false);
       try
       {
-        CalenderUrl = await OptionTasks.CreateDavResource(_model, CalenderUrl);
+        CalenderUrl = await OptionTasks.CreateDavResource(_model, CalenderUrl, CancellationToken.None);
       }
       catch (Exception x)
       {

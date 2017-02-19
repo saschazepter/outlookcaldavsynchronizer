@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalDavSynchronizer
@@ -27,12 +28,12 @@ namespace CalDavSynchronizer
     {
     }
 
-    public Task ShowOptionsAsync (Guid? initialVisibleProfile = null)
+    public Task ShowOptionsAsync (CancellationToken cancellationToken, Guid? initialVisibleProfile = null)
     {
       return Task.FromResult(0);
     }
 
-    public Task ShowGeneralOptionsAsync ()
+    public Task ShowGeneralOptionsAsync (CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CalDavSynchronizer.DataAccess;
@@ -293,7 +294,7 @@ namespace CalDavSynchronizer.Ui.Options
       return lookupUrl;
     }
 
-    public static async Task<Uri> AddResource(Uri davUri, IWebDavClient webDavClient, OlItemType selectedOutlookFolderType)
+    public static async Task<Uri> AddResource(Uri davUri, IWebDavClient webDavClient, OlItemType selectedOutlookFolderType, CancellationToken cancellationToken)
     {
       switch (selectedOutlookFolderType)
       {
@@ -307,9 +308,9 @@ namespace CalDavSynchronizer.Ui.Options
             {
               try
               {
-                var newUri = await calDavDataAccess.AddResource(addResourceForm.ResourceName, addResourceForm.UseRandomUri);
+                var newUri = await calDavDataAccess.AddResource(addResourceForm.ResourceName, addResourceForm.UseRandomUri, cancellationToken);
                 MessageBox.Show($"Added calendar resource '{addResourceForm.ResourceName}' successfully!", CreateDavResourceCaption, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                if (!await new CalDavDataAccess(newUri, webDavClient).SetCalendarColorNoThrow(new ArgbColor(addResourceForm.CalendarColor.ToArgb())))
+                if (!await new CalDavDataAccess(newUri, webDavClient).SetCalendarColorNoThrow(new ArgbColor(addResourceForm.CalendarColor.ToArgb()), cancellationToken))
                   MessageBox.Show($"Can't set the calendar color!'", CreateDavResourceCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return newUri;
               }
@@ -331,7 +332,7 @@ namespace CalDavSynchronizer.Ui.Options
             {
               try
               {
-                var newUri = await cardDavDataAccess.AddResource(addResourceForm.ResourceName, addResourceForm.UseRandomUri);
+                var newUri = await cardDavDataAccess.AddResource(addResourceForm.ResourceName, addResourceForm.UseRandomUri, cancellationToken);
                 MessageBox.Show($"Added addressbook resource '{addResourceForm.ResourceName}' successfully!", CreateDavResourceCaption, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return newUri;
               }
@@ -347,14 +348,14 @@ namespace CalDavSynchronizer.Ui.Options
       return davUri;
     }
 
-    public static async Task<AutoDiscoveryResult> DoAutoDiscovery(Uri autoDiscoveryUri, IWebDavClient webDavClient, bool useWellKnownCalDav, bool useWellKnownCardDav, OlItemType selectedOutlookFolderType)
+    public static async Task<AutoDiscoveryResult> DoAutoDiscovery(Uri autoDiscoveryUri, IWebDavClient webDavClient, bool useWellKnownCalDav, bool useWellKnownCardDav, OlItemType selectedOutlookFolderType, CancellationToken cancellationToken)
     {
 
       switch (selectedOutlookFolderType)
       {
         case OlItemType.olAppointmentItem:
           var calDavDataAccess = new CalDavDataAccess(autoDiscoveryUri, webDavClient);
-          var foundCalendars = (await calDavDataAccess.GetUserResourcesNoThrow(useWellKnownCalDav)).CalendarResources;
+          var foundCalendars = (await calDavDataAccess.GetUserResourcesNoThrow(useWellKnownCalDav, cancellationToken)).CalendarResources;
           if (foundCalendars.Count == 0)
             return new AutoDiscoveryResult(null, AutoDiscoverResultStatus.NoResourcesFound);
           var selectedCalendar = SelectCalendar(foundCalendars);
@@ -364,7 +365,7 @@ namespace CalDavSynchronizer.Ui.Options
             return new AutoDiscoveryResult(null, AutoDiscoverResultStatus.UserCancelled);
         case OlItemType.olTaskItem:
           var calDavDataAccessTasks = new CalDavDataAccess(autoDiscoveryUri, webDavClient);
-          var foundTasks = (await calDavDataAccessTasks.GetUserResourcesNoThrow(useWellKnownCalDav)).TaskListResources;
+          var foundTasks = (await calDavDataAccessTasks.GetUserResourcesNoThrow(useWellKnownCalDav, cancellationToken)).TaskListResources;
           if (foundTasks.Count == 0)
             return new AutoDiscoveryResult(null, AutoDiscoverResultStatus.NoResourcesFound);
           var selectedTask = SelectTaskList(foundTasks);
@@ -374,7 +375,7 @@ namespace CalDavSynchronizer.Ui.Options
             return new AutoDiscoveryResult(null, AutoDiscoverResultStatus.UserCancelled);
         case OlItemType.olContactItem:
           var cardDavDataAccess = new CardDavDataAccess(autoDiscoveryUri, webDavClient, contentType => true);
-          var foundAddressBooks = await cardDavDataAccess.GetUserAddressBooksNoThrow(useWellKnownCardDav);
+          var foundAddressBooks = await cardDavDataAccess.GetUserAddressBooksNoThrow(useWellKnownCardDav, cancellationToken);
           if (foundAddressBooks.Count == 0)
             return new AutoDiscoveryResult(null, AutoDiscoverResultStatus.NoResourcesFound);
           var selectedAddressBook = SelectAddressBook(foundAddressBooks);
@@ -512,7 +513,7 @@ namespace CalDavSynchronizer.Ui.Options
     }
 
 
-    public static async Task<string> CreateDavResource(OptionsModel options, string url)
+    public static async Task<string> CreateDavResource(OptionsModel options, string url, CancellationToken cancellationToken)
     {
       if (options.SelectedFolderOrNull == null)
       {
@@ -533,12 +534,12 @@ namespace CalDavSynchronizer.Ui.Options
 
       var enteredUri = new Uri(serverUrl);
       var webDavClient = options.CreateWebDavClient(enteredUri);
-      var newResourceUri = await AddResource(enteredUri, webDavClient, outlookFolderType);
+      var newResourceUri = await AddResource(enteredUri, webDavClient, outlookFolderType, cancellationToken);
 
       return newResourceUri.ToString();
     }
 
-    public async Task<string> TestWebDavConnection(OptionsModel options)
+    public async Task<string> TestWebDavConnection(OptionsModel options, CancellationToken cancellationToken)
     {
       string url = options.CalenderUrl;
       string serverEmail = options.EmailAddress;
@@ -579,7 +580,7 @@ namespace CalDavSynchronizer.Ui.Options
 
       if (ConnectionTester.RequiresAutoDiscovery(enteredUri))
       {
-        var autodiscoveryResult = await DoAutoDiscovery(enteredUri, webDavClient, true, true, outlookFolderType);
+        var autodiscoveryResult = await DoAutoDiscovery(enteredUri, webDavClient, true, true, outlookFolderType, cancellationToken);
         switch (autodiscoveryResult.Status)
         {
           case AutoDiscoverResultStatus.UserCancelled:
@@ -588,7 +589,7 @@ namespace CalDavSynchronizer.Ui.Options
             autoDiscoveredUrl = autodiscoveryResult.RessourceUrl;
             break;
           case AutoDiscoverResultStatus.NoResourcesFound:
-            var autodiscoveryResult2 = await DoAutoDiscovery(enteredUri.AbsolutePath.EndsWith("/") ? enteredUri : new Uri(enteredUri.ToString() + "/"), webDavClient, false, false, outlookFolderType);
+            var autodiscoveryResult2 = await DoAutoDiscovery(enteredUri.AbsolutePath.EndsWith("/") ? enteredUri : new Uri(enteredUri.ToString() + "/"), webDavClient, false, false, outlookFolderType, cancellationToken);
             switch (autodiscoveryResult2.Status)
             {
               case AutoDiscoverResultStatus.UserCancelled:
@@ -609,7 +610,7 @@ namespace CalDavSynchronizer.Ui.Options
       }
       else
       {
-        var result = await ConnectionTester.TestConnection(enteredUri, webDavClient);
+        var result = await ConnectionTester.TestConnection(enteredUri, webDavClient, cancellationToken);
         if (result.ResourceType != ResourceType.None)
         {
           _settingsFaultFinder.FixSynchronizationMode(options, result);
@@ -623,7 +624,7 @@ namespace CalDavSynchronizer.Ui.Options
         }
         else
         {
-          var autodiscoveryResult = await DoAutoDiscovery(enteredUri, webDavClient, false, false, outlookFolderType);
+          var autodiscoveryResult = await DoAutoDiscovery(enteredUri, webDavClient, false, false, outlookFolderType, cancellationToken);
           switch (autodiscoveryResult.Status)
           {
             case AutoDiscoverResultStatus.UserCancelled:
@@ -632,7 +633,7 @@ namespace CalDavSynchronizer.Ui.Options
               autoDiscoveredUrl = autodiscoveryResult.RessourceUrl;
               break;
             case AutoDiscoverResultStatus.NoResourcesFound:
-              var autodiscoveryResult2 = await DoAutoDiscovery(enteredUri, webDavClient, true, true, outlookFolderType);
+              var autodiscoveryResult2 = await DoAutoDiscovery(enteredUri, webDavClient, true, true, outlookFolderType, cancellationToken);
               switch (autodiscoveryResult2.Status)
               {
                 case AutoDiscoverResultStatus.UserCancelled:
@@ -655,7 +656,7 @@ namespace CalDavSynchronizer.Ui.Options
       }
 
 
-      var finalResult = await ConnectionTester.TestConnection(autoDiscoveredUrl, webDavClient);
+      var finalResult = await ConnectionTester.TestConnection(autoDiscoveredUrl, webDavClient, cancellationToken);
 
       _settingsFaultFinder.FixSynchronizationMode(options, finalResult);
 
@@ -668,7 +669,7 @@ namespace CalDavSynchronizer.Ui.Options
       return autoDiscoveredUrl.ToString();
     }
 
-    public async Task<string> TestGoogleConnection(OptionsModel options, string url)
+    public async Task<string> TestGoogleConnection(OptionsModel options, string url, CancellationToken cancellationToken)
     {
       if (options.SelectedFolderOrNull == null)
       {
@@ -688,12 +689,12 @@ namespace CalDavSynchronizer.Ui.Options
 
       if (outlookFolderType == OlItemType.olTaskItem)
       {
-        return await TestGoogleTaskConnection(options, errorMessageBuilder, outlookFolderType, url);
+        return await TestGoogleTaskConnection(options, errorMessageBuilder, outlookFolderType, url, cancellationToken);
       }
 
       if (outlookFolderType == OlItemType.olContactItem && options.UseGoogleNativeApi)
       {
-        return await TestGoogleContactsConnection(options, outlookFolderType, url);
+        return await TestGoogleContactsConnection(options, outlookFolderType, url, cancellationToken);
       }
 
       if (!ValidateWebDavUrl(url, errorMessageBuilder, false))
@@ -709,7 +710,7 @@ namespace CalDavSynchronizer.Ui.Options
 
       if (ConnectionTester.RequiresAutoDiscovery(enteredUri))
       {
-        var autoDiscoveryResult = await DoAutoDiscovery(enteredUri, webDavClient, false, true, outlookFolderType);
+        var autoDiscoveryResult = await DoAutoDiscovery(enteredUri, webDavClient, false, true, outlookFolderType, cancellationToken);
         switch (autoDiscoveryResult.Status)
         {
           case AutoDiscoverResultStatus.UserCancelled:
@@ -730,7 +731,7 @@ namespace CalDavSynchronizer.Ui.Options
 
       var finalUrl = autoDiscoveredUrl?.ToString() ?? url;
 
-      var result = await ConnectionTester.TestConnection(new Uri(finalUrl), webDavClient);
+      var result = await ConnectionTester.TestConnection(new Uri(finalUrl), webDavClient, cancellationToken);
 
       if (result.ResourceType != ResourceType.None)
       {
@@ -754,14 +755,14 @@ namespace CalDavSynchronizer.Ui.Options
       return finalUrl;
     }
 
-    private async Task<string> TestGoogleTaskConnection(OptionsModel options, StringBuilder errorMessageBuilder, OlItemType outlookFolderType, string url)
+    private async Task<string> TestGoogleTaskConnection(OptionsModel options, StringBuilder errorMessageBuilder, OlItemType outlookFolderType, string url, CancellationToken cancellationToken)
     {
-      var service = await GoogleHttpClientFactory.LoginToGoogleTasksService(options.EmailAddress, options.GetProxyIfConfigured());
+      var service = await GoogleHttpClientFactory.LoginToGoogleTasksService(options.EmailAddress, options.GetProxyIfConfigured(), cancellationToken);
 
       string connectionTestUrl;
       if (string.IsNullOrEmpty(url))
       {
-        TaskLists taskLists = await service.Tasklists.List().ExecuteAsync();
+        TaskLists taskLists = await service.Tasklists.List().ExecuteAsync(cancellationToken);
 
         if (taskLists.Items.Any())
         {
@@ -783,7 +784,7 @@ namespace CalDavSynchronizer.Ui.Options
 
       try
       {
-        await service.Tasklists.Get(connectionTestUrl).ExecuteAsync();
+        await service.Tasklists.Get(connectionTestUrl).ExecuteAsync(cancellationToken);
       }
       catch (Exception x)
       {
@@ -802,13 +803,13 @@ namespace CalDavSynchronizer.Ui.Options
       return connectionTestUrl;
     }
 
-    private async Task<string> TestGoogleContactsConnection(OptionsModel options, OlItemType outlookFolderType, string url)
+    private async Task<string> TestGoogleContactsConnection(OptionsModel options, OlItemType outlookFolderType, string url, CancellationToken cancellationToken)
     {
-      var service = await GoogleHttpClientFactory.LoginToContactsService(options.EmailAddress, options.GetProxyIfConfigured());
+      var service = await GoogleHttpClientFactory.LoginToContactsService(options.EmailAddress, options.GetProxyIfConfigured(), cancellationToken);
 
       try
       {
-        await Task.Run(() => service.GetGroups());
+        await Task.Run(() => service.GetGroups(), cancellationToken);
       }
       catch (Exception x)
       {

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using CalDavSynchronizer.Ui.ConnectionTests;
@@ -40,24 +41,24 @@ namespace CalDavSynchronizer.DataAccess
       _contentTypePredicate = contentTypePredicate;
     }
 
-    public Task<bool> IsAddressBookAccessSupported ()
+    public Task<bool> IsAddressBookAccessSupported (CancellationToken cancellationToken)
     {
-      return HasOption ("addressbook");
+      return HasOption ("addressbook", cancellationToken);
     }
 
-    public Task<bool> IsResourceAddressBook ()
+    public Task<bool> IsResourceAddressBook (CancellationToken cancellationToken)
     {
-      return IsResourceType ("A", "addressbook");
+      return IsResourceType ("A", "addressbook", cancellationToken);
     }
 
-    public async Task<Uri> GetCalendarHomeSetUriOrNull(bool useWellKnownUrl)
+    public async Task<Uri> GetCalendarHomeSetUriOrNull(bool useWellKnownUrl, CancellationToken cancellationToken)
     {
       var autodiscoveryUrl = useWellKnownUrl ? AutoDiscoveryUrl : _serverUrl;
 
-      var currentUserPrincipalUrl = await GetCurrentUserPrincipalUrl (autodiscoveryUrl);
+      var currentUserPrincipalUrl = await GetCurrentUserPrincipalUrl (autodiscoveryUrl, cancellationToken);
       if (currentUserPrincipalUrl != null)
       {
-        var addressBookHomeSetProperties = await GetAddressBookHomeSet (currentUserPrincipalUrl);
+        var addressBookHomeSetProperties = await GetAddressBookHomeSet (currentUserPrincipalUrl, cancellationToken);
 
         XmlNode homeSetNode = addressBookHomeSetProperties.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/A:addressbook-home-set", addressBookHomeSetProperties.XmlNamespaceManager);
 
@@ -79,9 +80,9 @@ namespace CalDavSynchronizer.DataAccess
       return null;
     }
 
-    public async Task<Uri> AddResource (string name, bool useRandomUri)
+    public async Task<Uri> AddResource (string name, bool useRandomUri, CancellationToken cancellationToken)
     {
-      var homeSetUri = await GetCalendarHomeSetUriOrNull (ConnectionTester.RequiresAutoDiscovery (_serverUrl)) ?? _serverUrl;
+      var homeSetUri = await GetCalendarHomeSetUriOrNull (ConnectionTester.RequiresAutoDiscovery (_serverUrl), cancellationToken) ?? _serverUrl;
       var resourceName = useRandomUri ? Guid.NewGuid() + "/" : name + "/";
 
       var newResourceUri = new Uri (homeSetUri, resourceName);
@@ -102,7 +103,8 @@ namespace CalDavSynchronizer.DataAccess
                           </D:resourcetype>
                         </D:prop>
                       </D:set>
-                    </D:mkcol>"
+                    </D:mkcol>",
+          cancellationToken
         );
 
       await _webDavClient.ExecuteWebDavRequestAndReturnResponseHeaders (
@@ -121,23 +123,24 @@ namespace CalDavSynchronizer.DataAccess
                           </D:prop>
                         </D:set>
                       </D:propertyupdate>
-                 ", name)
+                 ", name),
+        cancellationToken
         );
       return newResourceUri;
     }
-    public async Task<IReadOnlyList<AddressBookData>> GetUserAddressBooksNoThrow (bool useWellKnownUrl)
+    public async Task<IReadOnlyList<AddressBookData>> GetUserAddressBooksNoThrow (bool useWellKnownUrl, CancellationToken cancellationToken)
     {
       try
       {
         var autodiscoveryUrl = useWellKnownUrl ? AutoDiscoveryUrl : _serverUrl;
 
-        var currentUserPrincipalUrl = await GetCurrentUserPrincipalUrl (autodiscoveryUrl);
+        var currentUserPrincipalUrl = await GetCurrentUserPrincipalUrl (autodiscoveryUrl, cancellationToken);
 
         var addressbooks = new List<AddressBookData>();
 
         if (currentUserPrincipalUrl != null)
         {
-          var addressBookHomeSetProperties = await GetAddressBookHomeSet (currentUserPrincipalUrl);
+          var addressBookHomeSetProperties = await GetAddressBookHomeSet (currentUserPrincipalUrl, cancellationToken);
 
           XmlNode homeSetNode = addressBookHomeSetProperties.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/A:addressbook-home-set", addressBookHomeSetProperties.XmlNamespaceManager);
 
@@ -151,7 +154,7 @@ namespace CalDavSynchronizer.DataAccess
                   new Uri (homeSetNodeHref.InnerText) : 
                   new Uri (addressBookHomeSetProperties.DocumentUri.GetLeftPart (UriPartial.Authority) + homeSetNodeHref.InnerText);
 
-                var addressBookDocument = await ListAddressBooks (addressBookHomeSetUri);
+                var addressBookDocument = await ListAddressBooks (addressBookHomeSetUri, cancellationToken);
 
                 XmlNodeList responseNodes = addressBookDocument.XmlDocument.SelectNodes ("/D:multistatus/D:response", addressBookDocument.XmlNamespaceManager);
 
@@ -190,7 +193,7 @@ namespace CalDavSynchronizer.DataAccess
       get { return new Uri (_serverUrl.GetLeftPart (UriPartial.Authority) + "/.well-known/carddav"); }
     }
 
-    private Task<XmlDocumentWithNamespaceManager> GetAddressBookHomeSet (Uri url)
+    private Task<XmlDocumentWithNamespaceManager> GetAddressBookHomeSet (Uri url, CancellationToken cancellationToken)
     {
       return _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -205,11 +208,12 @@ namespace CalDavSynchronizer.DataAccess
                             <A:addressbook-home-set/>
                           </D:prop>
                         </D:propfind>
-                 "
+                 ",
+          cancellationToken
           );
     }
 
-    private Task<XmlDocumentWithNamespaceManager> ListAddressBooks (Uri url)
+    private Task<XmlDocumentWithNamespaceManager> ListAddressBooks (Uri url, CancellationToken cancellationToken)
     {
       return _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -225,16 +229,17 @@ namespace CalDavSynchronizer.DataAccess
                               <D:displayname />
                           </D:prop>
                         </D:propfind>
-                 "
+                 ",
+          cancellationToken
           );
     }
 
-    public Task<EntityVersion<WebResourceName, string>> CreateEntity (string vCardData, string uid)
+    public Task<EntityVersion<WebResourceName, string>> CreateEntity (string vCardData, string uid, CancellationToken cancellationToken)
     {
-      return CreateNewEntity (string.Format ("{0:D}.vcf", uid), vCardData);
+      return CreateNewEntity (string.Format ("{0:D}.vcf", uid), vCardData, cancellationToken);
     }
 
-    protected async Task<EntityVersion<WebResourceName, string>> CreateNewEntity (string name, string content)
+    protected async Task<EntityVersion<WebResourceName, string>> CreateNewEntity (string name, string content, CancellationToken cancellationToken)
     {
       var contactUrl = new Uri (_serverUrl, name);
 
@@ -247,7 +252,8 @@ namespace CalDavSynchronizer.DataAccess
         null,
         "*",
         "text/vcard",
-        content);
+        content,
+        cancellationToken);
 
       Uri effectiveContactUrl;
       if (responseHeaders.Location != null)
@@ -269,13 +275,13 @@ namespace CalDavSynchronizer.DataAccess
       }
       else
       {
-        version = await GetEtag (effectiveContactUrl);
+        version = await GetEtag (effectiveContactUrl, cancellationToken);
       }
 
       return new EntityVersion<WebResourceName, string> (new WebResourceName(effectiveContactUrl), version);
     }
 
-    public async Task<EntityVersion<WebResourceName, string>> TryUpdateEntity (WebResourceName url, string etag, string contents)
+    public async Task<EntityVersion<WebResourceName, string>> TryUpdateEntity (WebResourceName url, string etag, string contents, CancellationToken cancellationToken)
     {
       s_logger.DebugFormat ("Updating entity '{0}'", url);
 
@@ -293,7 +299,8 @@ namespace CalDavSynchronizer.DataAccess
             etag,
             null,
             "text/vcard",
-            contents);
+            contents,
+            cancellationToken);
       }
       catch (WebDavClientException x) when (x.StatusCode == HttpStatusCode.NotFound || x.StatusCode == HttpStatusCode.PreconditionFailed)
       {
@@ -323,13 +330,13 @@ namespace CalDavSynchronizer.DataAccess
       }
       else
       {
-        version = await GetEtag (effectiveContactUrl);
+        version = await GetEtag (effectiveContactUrl, cancellationToken);
       }
 
       return new EntityVersion<WebResourceName, string> (new WebResourceName(effectiveContactUrl), version);
     }
 
-    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<WebResourceName> urls)
+    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<WebResourceName> urls, CancellationToken cancellationToken)
     {
       WebResourceName firstResourceNameOrNull = null;
 
@@ -359,21 +366,21 @@ namespace CalDavSynchronizer.DataAccess
             null,
             null,
             "application/xml",
-            requestBody
-            );
+            requestBody,
+            cancellationToken);
 
         return ExtractVersions (responseXml);
       }
       catch (WebDavClientException x)
       {
-        if (x.StatusCode == HttpStatusCode.NotFound && await IsResourceAddressBook ())
+        if (x.StatusCode == HttpStatusCode.NotFound && await IsResourceAddressBook (cancellationToken))
           return new EntityVersion<WebResourceName, string>[] { };
 
         throw;
       }
     }
 
-    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions ()
+    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions (CancellationToken cancellationToken)
     {
       try
       {
@@ -391,14 +398,14 @@ namespace CalDavSynchronizer.DataAccess
                               <D:getcontenttype/>
                             </D:prop>
                         </D:propfind>
-                 "
-            );
+                 ",
+            cancellationToken);
 
         return ExtractVersions(responseXml);
       }
       catch (WebDavClientException x)
       {
-        if (x.StatusCode == HttpStatusCode.NotFound && await IsResourceAddressBook ())
+        if (x.StatusCode == HttpStatusCode.NotFound && await IsResourceAddressBook (cancellationToken))
           return new EntityVersion<WebResourceName, string>[] {};
 
         throw;
@@ -447,7 +454,7 @@ namespace CalDavSynchronizer.DataAccess
       return entities;
     }
 
-    public async Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities (IEnumerable<WebResourceName> urls)
+    public async Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities (IEnumerable<WebResourceName> urls, CancellationToken cancellationToken)
     {
       s_logger.Debug ("Entered GetEntities.");
 
@@ -482,8 +489,8 @@ namespace CalDavSynchronizer.DataAccess
           null,
           null,
           "application/xml",
-          requestBody
-          );
+          requestBody,
+          cancellationToken);
 
       XmlNodeList responseNodes = responseXml.XmlDocument.SelectNodes ("/D:multistatus/D:response", responseXml.XmlNamespaceManager);
 

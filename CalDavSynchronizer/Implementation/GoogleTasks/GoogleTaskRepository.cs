@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using GenSync;
@@ -47,43 +48,43 @@ namespace CalDavSynchronizer.Implementation.GoogleTasks
     }
 
 
-    public async System.Threading.Tasks.Task<bool> TryDelete (string entityId, string version, int context)
+    public async Task<bool> TryDelete (string entityId, string version, int context, CancellationToken cancellationToken)
     {
       var deleteRequest =   _tasksService.Tasks.Delete (_taskList.Id, entityId);
       // Todo: how to set etag ?
-      await deleteRequest.ExecuteAsync();
+      await deleteRequest.ExecuteAsync(cancellationToken);
       return true;
     }
 
-    public async Task<EntityVersion<string, string>> TryUpdate (string entityId, string version, Task entityToUpdate, Func<Task, Task<Task>> entityModifier, int context)
+    public async Task<EntityVersion<string, string>> TryUpdate (string entityId, string version, Task entityToUpdate, Func<Task, CancellationToken, Task<Task>> entityModifier, int context, CancellationToken cancellationToken)
     {
-      entityToUpdate = await entityModifier (entityToUpdate);
+      entityToUpdate = await entityModifier (entityToUpdate, cancellationToken);
       var updateRequest = _tasksService.Tasks.Update (entityToUpdate, _taskList.Id, entityId);
       updateRequest.ETagAction = Google.Apis.ETagAction.IfMatch;
-      var result = await updateRequest.ExecuteAsync();
+      var result = await updateRequest.ExecuteAsync(cancellationToken);
       return EntityVersion.Create (result.Id, result.ETag);
     }
 
-    public async Task<EntityVersion<string, string>> Create (Func<Task, Task<Task>> entityInitializer, int context)
+    public async Task<EntityVersion<string, string>> Create (Func<Task, CancellationToken, Task<Task>> entityInitializer, int context, CancellationToken cancellationToken)
     {
-      var task = await entityInitializer (new Task());
-      var result = await _tasksService.Tasks.Insert (task, _taskList.Id).ExecuteAsync();
+      var task = await entityInitializer (new Task(), cancellationToken);
+      var result = await _tasksService.Tasks.Insert (task, _taskList.Id).ExecuteAsync(cancellationToken);
       return EntityVersion.Create (result.Id, result.ETag);
     }
 
-    public async Task<IReadOnlyList<EntityVersion<string, string>>> GetVersions (IEnumerable<IdWithAwarenessLevel<string>> idsOfEntitiesToQuery, int context)
+    public async Task<IReadOnlyList<EntityVersion<string, string>>> GetVersions (IEnumerable<IdWithAwarenessLevel<string>> idsOfEntitiesToQuery, int context, CancellationToken cancellationToken)
     {
       var idsOfEntitiesToQueryDictionary = idsOfEntitiesToQuery.ToDictionary (i => i.Id);
-      return (await GetAllVersions (new string[] { }, context))
+      return (await GetAllVersions (new string[] { }, context, cancellationToken))
         .Where (v => idsOfEntitiesToQueryDictionary.ContainsKey (v.Id))
         .ToArray();
     }
 
-    public async Task<IReadOnlyList<EntityVersion<string, string>>> GetAllVersions (IEnumerable<string> idsOfknownEntities, int context)
+    public async Task<IReadOnlyList<EntityVersion<string, string>>> GetAllVersions (IEnumerable<string> idsOfknownEntities, int context, CancellationToken cancellationToken)
     {
       var request = _tasksService.Tasks.List (_taskList.Id);
       request.Fields = "items(etag,id)";
-      var result = await request.ExecuteAsync();
+      var result = await request.ExecuteAsync(cancellationToken);
       if (result.Items != null)
       {
         return result.Items.Select (t => EntityVersion.Create (t.Id, t.ETag)).ToArray();
@@ -94,7 +95,7 @@ namespace CalDavSynchronizer.Implementation.GoogleTasks
       }
     }
 
-    public async Task<IReadOnlyList<EntityWithId<string, Task>>> Get (ICollection<string> ids, ILoadEntityLogger logger, int context)
+    public async Task<IReadOnlyList<EntityWithId<string, Task>>> Get (ICollection<string> ids, ILoadEntityLogger logger, int context, CancellationToken cancellationToken)
     {
       var items = new List<EntityWithId<string, Task>> ();
 
@@ -102,14 +103,14 @@ namespace CalDavSynchronizer.Implementation.GoogleTasks
       // probably open up too many connections
       foreach (var id in ids)
       {
-        var item = await _tasksService.Tasks.Get (_taskList.Id, id).ExecuteAsync();
+        var item = await _tasksService.Tasks.Get (_taskList.Id, id).ExecuteAsync(cancellationToken);
         items.Add (EntityWithId.Create (item.Id, item));
       }
 
       return items;
     }
 
-    public System.Threading.Tasks.Task VerifyUnknownEntities (Dictionary<string, string> unknownEntites, int context)
+    public System.Threading.Tasks.Task VerifyUnknownEntities (Dictionary<string, string> unknownEntites, int context, CancellationToken cancellationToken)
     {
       return System.Threading.Tasks.Task.FromResult (0);
     }

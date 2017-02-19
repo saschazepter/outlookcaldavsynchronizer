@@ -22,6 +22,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DataAccess;
@@ -123,17 +124,17 @@ namespace CalDavSynchronizer.Scheduling
       public ISynchronizationContextFactory<IGoogleContactContext> GoogleContactContextFactory { get; set; }
     }
 
-    public async Task<IOutlookSynchronizer> CreateSynchronizer (Options options, GeneralOptions generalOptions)
+    public async Task<IOutlookSynchronizer> CreateSynchronizer (Options options, GeneralOptions generalOptions, CancellationToken cancellationToken)
     {
       if (options == null)
         throw new ArgumentNullException (nameof (options));
       if (generalOptions == null)
         throw new ArgumentNullException (nameof (generalOptions));
 
-      return (await CreateSynchronizerWithComponents(options, generalOptions)).Item1;
+      return (await CreateSynchronizerWithComponents(options, generalOptions, cancellationToken)).Item1;
     }
 
-    public async Task<Tuple<IOutlookSynchronizer, AvailableSynchronizerComponents>> CreateSynchronizerWithComponents (Options options, GeneralOptions generalOptions)
+    public async Task<Tuple<IOutlookSynchronizer, AvailableSynchronizerComponents>> CreateSynchronizerWithComponents (Options options, GeneralOptions generalOptions, CancellationToken cancellationToken)
     {
       if (options == null)
         throw new ArgumentNullException (nameof (options));
@@ -156,17 +157,17 @@ namespace CalDavSynchronizer.Scheduling
       switch (defaultItemType)
       {
         case OlItemType.olAppointmentItem:
-          synchronizer = await CreateEventSynchronizer (options, generalOptions, synchronizerComponents);
+          synchronizer = await CreateEventSynchronizer (options, generalOptions, synchronizerComponents, cancellationToken);
           break;
         case OlItemType.olTaskItem:
           if (options.ServerAdapterType == ServerAdapterType.GoogleTaskApi)
-            synchronizer = await CreateGoogleTaskSynchronizer (options);
+            synchronizer = await CreateGoogleTaskSynchronizer (options, cancellationToken);
           else
             synchronizer = CreateTaskSynchronizer (options, generalOptions, synchronizerComponents);
           break;
         case OlItemType.olContactItem:
           if (options.ServerAdapterType == ServerAdapterType.GoogleContactApi)
-            synchronizer = await CreateGoogleContactSynchronizer (options, synchronizerComponents);
+            synchronizer = await CreateGoogleContactSynchronizer (options, synchronizerComponents, cancellationToken);
           else
             synchronizer = CreateContactSynchronizer (options, generalOptions, synchronizerComponents);
           break;
@@ -181,7 +182,7 @@ namespace CalDavSynchronizer.Scheduling
       return Tuple.Create(synchronizer, synchronizerComponents);
     }
 
-    private async Task<IOutlookSynchronizer> CreateEventSynchronizer (Options options, GeneralOptions generalOptions ,AvailableSynchronizerComponents componentsToFill)
+    private async Task<IOutlookSynchronizer> CreateEventSynchronizer (Options options, GeneralOptions generalOptions ,AvailableSynchronizerComponents componentsToFill, CancellationToken cancellationToken)
     {
       ICalDavDataAccess calDavDataAccess;
 
@@ -204,7 +205,7 @@ namespace CalDavSynchronizer.Scheduling
 
       var entityRelationDataAccess = new EntityRelationDataAccess<AppointmentId, DateTime, OutlookEventRelationData, WebResourceName, string> (storageDataDirectory);
 
-      return await CreateEventSynchronizer (options, calDavDataAccess, entityRelationDataAccess);
+      return await CreateEventSynchronizer (options, calDavDataAccess, entityRelationDataAccess, cancellationToken);
     }
 
     public static IWebDavClient CreateWebDavClient (
@@ -242,8 +243,7 @@ namespace CalDavSynchronizer.Scheduling
         bool forceBasicAuthentication,
         ProxyOptions proxyOptions,
         bool enableClientCertificate,
-        bool acceptInvalidChars
-        )
+        bool acceptInvalidChars)
     {
       switch (serverAdapterType)
       {
@@ -251,7 +251,7 @@ namespace CalDavSynchronizer.Scheduling
         case ServerAdapterType.WebDavHttpClientBasedWithGoogleOAuth:
           var productAndVersion = GetProductAndVersion();
           return new DataAccess.HttpClientBasedClient.WebDavClient (
-              () => CreateHttpClient (username, password, serverUrl, timeout, serverAdapterType, proxyOptions, preemptiveAuthentication, forceBasicAuthentication, enableClientCertificate),
+              c => CreateHttpClient (username, password, serverUrl, timeout, serverAdapterType, proxyOptions, preemptiveAuthentication, forceBasicAuthentication, enableClientCertificate, c),
               productAndVersion.Item1,
               productAndVersion.Item2,
               closeConnectionAfterEachRequest,
@@ -287,7 +287,8 @@ namespace CalDavSynchronizer.Scheduling
                                                                                     ProxyOptions proxyOptions, 
                                                                                     bool preemptiveAuthentication,
                                                                                     bool forceBasicAuthentication,
-                                                                                    bool enableClientCertificate )
+                                                                                    bool enableClientCertificate, 
+                                                                                    CancellationToken cancellationToken)
     {
       IWebProxy proxy = (proxyOptions != null) ? CreateProxy (proxyOptions) : null;
 
@@ -321,7 +322,7 @@ namespace CalDavSynchronizer.Scheduling
           httpClient.Timeout = calDavConnectTimeout;
           return httpClient;
         case ServerAdapterType.WebDavHttpClientBasedWithGoogleOAuth:
-          return await OAuth.Google.GoogleHttpClientFactory.CreateHttpClient (username, GetProductWithVersion(), proxy);
+          return await OAuth.Google.GoogleHttpClientFactory.CreateHttpClient (username, GetProductWithVersion(), proxy, cancellationToken);
         default:
           throw new ArgumentOutOfRangeException ("serverAdapterType");
       }
@@ -369,7 +370,8 @@ namespace CalDavSynchronizer.Scheduling
     public async Task<IOutlookSynchronizer> CreateEventSynchronizer (
         Options options,
         ICalDavDataAccess calDavDataAccess,
-        IEntityRelationDataAccess<AppointmentId, DateTime, WebResourceName, string> entityRelationDataAccess)
+        IEntityRelationDataAccess<AppointmentId, DateTime, WebResourceName, string> entityRelationDataAccess,
+        CancellationToken cancellationToken)
     {
       var dateTimeRangeProvider =
           options.IgnoreSynchronizationTimeRange ?
@@ -400,7 +402,7 @@ namespace CalDavSynchronizer.Scheduling
       ITimeZone configuredEventTimeZoneOrNull;
 
       if (mappingParameters.UseIanaTz)
-        configuredEventTimeZoneOrNull = await timeZoneCache.GetByTzIdOrNull(mappingParameters.EventTz);
+        configuredEventTimeZoneOrNull = await timeZoneCache.GetByTzIdOrNull(mappingParameters.EventTz, cancellationToken);
       else
         configuredEventTimeZoneOrNull = null;
 
@@ -566,7 +568,7 @@ namespace CalDavSynchronizer.Scheduling
         new NullContextSynchronizerDecorator<string, DateTime, TaskItemWrapper, WebResourceName, string, IICalendar> (synchronizer));
     }
 
-    private async Task<IOutlookSynchronizer> CreateGoogleTaskSynchronizer (Options options)
+    private async Task<IOutlookSynchronizer> CreateGoogleTaskSynchronizer (Options options, CancellationToken cancellationToken)
     {
       var mappingParameters = GetMappingParameters<TaskMappingConfiguration> (options);
 
@@ -574,7 +576,7 @@ namespace CalDavSynchronizer.Scheduling
 
       IWebProxy proxy = options.ProxyOptions != null ? CreateProxy (options.ProxyOptions) : null;
 
-      var tasksService = await OAuth.Google.GoogleHttpClientFactory.LoginToGoogleTasksService (options.UserName,proxy);
+      var tasksService = await OAuth.Google.GoogleHttpClientFactory.LoginToGoogleTasksService (options.UserName,proxy, cancellationToken);
 
       TaskList taskList;
       try
@@ -819,7 +821,7 @@ namespace CalDavSynchronizer.Scheduling
       return synchronizer;
     }
 
-    private async Task<IOutlookSynchronizer> CreateGoogleContactSynchronizer (Options options, AvailableSynchronizerComponents componentsToFill)
+    private async Task<IOutlookSynchronizer> CreateGoogleContactSynchronizer (Options options, AvailableSynchronizerComponents componentsToFill, CancellationToken cancellationToken)
     {
       var atypeRepository = new OutlookContactRepository<IGoogleContactContext> (
           _outlookSession,
@@ -832,7 +834,7 @@ namespace CalDavSynchronizer.Scheduling
 
       IWebProxy proxy = options.ProxyOptions != null ? CreateProxy (options.ProxyOptions) : null;
 
-      var googleApiExecutor = new GoogleApiOperationExecutor (await OAuth.Google.GoogleHttpClientFactory.LoginToContactsService (options.UserName, proxy));
+      var googleApiExecutor = new GoogleApiOperationExecutor (await OAuth.Google.GoogleHttpClientFactory.LoginToContactsService (options.UserName, proxy, cancellationToken));
 
       var mappingParameters = GetMappingParameters<ContactMappingConfiguration> (options);
 

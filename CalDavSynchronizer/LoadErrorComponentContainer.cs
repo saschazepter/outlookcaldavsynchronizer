@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CalDavSynchronizer.Contracts;
@@ -36,13 +37,13 @@ namespace CalDavSynchronizer
       _loadExceptionAsString = loadExceptionAsString;
     }
 
-    public Task ShowOptionsAsync(Guid? initialVisibleProfile = null)
+    public Task ShowOptionsAsync(CancellationToken cancellationToken, Guid? initialVisibleProfile = null)
     {
       ShowErrorMessage();
       return Task.FromResult(0);
     }
 
-    public Task ShowGeneralOptionsAsync()
+    public Task ShowGeneralOptionsAsync(CancellationToken cancellationToken)
     {
       ShowErrorMessage ();
       return Task.FromResult (0);
@@ -80,7 +81,7 @@ namespace CalDavSynchronizer
 
     public event EventHandler SynchronizationFailedWhileReportsFormWasNotVisible;
     public event EventHandler<SchedulerStatusEventArgs> StatusChanged;
-    public Task InitializeSchedulerAndStartAsync()
+    public Task InitializeSchedulerAndStartAsync(CancellationToken cancellationToken)
     {
       return Task.FromResult(0);
     }

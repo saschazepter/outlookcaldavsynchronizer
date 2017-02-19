@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GenSync.EntityRepositories
@@ -24,7 +25,7 @@ namespace GenSync.EntityRepositories
     TEntityId EntityId { get; }
     TEntityVersion Version { get; }
     TEntity EntityToUpdate { get; }
-    Task<TEntity> UpdateEntity (TEntity entity);
+    Task<TEntity> UpdateEntity (TEntity entity, CancellationToken cancellationToken);
 
     void NotifyOperationSuceeded (EntityVersion<TEntityId, TEntityVersion> result);
     void NotifyEntityNotFound ();

@@ -17,6 +17,7 @@
 
 using System;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DataAccess;
@@ -27,7 +28,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
 {
   internal interface IServerSettingsTemplateViewModel 
   {
-    Task<ServerResources> GetServerResources ();
+    Task<ServerResources> GetServerResources (CancellationToken cancellationToken);
     void DiscoverAccountServerSettings();
 
     void SetResourceUrl (OptionsModel options, CalendarData resource);

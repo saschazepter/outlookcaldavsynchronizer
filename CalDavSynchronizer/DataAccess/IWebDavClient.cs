@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -30,7 +31,8 @@ namespace CalDavSynchronizer.DataAccess
         string ifMatch,
         string ifNoneMatch,
         string mediaType,
-        string requestBody);
+        string requestBody, 
+        CancellationToken cancellationToken);
 
     Task<IHttpHeaders> ExecuteWebDavRequestAndReturnResponseHeaders (
         Uri url,
@@ -39,6 +41,7 @@ namespace CalDavSynchronizer.DataAccess
         string ifMatch,
         string ifNoneMatch,
         string mediaType,
-        string requestBody);
+        string requestBody,
+        CancellationToken cancellationToken);
   }
 }

@@ -19,6 +19,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using DDay.iCal;
 using log4net;
@@ -38,9 +39,9 @@ namespace CalDavSynchronizer.Implementation.TimeZones
             _globalTimeZoneCache = globalTimeZoneCache;
         }
 
-        public async Task<ITimeZone> GetByTzIdOrNull(string tzId)
+        public async Task<ITimeZone> GetByTzIdOrNull(string tzId, CancellationToken cancellationToken)
         {
-            return await _globalTimeZoneCache.GetTimeZoneById(tzId, _includeHistoricalData, _httpClient);
+            return await _globalTimeZoneCache.GetTimeZoneById(tzId, _includeHistoricalData, _httpClient, cancellationToken);
         }
     }
 }

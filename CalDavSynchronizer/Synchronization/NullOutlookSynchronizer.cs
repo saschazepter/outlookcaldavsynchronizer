@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.ChangeWatching;
 using CalDavSynchronizer.Implementation.Events;
@@ -32,12 +33,12 @@ namespace CalDavSynchronizer.Synchronization
     {
     }
 
-    public Task Synchronize (ISynchronizationLogger logger)
+    public Task Synchronize (ISynchronizationLogger logger, CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }
 
-    public Task SynchronizePartial (IEnumerable<IOutlookId> outlookIds, ISynchronizationLogger logger)
+    public Task SynchronizePartial (IEnumerable<IOutlookId> outlookIds, ISynchronizationLogger logger, CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Implementation.TimeRangeFiltering;
 using CalDavSynchronizer.Ui.ConnectionTests;
@@ -36,53 +37,53 @@ namespace CalDavSynchronizer.DataAccess
       _directory = new DirectoryInfo(uri.LocalPath);
     }
 
-    public Task<bool> IsResourceCalender()
+    public Task<bool> IsResourceCalender(CancellationToken cancellationToken)
     {
       return Task.FromResult(true);
     }
 
-    public Task<bool> DoesSupportCalendarQuery()
+    public Task<bool> DoesSupportCalendarQuery(CancellationToken cancellationToken)
     {
       return Task.FromResult(true);
     }
 
-    public Task<bool> IsCalendarAccessSupported()
+    public Task<bool> IsCalendarAccessSupported(CancellationToken cancellationToken)
     {
       return Task.FromResult(true);
     }
 
-    public Task<AccessPrivileges> GetPrivileges()
+    public Task<AccessPrivileges> GetPrivileges(CancellationToken cancellationToken)
     {
       return Task.FromResult (AccessPrivileges.All);
     }
 
-    public Task<ArgbColor?> GetCalendarColorNoThrow()
+    public Task<ArgbColor?> GetCalendarColorNoThrow(CancellationToken cancellationToken)
     {
       return null;
     }
 
-    public Task<bool> SetCalendarColorNoThrow(ArgbColor color)
+    public Task<bool> SetCalendarColorNoThrow(ArgbColor color, CancellationToken cancellationToken)
     {
       return Task.FromResult(true);
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetEventVersions(DateTimeRange? range)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetEventVersions(DateTimeRange? range, CancellationToken cancellationToken)
     {
-      return GetAllVersions();
+      return GetAllVersions(cancellationToken);
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetTodoVersions(DateTimeRange? range)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetTodoVersions(DateTimeRange? range, CancellationToken cancellationToken)
     {
-      return GetEventVersions(range);
+      return GetEventVersions(range, cancellationToken);
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions()
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions(CancellationToken cancellationToken)
     {
       return Task.FromResult<IReadOnlyList<EntityVersion<WebResourceName, string>>> (
          _directory.EnumerateFiles ().Select (f => EntityVersion.Create (new WebResourceName (f.Name), f.LastWriteTimeUtc.ToString ("o"))).ToArray ());
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions(IEnumerable<WebResourceName> eventUrls)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions(IEnumerable<WebResourceName> eventUrls, CancellationToken cancellationToken)
     {
       var versions =
         from url in eventUrls
@@ -93,7 +94,7 @@ namespace CalDavSynchronizer.DataAccess
       return Task.FromResult<IReadOnlyList<EntityVersion<WebResourceName, string>>>(versions.ToArray());
     }
 
-    public Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities(IEnumerable<WebResourceName> eventUrls)
+    public Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities(IEnumerable<WebResourceName> eventUrls, CancellationToken cancellationToken)
     {
       var entities =
         from url in eventUrls
@@ -104,7 +105,7 @@ namespace CalDavSynchronizer.DataAccess
       return Task.FromResult<IReadOnlyList<EntityWithId<WebResourceName, string>>>(entities.ToArray());
     }
 
-    public Task<EntityVersion<WebResourceName, string>> CreateEntity(string iCalData, string uid)
+    public Task<EntityVersion<WebResourceName, string>> CreateEntity(string iCalData, string uid, CancellationToken cancellationToken)
     {
       var fileName = uid + ".ics";
       var path = Path.Combine(_directory.FullName, fileName);
@@ -112,7 +113,7 @@ namespace CalDavSynchronizer.DataAccess
       return Task.FromResult(EntityVersion.Create(new WebResourceName(fileName), File.GetLastWriteTimeUtc(path).ToString("o")));
     }
 
-    public Task<bool> TryDeleteEntity(WebResourceName uri, string etag)
+    public Task<bool> TryDeleteEntity(WebResourceName uri, string etag, CancellationToken cancellationToken)
     {
       var path = Path.Combine(_directory.FullName, uri.OriginalAbsolutePath);
       if (!File.Exists(path))
@@ -122,7 +123,7 @@ namespace CalDavSynchronizer.DataAccess
       return Task.FromResult(true);
     }
 
-    public Task<EntityVersion<WebResourceName, string>> TryUpdateEntity(WebResourceName url, string etag, string iCalData)
+    public Task<EntityVersion<WebResourceName, string>> TryUpdateEntity(WebResourceName url, string etag, string iCalData, CancellationToken cancellationToken)
     {
       var path = Path.Combine(_directory.FullName, url.OriginalAbsolutePath);
       File.WriteAllText(path, iCalData);

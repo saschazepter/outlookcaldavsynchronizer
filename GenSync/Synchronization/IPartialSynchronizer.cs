@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.Logging;
 
@@ -29,7 +30,8 @@ namespace GenSync.Synchronization
     Task SynchronizePartial(
         IEnumerable<IIdWithHints<TAtypeEntityId, TAtypeEntityVersion>> aIds,
         IEnumerable<IIdWithHints<TBtypeEntityId, TBtypeEntityVersion>> bIds,
-        ISynchronizationLogger logger);
+        ISynchronizationLogger logger, 
+        CancellationToken cancellationToken);
   }
 
   public interface IPartialSynchronizer<in TAtypeEntityId, in TAtypeEntityVersion, in TBtypeEntityId, in TBtypeEntityVersion, TContext> 
@@ -39,7 +41,8 @@ namespace GenSync.Synchronization
         IEnumerable<IIdWithHints<TAtypeEntityId, TAtypeEntityVersion>> aIds,
         IEnumerable<IIdWithHints<TBtypeEntityId, TBtypeEntityVersion>> bIds,
         ISynchronizationLogger logger,
-        Func<Task<TContext>> contextFactoryAsync,
-        Func<TContext,Task> syncronizationFinishedAsync);
+        Func<CancellationToken, Task<TContext>> contextFactoryAsync,
+        Func<TContext, CancellationToken, Task> syncronizationFinishedAsync, 
+        CancellationToken cancellationToken);
   }
 }

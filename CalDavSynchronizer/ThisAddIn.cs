@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using CalDavSynchronizer.Scheduling;
 using CalDavSynchronizer.Utilities;
@@ -71,7 +72,7 @@ namespace CalDavSynchronizer
         CalDavSynchronizer.ComponentContainer.EnsureSynchronizationContext();
 
         s_logger.Info ("Initializing component container.");
-        await ComponentContainer.InitializeSchedulerAndStartAsync();
+        await ComponentContainer.InitializeSchedulerAndStartAsync(CancellationToken.None);
 
         s_logger.Info ("Startup exiting.");
       }

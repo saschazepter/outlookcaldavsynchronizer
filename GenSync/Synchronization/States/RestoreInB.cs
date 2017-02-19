@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.EntityRelationManagement;
 using GenSync.EntityRepositories;
@@ -51,9 +52,9 @@ namespace GenSync.Synchronization.States
       bJobs.AddUpdateJob(new JobWrapper(this, logger, context));
     }
 
-    async Task<TBtypeEntity> UpdateEntity (TBtypeEntity entity, IEntitySynchronizationLogger logger, TContext context)
+    async Task<TBtypeEntity> UpdateEntity (TBtypeEntity entity, IEntitySynchronizationLogger logger, TContext context, CancellationToken cancellationToken)
     {
-      return await _environment.Mapper.Map1To2 (_aEntity, entity, logger, context);
+      return await _environment.Mapper.Map1To2 (_aEntity, entity, logger, context, cancellationToken);
     }
 
     private void NotifyOperationSuceeded (
@@ -127,9 +128,9 @@ namespace GenSync.Synchronization.States
       public TBtypeEntityVersion Version => _state._currentBVersion;
       public TBtypeEntity EntityToUpdate => _state._bEntity;
 
-      public async Task<TBtypeEntity> UpdateEntity (TBtypeEntity entity)
+      public async Task<TBtypeEntity> UpdateEntity (TBtypeEntity entity, CancellationToken cancellationToken)
       {
-        return await _state.UpdateEntity (entity, _logger, _context);
+        return await _state.UpdateEntity (entity, _logger, _context, cancellationToken);
       }
 
       public void NotifyOperationSuceeded (EntityVersion<TBtypeEntityId, TBtypeEntityVersion> result)

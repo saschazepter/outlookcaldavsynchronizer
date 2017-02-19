@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Office.Interop.Outlook;
 
@@ -24,9 +25,9 @@ namespace CalDavSynchronizer.Implementation.Events
 {
   public interface IEventSynchronizationContext
   {
-    Task NotifySynchronizationFinished ();
+    Task NotifySynchronizationFinished (CancellationToken cancellationToken);
     void AnnounceAppointment (AppointmentSlim appointment);
     void AnnounceAppointmentDeleted (AppointmentId id);
-    Task<IEnumerable<AppointmentId>> DeleteAnnouncedEventsIfDuplicates(Predicate<AppointmentId> canBeDeleted);
+    Task<IEnumerable<AppointmentId>> DeleteAnnouncedEventsIfDuplicates(Predicate<AppointmentId> canBeDeleted, CancellationToken cancellationToken);
   }
 }

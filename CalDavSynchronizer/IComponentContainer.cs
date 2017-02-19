@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Scheduling;
@@ -27,7 +28,7 @@ namespace CalDavSynchronizer
     event EventHandler SynchronizationFailedWhileReportsFormWasNotVisible;
     event EventHandler<SchedulerStatusEventArgs> StatusChanged;
 
-    Task InitializeSchedulerAndStartAsync();
+    Task InitializeSchedulerAndStartAsync(CancellationToken cancellationToken);
 
     void SaveToolBarSettings(ToolbarSettings settings);
     ToolbarSettings LoadToolBarSettings();

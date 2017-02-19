@@ -18,6 +18,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection.Emit;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Scheduling;
@@ -62,33 +63,33 @@ namespace CalDavSynchronizer.Ui.ConnectionTests
         return false;
     }
 
-    public static async Task<TestResult> TestConnection (Uri url, IWebDavClient webDavClient)
+    public static async Task<TestResult> TestConnection (Uri url, IWebDavClient webDavClient, CancellationToken cancellationToken)
     {
       var calDavDataAccess = new CalDavDataAccess (url, webDavClient);
       var cardDavDataAccess = new CardDavDataAccess (url, webDavClient, contentType => true);
 
       // Note: CalDav Calendars can contain Events and Todos. Therefore an calender resource is always a calendar and a task list.
       var ressourceType =
-              (await calDavDataAccess.IsResourceCalender() ? ResourceType.Calendar | ResourceType.TaskList : ResourceType.None) |
-              (await cardDavDataAccess.IsResourceAddressBook() ? ResourceType.AddressBook : ResourceType.None);
+              (await calDavDataAccess.IsResourceCalender(cancellationToken) ? ResourceType.Calendar | ResourceType.TaskList : ResourceType.None) |
+              (await cardDavDataAccess.IsResourceAddressBook(cancellationToken) ? ResourceType.AddressBook : ResourceType.None);
 
       return new TestResult (
           ressourceType,
-          ressourceType.HasFlag (ResourceType.Calendar) ? await GetCalendarProperties (calDavDataAccess) : CalendarProperties.None,
-          ressourceType.HasFlag (ResourceType.AddressBook) ? await GetAddressBookProperties (cardDavDataAccess) : AddressBookProperties.None,
-          await calDavDataAccess.GetPrivileges());
+          ressourceType.HasFlag (ResourceType.Calendar) ? await GetCalendarProperties (calDavDataAccess, cancellationToken) : CalendarProperties.None,
+          ressourceType.HasFlag (ResourceType.AddressBook) ? await GetAddressBookProperties (cardDavDataAccess, cancellationToken) : AddressBookProperties.None,
+          await calDavDataAccess.GetPrivileges(cancellationToken));
     }
 
-    private static async Task<CalendarProperties> GetCalendarProperties (CalDavDataAccess calDavDataAccess)
+    private static async Task<CalendarProperties> GetCalendarProperties (CalDavDataAccess calDavDataAccess, CancellationToken cancellationToken)
     {
       return
-          (await calDavDataAccess.IsCalendarAccessSupported() ? CalendarProperties.CalendarAccessSupported : CalendarProperties.None) |
-          (await calDavDataAccess.DoesSupportCalendarQuery() ? CalendarProperties.SupportsCalendarQuery : CalendarProperties.None);
+          (await calDavDataAccess.IsCalendarAccessSupported(cancellationToken) ? CalendarProperties.CalendarAccessSupported : CalendarProperties.None) |
+          (await calDavDataAccess.DoesSupportCalendarQuery(cancellationToken) ? CalendarProperties.SupportsCalendarQuery : CalendarProperties.None);
     }
 
-    private static async Task<AddressBookProperties> GetAddressBookProperties (CardDavDataAccess cardDavDataAccess)
+    private static async Task<AddressBookProperties> GetAddressBookProperties (CardDavDataAccess cardDavDataAccess, CancellationToken cancellationToken)
     {
-      return await cardDavDataAccess.IsAddressBookAccessSupported() ? AddressBookProperties.AddressBookAccessSupported : AddressBookProperties.None;
+      return await cardDavDataAccess.IsAddressBookAccessSupported(cancellationToken) ? AddressBookProperties.AddressBookAccessSupported : AddressBookProperties.None;
     }
 
 

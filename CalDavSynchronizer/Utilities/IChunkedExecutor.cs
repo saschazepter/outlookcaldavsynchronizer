@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalDavSynchronizer.Utilities
@@ -25,7 +26,8 @@ namespace CalDavSynchronizer.Utilities
     Task<TExecutionContext> ExecuteAsync<TItem, TExecutionContext>(
       TExecutionContext executionContext,
       IEnumerable<TItem> items,
-      Func<List<TItem>, TExecutionContext, Task> processChunk);
+      Func<List<TItem>, TExecutionContext, CancellationToken, Task> processChunk,
+      CancellationToken cancellationToken);
 
     TExecutionContext Execute<TItem, TExecutionContext>(
       TExecutionContext executionContext,

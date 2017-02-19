@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.EntityMapping;
 using GenSync.Logging;
@@ -23,12 +24,12 @@ namespace GenSync.UnitTests.Synchronization.Stubs
 {
   internal class Mapper : IEntityMapper<string, string, int>
   {
-    public Task<string> Map1To2 (string source, string target, IEntityMappingLogger logger, int context)
+    public Task<string> Map1To2 (string source, string target, IEntityMappingLogger logger, int context, CancellationToken cancellationToken)
     {
       return Task.FromResult(source);
     }
 
-    public Task<string> Map2To1 (string source, string target, IEntityMappingLogger logger, int context)
+    public Task<string> Map2To1 (string source, string target, IEntityMappingLogger logger, int context, CancellationToken cancellationToken)
     {
       return Task.FromResult(source);
     }

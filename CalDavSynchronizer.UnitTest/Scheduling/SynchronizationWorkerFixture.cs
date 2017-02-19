@@ -54,17 +54,17 @@ namespace CalDavSynchronizer.UnitTest.Scheduling
       var options = new Options();
       var generalOptions = new GeneralOptions();
       _stubSynchronizer = new StubSynchronizer();
-      _synchronizerFactory.Expect (f => f.CreateSynchronizer (options, generalOptions)).Return (Task.FromResult<IOutlookSynchronizer>(_stubSynchronizer));
-      await _synchronizationProfileRunner.UpdateOptions (options, generalOptions);
+      _synchronizerFactory.Expect (f => f.CreateSynchronizer (options, generalOptions, CancellationToken.None)).Return (Task.FromResult<IOutlookSynchronizer>(_stubSynchronizer));
+      await _synchronizationProfileRunner.UpdateOptions (options, generalOptions, CancellationToken.None);
     }
 
     [Test]
     public void RunNoThrowAndRescheduleIfNotRunning ()
     {
-      var synchronizationTask1 = _synchronizationProfileRunner.RunAndRescheduleNoThrow (true);
-      var synchronizationTask2 = _synchronizationProfileRunner.RunAndRescheduleNoThrow (true);
-      var synchronizationTask3 = _synchronizationProfileRunner.RunAndRescheduleNoThrow (true);
-      var synchronizationTask4 = _synchronizationProfileRunner.RunAndRescheduleNoThrow (true);
+      var synchronizationTask1 = _synchronizationProfileRunner.RunAndRescheduleNoThrow (true, CancellationToken.None);
+      var synchronizationTask2 = _synchronizationProfileRunner.RunAndRescheduleNoThrow (true, CancellationToken.None);
+      var synchronizationTask3 = _synchronizationProfileRunner.RunAndRescheduleNoThrow (true, CancellationToken.None);
+      var synchronizationTask4 = _synchronizationProfileRunner.RunAndRescheduleNoThrow (true, CancellationToken.None);
 
       Assert.That (synchronizationTask1.IsCompleted, Is.False);
       Assert.That (synchronizationTask2.IsCompleted, Is.True);
@@ -93,13 +93,13 @@ namespace CalDavSynchronizer.UnitTest.Scheduling
         get { return _runCount; }
       }
 
-      public Task Synchronize (ISynchronizationLogger logger)
+      public Task Synchronize (ISynchronizationLogger logger, CancellationToken cancellationToken)
       {
         _runCount++;
         return Task.Run (() => FinishSynchronizationEvent.Wait());
       }
 
-      public Task SynchronizePartial (IEnumerable<IOutlookId> outlookIds, ISynchronizationLogger logger)
+      public Task SynchronizePartial (IEnumerable<IOutlookId> outlookIds, ISynchronizationLogger logger, CancellationToken cancellationToken)
       {
         throw new NotImplementedException();
       }

@@ -24,6 +24,8 @@ using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Utilities;
 using Microsoft.Office.Interop.Outlook;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using CalDavSynchronizer.Ui.Options.Models;
 using log4net;
@@ -41,6 +43,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels.Mapping
     private bool _isSelected;
     private bool _isExpanded;
 
+
     public EventMappingConfigurationViewModel(IReadOnlyList<string> availableCategories, EventMappingConfigurationModel model, OptionsModel optionsModel)
     {
       if (availableCategories == null)
@@ -54,12 +57,12 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels.Mapping
       SetServerCalendarColorCommand = new DelegateCommand(_ =>
       {
         ComponentContainer.EnsureSynchronizationContext();
-        SetServerCalendarColorAsync();
+        SetServerCalendarColorAsync(CancellationToken.None);
       });
       GetServerCalendarColorCommand = new DelegateCommand(_ =>
       {
         ComponentContainer.EnsureSynchronizationContext();
-        GetServerCalendarColorAsync();
+        GetServerCalendarColorAsync(CancellationToken.None);
       });
 
       Items = new[] { new CustomPropertyMappingViewModel(model) };
@@ -328,11 +331,11 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels.Mapping
     };
 
    
-    private async void GetServerCalendarColorAsync()
+    private async void GetServerCalendarColorAsync(CancellationToken cancellationToken)
     {
       try
       {
-        var serverColor = await _optionsModel.CreateCalDavDataAccess().GetCalendarColorNoThrow();
+        var serverColor = await _optionsModel.CreateCalDavDataAccess().GetCalendarColorNoThrow(cancellationToken);
 
         if (serverColor != null)
         {
@@ -345,13 +348,13 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels.Mapping
       }
     }
 
-    private async void SetServerCalendarColorAsync()
+    private async void SetServerCalendarColorAsync(CancellationToken cancellationToken)
     {
       try
       {
         if (EventCategoryColor != OlCategoryColor.olCategoryColorNone)
         {
-          if (await _optionsModel.CreateCalDavDataAccess().SetCalendarColorNoThrow(ColorHelper.CategoryColors[EventCategoryColor]))
+          if (await _optionsModel.CreateCalDavDataAccess().SetCalendarColorNoThrow(ColorHelper.CategoryColors[EventCategoryColor], cancellationToken))
           {
             System.Windows.MessageBox.Show("Successfully updated the server calendar color!");
           }

@@ -22,6 +22,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using CalDavSynchronizer.Implementation.TimeRangeFiltering;
@@ -41,29 +42,29 @@ namespace CalDavSynchronizer.DataAccess
     {
     }
 
-    public Task<bool> IsCalendarAccessSupported ()
+    public Task<bool> IsCalendarAccessSupported (CancellationToken cancellationToken)
     {
-      return HasOption ("calendar-access");
+      return HasOption ("calendar-access", cancellationToken);
     }
 
-    public Task<bool> IsResourceCalender ()
+    public Task<bool> IsResourceCalender (CancellationToken cancellationToken)
     {
-      return IsResourceType ("C", "calendar");
+      return IsResourceType ("C", "calendar", cancellationToken);
     }
 
-    public Task<bool> DoesSupportCalendarQuery ()
+    public Task<bool> DoesSupportCalendarQuery (CancellationToken cancellationToken)
     {
-      return DoesSupportsReportSet (_serverUrl, 0, "C", "calendar-query");
+      return DoesSupportsReportSet (_serverUrl, 0, "C", "calendar-query", cancellationToken);
     }
 
-    public async Task<Uri> GetCalendarHomeSetUriOrNull (bool useWellKnownUrl)
+    public async Task<Uri> GetCalendarHomeSetUriOrNull (bool useWellKnownUrl, CancellationToken cancellationToken)
     {
       var autodiscoveryUrl = useWellKnownUrl ? AutoDiscoveryUrl : _serverUrl;
 
-      var currentUserPrincipalUrl = await GetCurrentUserPrincipalUrl (autodiscoveryUrl);
+      var currentUserPrincipalUrl = await GetCurrentUserPrincipalUrl (autodiscoveryUrl, cancellationToken);
       if (currentUserPrincipalUrl != null)
       {
-        var calendarHomeSetProperties = await GetCalendarHomeSet (currentUserPrincipalUrl);
+        var calendarHomeSetProperties = await GetCalendarHomeSet (currentUserPrincipalUrl, cancellationToken);
 
         XmlNode homeSetNode = calendarHomeSetProperties.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/C:calendar-home-set", calendarHomeSetProperties.XmlNamespaceManager);
         if (homeSetNode != null && homeSetNode.HasChildNodes)
@@ -85,9 +86,9 @@ namespace CalDavSynchronizer.DataAccess
       return null;
     }
 
-    public async Task<Uri> AddResource (string name, bool useRandomUri)
+    public async Task<Uri> AddResource (string name, bool useRandomUri, CancellationToken cancellationToken)
     {
-      var homeSetUri = await GetCalendarHomeSetUriOrNull (ConnectionTester.RequiresAutoDiscovery (_serverUrl)) ?? _serverUrl;
+      var homeSetUri = await GetCalendarHomeSetUriOrNull (ConnectionTester.RequiresAutoDiscovery (_serverUrl), cancellationToken) ?? _serverUrl;
       var resourceName = useRandomUri ? Guid.NewGuid() + "/" : name + "/";
 
       var newResourceUri = new Uri (homeSetUri, resourceName);
@@ -108,7 +109,8 @@ namespace CalDavSynchronizer.DataAccess
                           </D:resourcetype>
                         </D:prop>
                       </D:set>
-                    </D:mkcol>"
+                    </D:mkcol>", 
+          cancellationToken
         );
 
       await _webDavClient.ExecuteWebDavRequestAndReturnResponseHeaders (
@@ -127,25 +129,26 @@ namespace CalDavSynchronizer.DataAccess
                           </D:prop>
                         </D:set>
                       </D:propertyupdate>
-                 ", name)
+                 ", name),
+        cancellationToken
         );
       return newResourceUri;
     }
 
-    public async Task<CalDavResources> GetUserResourcesNoThrow (bool useWellKnownUrl)
+    public async Task<CalDavResources> GetUserResourcesNoThrow (bool useWellKnownUrl, CancellationToken cancellationToken)
     {
       try
       {
         var autodiscoveryUrl = useWellKnownUrl ? AutoDiscoveryUrl : _serverUrl;
 
-        var currentUserPrincipalUrl = await GetCurrentUserPrincipalUrl (autodiscoveryUrl);
+        var currentUserPrincipalUrl = await GetCurrentUserPrincipalUrl (autodiscoveryUrl, cancellationToken);
 
         var calendars = new List<CalendarData>();
         var taskLists = new List<TaskListData>();
 
         if (currentUserPrincipalUrl != null)
         {
-          var calendarHomeSetProperties = await GetCalendarHomeSet (currentUserPrincipalUrl);
+          var calendarHomeSetProperties = await GetCalendarHomeSet (currentUserPrincipalUrl, cancellationToken);
 
           XmlNode homeSetNode = calendarHomeSetProperties.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/C:calendar-home-set", calendarHomeSetProperties.XmlNamespaceManager);
           if (homeSetNode != null && homeSetNode.HasChildNodes)
@@ -158,7 +161,7 @@ namespace CalDavSynchronizer.DataAccess
                   new Uri (homeSetNodeHref.InnerText) :
                   new Uri (calendarHomeSetProperties.DocumentUri.GetLeftPart (UriPartial.Authority) + homeSetNodeHref.InnerText);
 
-                var calendarDocument = await ListCalendars (calendarHomeSetUri);
+                var calendarDocument = await ListCalendars (calendarHomeSetUri, cancellationToken);
 
                 XmlNodeList responseNodes = calendarDocument.XmlDocument.SelectNodes ("/D:multistatus/D:response",calendarDocument.XmlNamespaceManager);
 
@@ -220,7 +223,7 @@ namespace CalDavSynchronizer.DataAccess
       }
     }
 
-    private Task<XmlDocumentWithNamespaceManager> GetCalendarHomeSet (Uri url)
+    private Task<XmlDocumentWithNamespaceManager> GetCalendarHomeSet (Uri url, CancellationToken cancellationToken)
     {
       return _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -235,11 +238,12 @@ namespace CalDavSynchronizer.DataAccess
                             <C:calendar-home-set/>
                           </D:prop>
                         </D:propfind>
-                 "
+                 ",
+          cancellationToken
           );
     }
 
-    private Task<XmlDocumentWithNamespaceManager> ListCalendars (Uri url)
+    private Task<XmlDocumentWithNamespaceManager> ListCalendars (Uri url, CancellationToken cancellationToken)
     {
       return _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -257,11 +261,12 @@ namespace CalDavSynchronizer.DataAccess
                               <C:supported-calendar-component-set />
                           </D:prop>
                         </D:propfind>
-                 "
+                 ",
+          cancellationToken
           );
     }
 
-    public async Task<ArgbColor?> GetCalendarColorNoThrow ()
+    public async Task<ArgbColor?> GetCalendarColorNoThrow (CancellationToken cancellationToken)
     {
       try
       {
@@ -278,7 +283,8 @@ namespace CalDavSynchronizer.DataAccess
                               <E:calendar-color />
                           </D:prop>
                       </D:propfind>
-                 "
+                 ",
+                 cancellationToken
             );
 
         var calendarColorNode = document.XmlDocument.SelectSingleNode("/D:multistatus/D:response/D:propstat/D:prop/E:calendar-color", document.XmlNamespaceManager);
@@ -297,7 +303,7 @@ namespace CalDavSynchronizer.DataAccess
     
     
 
-    public async Task<bool> SetCalendarColorNoThrow (ArgbColor color)
+    public async Task<bool> SetCalendarColorNoThrow (ArgbColor color, CancellationToken cancellationToken)
     {
       try
       {
@@ -317,7 +323,8 @@ namespace CalDavSynchronizer.DataAccess
                           </D:prop>
                         </D:set>
                       </D:propertyupdate>
-                 ", color.ToRgbaHexString())
+                 ", color.ToRgbaHexString()),
+            cancellationToken
             );
         return true;
       }
@@ -330,22 +337,22 @@ namespace CalDavSynchronizer.DataAccess
 
     private const string s_calDavDateTimeFormatString = "yyyyMMddTHHmmssZ";
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetEventVersions (DateTimeRange? range)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetEventVersions (DateTimeRange? range, CancellationToken cancellationToken)
     {
-      return GetVersions (range, "VEVENT");
+      return GetVersions (range, "VEVENT", cancellationToken);
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetTodoVersions (DateTimeRange? range)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetTodoVersions (DateTimeRange? range, CancellationToken cancellationToken)
     {
-      return GetVersions (range, "VTODO");
+      return GetVersions (range, "VTODO", cancellationToken);
     }
 
-    public Task<EntityVersion<WebResourceName, string>> CreateEntity (string iCalData, string uid)
+    public Task<EntityVersion<WebResourceName, string>> CreateEntity (string iCalData, string uid, CancellationToken cancellationToken)
     {
-      return CreateNewEntity (string.Format ("{0:D}.ics", uid), iCalData);
+      return CreateNewEntity (string.Format ("{0:D}.ics", uid), iCalData, cancellationToken);
     }
 
-    protected async Task<EntityVersion<WebResourceName, string>> CreateNewEntity (string name, string content)
+    protected async Task<EntityVersion<WebResourceName, string>> CreateNewEntity (string name, string content, CancellationToken cancellationToken)
     {
       var eventUrl = new Uri (_serverUrl, name);
 
@@ -358,7 +365,8 @@ namespace CalDavSynchronizer.DataAccess
         null,
         "*",
         "text/calendar",
-        content);
+        content,
+        cancellationToken);
 
       Uri effectiveEventUrl;
       if (responseHeaders.Location != null)
@@ -380,13 +388,13 @@ namespace CalDavSynchronizer.DataAccess
       }
       else
       {
-        version = await GetEtag (effectiveEventUrl);
+        version = await GetEtag (effectiveEventUrl, cancellationToken);
       }
 
       return new EntityVersion<WebResourceName, string> (new WebResourceName(effectiveEventUrl), version);
     }
 
-    public async Task<EntityVersion<WebResourceName, string>> TryUpdateEntity (WebResourceName url, string etag, string contents)
+    public async Task<EntityVersion<WebResourceName, string>> TryUpdateEntity (WebResourceName url, string etag, string contents, CancellationToken cancellationToken)
     {
       s_logger.DebugFormat ("Updating entity '{0}'", url);
 
@@ -405,7 +413,8 @@ namespace CalDavSynchronizer.DataAccess
           etag,
           null,
           "text/calendar",
-          contents);
+          contents,
+          cancellationToken);
       }
       catch (WebDavClientException x) when (x.StatusCode == HttpStatusCode.NotFound || x.StatusCode == HttpStatusCode.PreconditionFailed)
       {
@@ -435,13 +444,13 @@ namespace CalDavSynchronizer.DataAccess
       }
       else
       {
-        version = await GetEtag (effectiveEventUrl);
+        version = await GetEtag (effectiveEventUrl, cancellationToken);
       }
 
       return new EntityVersion<WebResourceName, string> (new WebResourceName(effectiveEventUrl), version);
     }
 
-    private async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (DateTimeRange? range, string entityType)
+    private async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (DateTimeRange? range, string entityType, CancellationToken cancellationToken)
     {
       var entities = new List<EntityVersion<WebResourceName, string>>();
 
@@ -473,7 +482,8 @@ namespace CalDavSynchronizer.DataAccess
                 range == null ? string.Empty : string.Format (@"<C:time-range start=""{0}"" end=""{1}""/>",
                     range.Value.From.ToString (s_calDavDateTimeFormatString),
                     range.Value.To.ToString (s_calDavDateTimeFormatString))
-                ));
+                ),
+            cancellationToken);
 
 
         XmlNodeList responseNodes = responseXml.XmlDocument.SelectNodes ("/D:multistatus/D:response", responseXml.XmlNamespaceManager);
@@ -496,7 +506,7 @@ namespace CalDavSynchronizer.DataAccess
       catch (WebDavClientException x)
       {
         // Workaround for Synology NAS, which returns 404 insteaod of an empty response if no events are present
-        if (x.StatusCode == HttpStatusCode.NotFound && await IsResourceCalender())
+        if (x.StatusCode == HttpStatusCode.NotFound && await IsResourceCalender(cancellationToken))
           return entities;
 
         throw;
@@ -505,7 +515,7 @@ namespace CalDavSynchronizer.DataAccess
       return entities;
     }
 
-    public async Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities (IEnumerable<WebResourceName> eventUrls)
+    public async Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities (IEnumerable<WebResourceName> eventUrls, CancellationToken cancellationToken)
     {
       WebResourceName firstResourceNameOrNull = null;
 
@@ -535,7 +545,8 @@ namespace CalDavSynchronizer.DataAccess
           null,
           null,
           "application/xml",
-          requestBody
+          requestBody,
+          cancellationToken
           );
 
       XmlNodeList responseNodes = responseXml.XmlDocument.SelectNodes ("/D:multistatus/D:response", responseXml.XmlNamespaceManager);
@@ -560,7 +571,7 @@ namespace CalDavSynchronizer.DataAccess
       return entities;
     }
 
-    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<WebResourceName> eventUrls)
+    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<WebResourceName> eventUrls, CancellationToken cancellationToken)
     {
       WebResourceName firstResourceNameOrNull = null;
 
@@ -587,7 +598,8 @@ namespace CalDavSynchronizer.DataAccess
           null,
           null,
           "application/xml",
-          requestBody
+          requestBody,
+          cancellationToken
           );
 
       XmlNodeList responseNodes = responseXml.XmlDocument.SelectNodes ("/D:multistatus/D:response", responseXml.XmlNamespaceManager);

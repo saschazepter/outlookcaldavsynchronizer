@@ -20,6 +20,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Implementation.Common;
@@ -80,7 +81,7 @@ namespace CalDavSynchronizer.Implementation.Events
       return GenericComObjectWrapper.Create ((Folder) _mapiNameSpace.GetFolderFromID (_folderId, _folderStoreId));
     }
 
-    public Task<IReadOnlyList<EntityVersion<AppointmentId, DateTime>>> GetVersions (IEnumerable<IdWithAwarenessLevel<AppointmentId>> idsOfEntitiesToQuery, IEventSynchronizationContext context)
+    public Task<IReadOnlyList<EntityVersion<AppointmentId, DateTime>>> GetVersions (IEnumerable<IdWithAwarenessLevel<AppointmentId>> idsOfEntitiesToQuery, IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
       var result = new List<EntityVersion<AppointmentId, DateTime>>();
 
@@ -124,9 +125,9 @@ namespace CalDavSynchronizer.Implementation.Events
       return _configuration.InvertEventCategoryFilter ? !found : found;
     }
 
-    public async Task<IReadOnlyList<EntityVersion<AppointmentId, DateTime>>> GetAllVersions (IEnumerable<AppointmentId> idsOfknownEntities, IEventSynchronizationContext context)
+    public async Task<IReadOnlyList<EntityVersion<AppointmentId, DateTime>>> GetAllVersions (IEnumerable<AppointmentId> idsOfknownEntities, IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
-      var all =  await GetAll (idsOfknownEntities,context);
+      var all =  await GetAll (idsOfknownEntities,context, cancellationToken);
       
       foreach (var appointment in all)
         context.AnnounceAppointment(appointment);
@@ -134,7 +135,7 @@ namespace CalDavSynchronizer.Implementation.Events
       return all.Select(a => a.Version).ToList();
     }
 
-    private Task<IReadOnlyList<AppointmentSlim>> GetAll (IEnumerable<AppointmentId> idsOfknownEntities, IEventSynchronizationContext context)
+    private Task<IReadOnlyList<AppointmentSlim>> GetAll (IEnumerable<AppointmentId> idsOfknownEntities, IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
       var range = _dateTimeRangeProvider.GetRange ();
 
@@ -204,7 +205,7 @@ namespace CalDavSynchronizer.Implementation.Events
     }
 
 #pragma warning disable 1998
-    public async Task<IReadOnlyList<EntityWithId<AppointmentId, AppointmentItemWrapper>>> Get (ICollection<AppointmentId> ids, ILoadEntityLogger logger, IEventSynchronizationContext context)
+    public async Task<IReadOnlyList<EntityWithId<AppointmentId, AppointmentItemWrapper>>> Get (ICollection<AppointmentId> ids, ILoadEntityLogger logger, IEventSynchronizationContext context, CancellationToken cancellationToken)
 #pragma warning restore 1998
     {
       return ids
@@ -216,9 +217,9 @@ namespace CalDavSynchronizer.Implementation.Events
           .ToArray();
     }
 
-    public async Task VerifyUnknownEntities (Dictionary<AppointmentId, DateTime> unknownEntites, IEventSynchronizationContext context)
+    public async Task VerifyUnknownEntities (Dictionary<AppointmentId, DateTime> unknownEntites, IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
-      foreach (var deletedId in await context.DeleteAnnouncedEventsIfDuplicates(unknownEntites.ContainsKey))
+      foreach (var deletedId in await context.DeleteAnnouncedEventsIfDuplicates(unknownEntites.ContainsKey, cancellationToken))
         unknownEntites.Remove(deletedId);
     }
 
@@ -237,10 +238,11 @@ namespace CalDavSynchronizer.Implementation.Events
         AppointmentId entityId,
         DateTime entityVersion,
         AppointmentItemWrapper entityToUpdate,
-        Func<AppointmentItemWrapper, Task<AppointmentItemWrapper>> entityModifier,
-        IEventSynchronizationContext context)
+        Func<AppointmentItemWrapper, CancellationToken, Task<AppointmentItemWrapper>> entityModifier,
+        IEventSynchronizationContext context, 
+        CancellationToken cancellationToken)
     {
-      entityToUpdate = await entityModifier (entityToUpdate);
+      entityToUpdate = await entityModifier (entityToUpdate, cancellationToken);
       entityToUpdate.Inner.Save();
       context.AnnounceAppointment (AppointmentSlim.FromAppointmentItem(entityToUpdate.Inner));
 
@@ -254,9 +256,9 @@ namespace CalDavSynchronizer.Implementation.Events
         entityToUpdate.Inner.LastModificationTime);
     }
 
-    public Task<bool> TryDelete (AppointmentId entityId, DateTime version, IEventSynchronizationContext context)
+    public Task<bool> TryDelete (AppointmentId entityId, DateTime version, IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
-      var entityWithId = Get (new[] { entityId }, NullLoadEntityLogger.Instance, context).Result.SingleOrDefault();
+      var entityWithId = Get (new[] { entityId }, NullLoadEntityLogger.Instance, context, cancellationToken).Result.SingleOrDefault();
       if (entityWithId == null)
         return Task.FromResult (true);
 
@@ -268,7 +270,7 @@ namespace CalDavSynchronizer.Implementation.Events
       return Task.FromResult (true);
     }
 
-    public async Task<EntityVersion<AppointmentId, DateTime>> Create (Func<AppointmentItemWrapper, Task<AppointmentItemWrapper>> entityInitializer, IEventSynchronizationContext context)
+    public async Task<EntityVersion<AppointmentId, DateTime>> Create (Func<AppointmentItemWrapper, CancellationToken, Task<AppointmentItemWrapper>> entityInitializer, IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
       AppointmentItemWrapper newAppointmentItemWrapper;
 
@@ -281,7 +283,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
       using (newAppointmentItemWrapper)
       {
-        using (var initializedWrapper = await entityInitializer(newAppointmentItemWrapper))
+        using (var initializedWrapper = await entityInitializer(newAppointmentItemWrapper, cancellationToken))
         {
           initializedWrapper.SaveAndReload();
           context.AnnounceAppointment(AppointmentSlim.FromAppointmentItem(initializedWrapper.Inner));

@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DataAccess;
@@ -42,7 +43,7 @@ namespace CalDavSynchronizer.Implementation.DistributionLists
   {
     private static readonly ILog s_logger = LogManager.GetLogger(MethodInfo.GetCurrentMethod().DeclaringType);
 
-    public Task<DistributionList> Map1To2(GenericComObjectWrapper<DistListItem> source, DistributionList target, IEntityMappingLogger logger, DistributionListSychronizationContext context)
+    public Task<DistributionList> Map1To2(GenericComObjectWrapper<DistListItem> source, DistributionList target, IEntityMappingLogger logger, DistributionListSychronizationContext context, CancellationToken cancellationToken)
     {
       target.Members.Clear();
       target.NonAddressBookMembers.Clear();
@@ -95,7 +96,7 @@ namespace CalDavSynchronizer.Implementation.DistributionLists
       return Task.FromResult(target);
     }
 
-    public Task<GenericComObjectWrapper<DistListItem>> Map2To1(DistributionList source, GenericComObjectWrapper<DistListItem> target, IEntityMappingLogger logger, DistributionListSychronizationContext context)
+    public Task<GenericComObjectWrapper<DistListItem>> Map2To1(DistributionList source, GenericComObjectWrapper<DistListItem> target, IEntityMappingLogger logger, DistributionListSychronizationContext context, CancellationToken cancellationToken)
     {
 
       var outlookMembersByAddress = new Dictionary<string, GenericComObjectWrapper<Recipient>>(StringComparer.InvariantCultureIgnoreCase);

@@ -21,6 +21,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -95,19 +96,19 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
       EmailAddress = serverAccountSettings.EmailAddress;
     }
 
-    public async Task<ServerResources> GetServerResources ()
+    public async Task<ServerResources> GetServerResources (CancellationToken cancellationToken)
     {
       var trimmedUrl = CalenderUrl.Trim();
       var url = new Uri (trimmedUrl.EndsWith ("/") ? trimmedUrl : trimmedUrl + "/");
 
       var webDavClient = _prototypeModel.CreateWebDavClient();
       var calDavDataAccess = new CalDavDataAccess (url, webDavClient);
-      var foundResources = await calDavDataAccess.GetUserResourcesNoThrow (false);
+      var foundResources = await calDavDataAccess.GetUserResourcesNoThrow (false, cancellationToken);
 
       var foundAddressBooks = new[] { new AddressBookData (new Uri ("googleApi://defaultAddressBook"), "Default AddressBook") };
 
-      var service = await GoogleHttpClientFactory.LoginToGoogleTasksService (EmailAddress, SynchronizerFactory.CreateProxy (_prototypeModel.CreateProxyOptions()));
-      var taskLists = await service.Tasklists.List().ExecuteAsync();
+      var service = await GoogleHttpClientFactory.LoginToGoogleTasksService (EmailAddress, SynchronizerFactory.CreateProxy (_prototypeModel.CreateProxyOptions()), cancellationToken);
+      var taskLists = await service.Tasklists.List().ExecuteAsync(cancellationToken);
       var taskListsData = taskLists?.Items.Select (i => new TaskListData (i.Id, i.Title)).ToArray() ?? new TaskListData[] { };
 
       return new ServerResources (foundResources.CalendarResources, foundAddressBooks, taskListsData);

@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.EntityRelationManagement;
 using GenSync.EntityRepositories;
@@ -90,9 +91,9 @@ namespace GenSync.Synchronization.States
       aJobs.AddCreateJob (new JobWrapper (this, logger, context));
     }
 
-    private async Task<TAtypeEntity> InitializeEntity (TAtypeEntity entity, IEntityMappingLogger logger, TContext context)
+    private async Task<TAtypeEntity> InitializeEntity (TAtypeEntity entity, IEntityMappingLogger logger, TContext context, CancellationToken cancellationToken)
     {
-      return await _environment.Mapper.Map2To1 (_bEntity, entity, logger, context);
+      return await _environment.Mapper.Map2To1 (_bEntity, entity, logger, context, cancellationToken);
     }
 
     private void NotifyOperationSuceeded (EntityVersion<TAtypeEntityId, TAtypeEntityVersion> newVersion, IEntitySynchronizationLogger logger)
@@ -150,9 +151,9 @@ namespace GenSync.Synchronization.States
         _context = context;
       }
 
-      public async Task<TAtypeEntity> InitializeEntity (TAtypeEntity entity)
+      public async Task<TAtypeEntity> InitializeEntity (TAtypeEntity entity, CancellationToken cancellationToken)
       {
-        return await _state.InitializeEntity (entity, _logger, _context);
+        return await _state.InitializeEntity (entity, _logger, _context, cancellationToken);
       }
 
       public void NotifyOperationSuceeded (EntityVersion<TAtypeEntityId, TAtypeEntityVersion> result)

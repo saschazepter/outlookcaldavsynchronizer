@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.ProgressReport;
 
@@ -28,6 +29,7 @@ namespace GenSync.EntityRepositories
         IReadOnlyList<IUpdateJob<TEntityId, TEntityVersion, TEntity>> updateJobs,
         IReadOnlyList<IDeleteJob<TEntityId, TEntityVersion>> deleteJobs,
         IProgressLogger progressLogger,
-        TContext context);
+        TContext context,
+        CancellationToken cancellationToken);
   }
 }

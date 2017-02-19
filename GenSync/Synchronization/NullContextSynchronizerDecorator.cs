@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.Logging;
 
@@ -30,17 +31,18 @@ namespace GenSync.Synchronization
       _inner = inner;
     }
 
-    public async Task Synchronize(ISynchronizationLogger logger)
+    public async Task Synchronize(ISynchronizationLogger logger, CancellationToken cancellationToken)
     {
-      await _inner.Synchronize(logger, 0);
+      await _inner.Synchronize(logger, 0, cancellationToken);
     }
 
     public async Task SynchronizePartial(
       IEnumerable<IIdWithHints<TAtypeEntityId, TAtypeEntityVersion>> aIds,
       IEnumerable<IIdWithHints<TBtypeEntityId, TBtypeEntityVersion>> bIds,
-      ISynchronizationLogger logger)
+      ISynchronizationLogger logger, 
+      CancellationToken cancellationToken)
     {
-      await _inner.SynchronizePartial(aIds, bIds, logger, () => Task.FromResult(0), c => Task.FromResult(0));
+      await _inner.SynchronizePartial(aIds, bIds, logger, ct => Task.FromResult(0), (c,t) => Task.FromResult(0), cancellationToken);
     }
   }
 }

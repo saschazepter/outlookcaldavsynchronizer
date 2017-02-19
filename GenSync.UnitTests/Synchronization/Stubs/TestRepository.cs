@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.EntityRepositories;
 using GenSync.Logging;
@@ -41,7 +42,7 @@ namespace GenSync.UnitTests.Synchronization.Stubs
       _idPrefix = idPrefix;
     }
 
-    public Task<IReadOnlyList<EntityVersion<Identifier, int>>> GetVersions (IEnumerable<IdWithAwarenessLevel<Identifier>> idsOfEntitiesToQuery, int context)
+    public Task<IReadOnlyList<EntityVersion<Identifier, int>>> GetVersions (IEnumerable<IdWithAwarenessLevel<Identifier>> idsOfEntitiesToQuery, int context, CancellationToken cancellationToken)
     {
       List<EntityVersion<Identifier, int>> result = new List<EntityVersion<Identifier, int>>();
 
@@ -55,19 +56,19 @@ namespace GenSync.UnitTests.Synchronization.Stubs
       return Task.FromResult<IReadOnlyList<EntityVersion<Identifier, int>>> (result);
     }
 
-    public Task<IReadOnlyList<EntityVersion<Identifier, int>>> GetAllVersions (IEnumerable<Identifier> idsOfknownEntities, int context)
+    public Task<IReadOnlyList<EntityVersion<Identifier, int>>> GetAllVersions (IEnumerable<Identifier> idsOfknownEntities, int context, CancellationToken cancellationToken)
     {
       return Task.FromResult<IReadOnlyList<EntityVersion<Identifier, int>>> (
           EntityVersionAndContentById.Select (kv => EntityVersion.Create (kv.Key, kv.Value.Item1)).ToList());
     }
 
-    public Task<IReadOnlyList<EntityWithId<Identifier, string>>> Get (ICollection<Identifier> ids, ILoadEntityLogger logger, int context)
+    public Task<IReadOnlyList<EntityWithId<Identifier, string>>> Get (ICollection<Identifier> ids, ILoadEntityLogger logger, int context, CancellationToken cancellationToken)
     {
       return Task.FromResult<IReadOnlyList<EntityWithId<Identifier, string>>> (
           ids.Select (id => EntityWithId.Create (id, EntityVersionAndContentById[id].Item2)).ToArray());
     }
 
-    public Task VerifyUnknownEntities (Dictionary<Identifier, int> unknownEntites, int context)
+    public Task VerifyUnknownEntities (Dictionary<Identifier, int> unknownEntites, int context, CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }
@@ -81,7 +82,7 @@ namespace GenSync.UnitTests.Synchronization.Stubs
       EntityVersionAndContentById.Remove (entityId);
     }
 
-    public Task<bool> TryDelete (Identifier entityId, int version, int context)
+    public Task<bool> TryDelete (Identifier entityId, int version, int context, CancellationToken cancellationToken)
     {
       if (!EntityVersionAndContentById.ContainsKey (entityId))
         throw new Exception ("tried to delete non existing entity!");
@@ -97,8 +98,9 @@ namespace GenSync.UnitTests.Synchronization.Stubs
         Identifier entityId,
         int entityVersion,
         string entityToUpdate,
-        Func<string, Task<string>> entityModifier, 
-        int context)
+        Func<string, CancellationToken, Task<string>> entityModifier, 
+        int context, 
+        CancellationToken cancellationToken)
     {
       var kv = EntityVersionAndContentById[entityId];
 
@@ -107,7 +109,7 @@ namespace GenSync.UnitTests.Synchronization.Stubs
 
       EntityVersionAndContentById.Remove (entityId);
 
-      var newValue = await entityModifier (kv.Item2);
+      var newValue = await entityModifier (kv.Item2, cancellationToken);
       var newVersion = kv.Item1 + 1;
 
       var newEntityId = entityId.Value + "u";
@@ -128,9 +130,9 @@ namespace GenSync.UnitTests.Synchronization.Stubs
     }
 
 
-    public async Task<EntityVersion<Identifier, int>> Create (Func<string, Task<string>> entityInitializer, int context)
+    public async Task<EntityVersion<Identifier, int>> Create (Func<string, CancellationToken, Task<string>> entityInitializer, int context, CancellationToken cancellationToken)
     {
-      var newValue = await entityInitializer (string.Empty);
+      var newValue = await entityInitializer (string.Empty, cancellationToken);
       var entityId = _idPrefix + _nextId++;
       EntityVersionAndContentById[entityId] = Tuple.Create (0, newValue);
       return new EntityVersion<Identifier, int> (entityId, 0);

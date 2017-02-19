@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.EntityRelationManagement;
 using GenSync.Logging;
@@ -37,14 +38,14 @@ namespace GenSync.UnitTests.Synchronization.Stubs
       builder.AtypeIdComparer = StringComparer.InvariantCultureIgnoreCase;
 
       builder.AtypeRepository
-          .Expect (r => r.GetAllVersions (new string[] { },0))
+          .Expect (r => r.GetAllVersions (new string[] { },0, CancellationToken.None))
           .IgnoreArguments()
           .Return (
               Task.FromResult<IReadOnlyList<EntityVersion<string, string>>> (
                   new[] { EntityVersion.Create ("A1", "v1"), EntityVersion.Create ("a1", "v3") }));
 
       builder.BtypeRepository
-          .Expect (r => r.GetAllVersions (new string[] { }, 0))
+          .Expect (r => r.GetAllVersions (new string[] { }, 0, CancellationToken.None))
           .IgnoreArguments()
           .Return (
               Task.FromResult<IReadOnlyList<EntityVersion<string, string>>> (
@@ -58,7 +59,8 @@ namespace GenSync.UnitTests.Synchronization.Stubs
           .Expect (r => r.Get (
               Arg<ICollection<string>>.Matches (c => c.Count == 1 && c.First() == "A1"),
               Arg<ILoadEntityLogger>.Is.NotNull,
-              Arg<int>.Is.Anything))
+              Arg<int>.Is.Anything, 
+              CancellationToken.None))
           .Return (aTypeLoadTask);
 
       Task<IReadOnlyList<EntityWithId<string, string>>> bTypeLoadTask = new Task<IReadOnlyList<EntityWithId<string, string>>> (
@@ -68,7 +70,8 @@ namespace GenSync.UnitTests.Synchronization.Stubs
           .Expect (r => r.Get (
               Arg<ICollection<string>>.Matches (c => c.Count == 1 && c.First() == "b1"),
               Arg<ILoadEntityLogger>.Is.NotNull,
-              Arg<int>.Is.Anything))
+              Arg<int>.Is.Anything, 
+              CancellationToken.None))
           .Return (bTypeLoadTask);
 
 
@@ -82,11 +85,11 @@ namespace GenSync.UnitTests.Synchronization.Stubs
           .Expect (s => s.CreateFor_Unchanged_Unchanged (knownData))
           .Return (new DoNothing<string, string, string, string, string, string, int> (knownData));
 
-      builder.AtypeRepository.Stub(_ => _.VerifyUnknownEntities(null,0)).IgnoreArguments().Return(Task.FromResult(0));
-      builder.BtypeRepository.Stub(_ => _.VerifyUnknownEntities(null,0)).IgnoreArguments().Return(Task.FromResult(0));
+      builder.AtypeRepository.Stub(_ => _.VerifyUnknownEntities(null,0, CancellationToken.None)).IgnoreArguments().Return(Task.FromResult(0));
+      builder.BtypeRepository.Stub(_ => _.VerifyUnknownEntities(null,0, CancellationToken.None)).IgnoreArguments().Return(Task.FromResult(0));
 
       var synchronizer = builder.Build();
-      await synchronizer.Synchronize (NullSynchronizationLogger.Instance, 0);
+      await synchronizer.Synchronize (NullSynchronizationLogger.Instance, 0, CancellationToken.None);
 
       builder.EntityRelationDataAccess.AssertWasCalled (
           c => c.SaveEntityRelationData (Arg<List<IEntityRelationData<string, string, string, string>>>.Matches (l => l.Count == 1 && l[0] == knownData)));

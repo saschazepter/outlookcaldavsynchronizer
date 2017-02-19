@@ -14,6 +14,8 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+using System.Threading;
 using System.Threading.Tasks;
 using DDay.iCal;
 
@@ -21,6 +23,6 @@ namespace CalDavSynchronizer.Implementation.TimeZones
 {
   public interface ITimeZoneCache
   {
-    Task<ITimeZone> GetByTzIdOrNull(string tzId);
+    Task<ITimeZone> GetByTzIdOrNull(string tzId, CancellationToken cancellationToken);
   }
 }

@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Implementation;
 using CalDavSynchronizer.Implementation.TimeRangeFiltering;
@@ -27,23 +28,23 @@ namespace CalDavSynchronizer.DataAccess
 {
   public interface ICalDavDataAccess
   {
-    Task<bool> IsResourceCalender ();
-    Task<bool> DoesSupportCalendarQuery ();
-    Task<bool> IsCalendarAccessSupported ();
-    Task<AccessPrivileges> GetPrivileges ();
+    Task<bool> IsResourceCalender (CancellationToken cancellationToken);
+    Task<bool> DoesSupportCalendarQuery (CancellationToken cancellationToken);
+    Task<bool> IsCalendarAccessSupported (CancellationToken cancellationToken);
+    Task<AccessPrivileges> GetPrivileges (CancellationToken cancellationToken);
 
-    Task<ArgbColor?> GetCalendarColorNoThrow ();
-    Task<bool> SetCalendarColorNoThrow (ArgbColor color);
+    Task<ArgbColor?> GetCalendarColorNoThrow (CancellationToken cancellationToken);
+    Task<bool> SetCalendarColorNoThrow (ArgbColor color, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetEventVersions (DateTimeRange? range);
-    Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetTodoVersions (DateTimeRange? range);
-    Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<WebResourceName> eventUrls);
+    Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetEventVersions (DateTimeRange? range, CancellationToken cancellationToken);
+    Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetTodoVersions (DateTimeRange? range, CancellationToken cancellationToken);
+    Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<WebResourceName> eventUrls, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities (IEnumerable<WebResourceName> eventUrls);
+    Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities (IEnumerable<WebResourceName> eventUrls, CancellationToken cancellationToken);
 
-    Task<EntityVersion<WebResourceName, string>> CreateEntity (string iCalData, string uid);
+    Task<EntityVersion<WebResourceName, string>> CreateEntity (string iCalData, string uid, CancellationToken cancellationToken);
 
-    Task<bool> TryDeleteEntity (WebResourceName uri, string etag);
-    Task<EntityVersion<WebResourceName, string>> TryUpdateEntity (WebResourceName url, string etag, string iCalData);
+    Task<bool> TryDeleteEntity (WebResourceName uri, string etag, CancellationToken cancellationToken);
+    Task<EntityVersion<WebResourceName, string>> TryUpdateEntity (WebResourceName url, string etag, string iCalData, CancellationToken cancellationToken);
   }
 }

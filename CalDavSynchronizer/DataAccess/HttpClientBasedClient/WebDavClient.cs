@@ -21,6 +21,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using log4net;
@@ -32,13 +33,13 @@ namespace CalDavSynchronizer.DataAccess.HttpClientBasedClient
     private static readonly ILog s_logger = LogManager.GetLogger (MethodInfo.GetCurrentMethod().DeclaringType);
 
     private readonly ProductInfoHeaderValue _productInfo;
-    private readonly Func<Task<HttpClient>> _httpClientFactory;
+    private readonly Func<CancellationToken,Task<HttpClient>> _httpClientFactory;
     private HttpClient _httpClient;
     private readonly bool _closeConnectionAfterEachRequest;
     private readonly bool _sendEtagsWithoutQuote;
 
     public WebDavClient (
-      Func<Task<HttpClient>> httpClientFactory, 
+      Func<CancellationToken, Task<HttpClient>> httpClientFactory, 
       string productName, 
       string productVersion,
       bool closeConnectionAfterEachRequest, 
@@ -62,11 +63,12 @@ namespace CalDavSynchronizer.DataAccess.HttpClientBasedClient
         string ifMatch,
         string ifNoneMatch,
         string mediaType,
-        string requestBody)
+        string requestBody, 
+        CancellationToken cancellationToken)
     {
       try
       {
-        var response = await ExecuteWebDavRequest (url, httpMethod, depth, ifMatch, ifNoneMatch, mediaType, requestBody);
+        var response = await ExecuteWebDavRequest (url, httpMethod, depth, ifMatch, ifNoneMatch, mediaType, requestBody, cancellationToken);
         using (response.Item2)
         {
           using (var responseStream = await response.Item2.Content.ReadAsStreamAsync())
@@ -88,11 +90,12 @@ namespace CalDavSynchronizer.DataAccess.HttpClientBasedClient
         string ifMatch,
         string ifNoneMatch,
         string mediaType,
-        string requestBody)
+        string requestBody, 
+        CancellationToken cancellationToken)
     {
       try
       {
-        var result = await ExecuteWebDavRequest (url, httpMethod, depth, ifMatch, ifNoneMatch, mediaType, requestBody);
+        var result = await ExecuteWebDavRequest (url, httpMethod, depth, ifMatch, ifNoneMatch, mediaType, requestBody, cancellationToken);
         using (var response = result.Item2)
         {
           return new HttpResponseHeadersAdapter (result.Item1, response.Headers);
@@ -112,6 +115,7 @@ namespace CalDavSynchronizer.DataAccess.HttpClientBasedClient
         string ifNoneMatch,
         string mediaType,
         string requestBody,
+        CancellationToken cancellationToken,
         HttpResponseHeaders headersFromFirstCall = null)
     {
       HttpResponseMessage response;
@@ -143,12 +147,12 @@ namespace CalDavSynchronizer.DataAccess.HttpClientBasedClient
 
         if (_httpClient == null)
         {
-          _httpClient = await _httpClientFactory();
+          _httpClient = await _httpClientFactory(cancellationToken);
           if (_closeConnectionAfterEachRequest)
             _httpClient.DefaultRequestHeaders.Add ("Connection", "close");
         }
 
-        response = await _httpClient.SendAsync (requestMessage);
+        response = await _httpClient.SendAsync (requestMessage, cancellationToken);
       }
 
       try
@@ -160,7 +164,7 @@ namespace CalDavSynchronizer.DataAccess.HttpClientBasedClient
             var location = response.Headers.Location;
             response.Dispose();
             var effectiveLocation = location.IsAbsoluteUri ? location : new Uri (url, location);
-            return await ExecuteWebDavRequest (effectiveLocation, httpMethod, depth, ifMatch, ifNoneMatch, mediaType, requestBody, headersFromFirstCall ?? response.Headers);
+            return await ExecuteWebDavRequest (effectiveLocation, httpMethod, depth, ifMatch, ifNoneMatch, mediaType, requestBody, cancellationToken, headersFromFirstCall ?? response.Headers);
           }
           else
           {

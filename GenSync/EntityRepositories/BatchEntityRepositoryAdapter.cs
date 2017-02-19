@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.ProgressReport;
 
@@ -41,16 +42,18 @@ namespace GenSync.EntityRepositories
         IReadOnlyList<IUpdateJob<TEntityId, TEntityVersion, TEntity>> updateJobs,
         IReadOnlyList<IDeleteJob<TEntityId, TEntityVersion>> deleteJobs,
         IProgressLogger progressLogger,
-        TContext context)
+        TContext context,
+        CancellationToken cancellationToken)
     {
       foreach (var job in createJobs)
       {
+        cancellationToken.ThrowIfCancellationRequested ();
         try
         {
-          var result = await _inner.Create (job.InitializeEntity, context);
+          var result = await _inner.Create (job.InitializeEntity, context, cancellationToken);
           job.NotifyOperationSuceeded (result);
         }
-        catch (Exception x)
+        catch (Exception x) when (!(x is TaskCanceledException && cancellationToken.IsCancellationRequested))
         {
           job.NotifyOperationFailed (x);
         }
@@ -59,15 +62,16 @@ namespace GenSync.EntityRepositories
 
       foreach (var job in updateJobs)
       {
+        cancellationToken.ThrowIfCancellationRequested ();
         try
         {
-          var result = await _inner.TryUpdate (job.EntityId, job.Version, job.EntityToUpdate, job.UpdateEntity , context);
+          var result = await _inner.TryUpdate (job.EntityId, job.Version, job.EntityToUpdate, job.UpdateEntity , context, cancellationToken);
           if (result != null)
             job.NotifyOperationSuceeded (result);
           else
             job.NotifyEntityNotFound();
         }
-        catch (Exception x)
+        catch (Exception x) when (!(x is TaskCanceledException && cancellationToken.IsCancellationRequested))
         {
           job.NotifyOperationFailed (x);
         }
@@ -76,14 +80,15 @@ namespace GenSync.EntityRepositories
 
       foreach (var job in deleteJobs)
       {
+        cancellationToken.ThrowIfCancellationRequested ();
         try
         {
-          if (await _inner.TryDelete (job.EntityId, job.Version, context))
+          if (await _inner.TryDelete (job.EntityId, job.Version, context, cancellationToken))
             job.NotifyOperationSuceeded();
           else
             job.NotifyEntityNotFound();
         }
-        catch (Exception x)
+        catch (Exception x) when (!(x is TaskCanceledException && cancellationToken.IsCancellationRequested))
         {
           job.NotifyOperationFailed (x);
         }

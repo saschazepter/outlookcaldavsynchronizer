@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Linq;
+using System.Threading;
 using CalDavSynchronizer.Implementation;
 using CalDavSynchronizerTestAutomation.Infrastructure;
 using GenSync.Logging;
@@ -45,7 +46,7 @@ namespace CalDavSynchronizerTestAutomation
           entityRelationStorage);
 
 
-      OutlookTestContext.WaitForTask (synchronizer.Synchronize(NullSynchronizationLogger.Instance));
+      OutlookTestContext.WaitForTask (synchronizer.Synchronize(NullSynchronizationLogger.Instance, CancellationToken.None));
 
       var entityRelationDatas = entityRelationStorage.LoadEntityRelationData().ToArray();
       Assert.That (entityRelationDatas.Length, Is.EqualTo (3));
@@ -57,7 +58,7 @@ namespace CalDavSynchronizerTestAutomation
           calDavServer,
           newEntityRelationStorage);
 
-      OutlookTestContext.WaitForTask (synchronizer.Synchronize (NullSynchronizationLogger.Instance));
+      OutlookTestContext.WaitForTask (synchronizer.Synchronize (NullSynchronizationLogger.Instance, CancellationToken.None));
 
       var newRelations = newEntityRelationStorage.LoadEntityRelationData().ToArray();
       // If the InitialEntityMatcher would not work, it would not recognize matching events 

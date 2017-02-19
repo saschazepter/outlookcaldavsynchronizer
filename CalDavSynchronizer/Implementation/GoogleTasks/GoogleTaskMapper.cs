@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Implementation.ComWrappers;
 using GenSync.EntityMapping;
@@ -32,7 +33,7 @@ namespace CalDavSynchronizer.Implementation.GoogleTasks
     {
       _dateNull = new DateTime (4501, 1, 1, 0, 0, 0);
     }
-    public Task<Task> Map1To2 (TaskItemWrapper source, Task target, IEntityMappingLogger logger, int context)
+    public Task<Task> Map1To2 (TaskItemWrapper source, Task target, IEntityMappingLogger logger, int context, CancellationToken cancellationToken)
     {
       target.Title = source.Inner.Subject;
       target.Notes = source.Inner.Body;
@@ -74,7 +75,7 @@ namespace CalDavSynchronizer.Implementation.GoogleTasks
       throw new NotImplementedException (string.Format ("Mapping for value '{0}' not implemented.", value));
     }
 
-    public Task<TaskItemWrapper> Map2To1 (Task source, TaskItemWrapper target, IEntityMappingLogger logger, int context)
+    public Task<TaskItemWrapper> Map2To1 (Task source, TaskItemWrapper target, IEntityMappingLogger logger, int context, CancellationToken cancellationToken)
     {
       target.Inner.Subject = source.Title;
       target.Inner.Body = source.Notes;

@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.Logging;
 
@@ -25,11 +26,11 @@ namespace GenSync.Synchronization
   /// </summary>
   public interface ISynchronizer
   {
-    Task Synchronize (ISynchronizationLogger logger);
+    Task Synchronize (ISynchronizationLogger logger, CancellationToken cancellationToken);
   }
 
   public interface ISynchronizer<in TContext> 
   {
-    Task Synchronize(ISynchronizationLogger logger, TContext synchronizationContext);
+    Task Synchronize(ISynchronizationLogger logger, TContext synchronizationContext, CancellationToken cancellationToken);
   }
 }

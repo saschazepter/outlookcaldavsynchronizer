@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using DDay.iCal;
 using log4net;
@@ -42,14 +43,14 @@ namespace CalDavSynchronizer.Implementation.TimeZones
             _tzHistoricalMap = new Dictionary<string, ITimeZone>();
         }
 
-        public async Task<ITimeZone> GetTimeZoneById(string tzId, bool includeHistoricalData, HttpClient httpClient)
+        public async Task<ITimeZone> GetTimeZoneById(string tzId, bool includeHistoricalData, HttpClient httpClient, CancellationToken cancellationToken)
         {
             ITimeZone tz = GetTzOrNull(tzId, includeHistoricalData);
             if (tz == null)
             {
                 var baseurl = includeHistoricalData ? TZURL_FULL : TZURL_OUTLOOK;
                 var uri = new Uri(baseurl + tzId + ".ics");
-                var col = await LoadFromUriOrNull(httpClient, uri);
+                var col = await LoadFromUriOrNull(httpClient, uri, cancellationToken);
                 if (col != null)
                 {
                     tz = col[0].TimeZones[0];
@@ -84,10 +85,10 @@ namespace CalDavSynchronizer.Implementation.TimeZones
             }
         }
 
-        private async Task<IICalendarCollection> LoadFromUriOrNull(HttpClient httpClient, Uri uri)
+        private async Task<IICalendarCollection> LoadFromUriOrNull(HttpClient httpClient, Uri uri, CancellationToken cancellationToken)
         {
 
-            using (var response = await httpClient.GetAsync(uri))
+            using (var response = await httpClient.GetAsync(uri, cancellationToken))
             {
                 try
                 {

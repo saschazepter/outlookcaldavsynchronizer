@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.Synchronization;
 using NUnit.Framework;
@@ -27,8 +28,8 @@ namespace GenSync.UnitTests.Synchronization
     [Test]
     public async Task ReplicateAtoBAddedLocal ()
     {
-      await _localRepository.Create (v => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create ().Result);
-      await _localRepository.Create (v => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create().Result);
+      await _localRepository.Create ((v, ct) => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
+      await _localRepository.Create ((v, ct) => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create(CancellationToken.None).Result, CancellationToken.None);
 
       ExecuteMultipleTimes (() =>
       {
@@ -47,8 +48,8 @@ namespace GenSync.UnitTests.Synchronization
     [Test]
     public async Task ReplicateAtoBAddedServer ()
     {
-      await _serverRepository.Create (v => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create ().Result);
-      await _serverRepository.Create (v => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create ().Result);
+      await _serverRepository.Create ((v, ct) => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
+      await _serverRepository.Create ((v, ct) => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
 
       ExecuteMultipleTimes (() =>
       {
@@ -65,8 +66,8 @@ namespace GenSync.UnitTests.Synchronization
     {
       await InitializeWithTwoEvents();
 
-      await _localRepository.Create (v => Task.FromResult("Item l"), NullSynchronizationContextFactory.Instance.Create ().Result);
-      await _serverRepository.Create (v => Task.FromResult("Item s"), NullSynchronizationContextFactory.Instance.Create ().Result);
+      await _localRepository.Create ((v, ct) => Task.FromResult("Item l"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
+      await _serverRepository.Create ((v, ct) => Task.FromResult("Item s"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
 
       ExecuteMultipleTimes (() =>
       {

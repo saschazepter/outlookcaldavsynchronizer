@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
@@ -67,19 +68,19 @@ namespace CalDavSynchronizer.Implementation
       _outlookSession = outlookSession;
     }
 
-    public async Task Synchronize (ISynchronizationLogger logger)
+    public async Task Synchronize (ISynchronizationLogger logger, CancellationToken cancellationToken)
     {
       var emailAddressCache = new EmailAddressCache();
       emailAddressCache.Items = _emailAddressCacheDataAccess.Load();
 
       using (var subLogger = logger.CreateSubLogger("Contacts"))
       {
-        await _contactSynchronizer.Synchronize(subLogger, emailAddressCache);
+        await _contactSynchronizer.Synchronize(subLogger, emailAddressCache, cancellationToken);
       }
 
       var idsToQuery = emailAddressCache.GetIdsOfEntriesWithEmptyEmailAddress();
       if (idsToQuery.Length > 0)
-        await _cardDavDataAccess.Get(idsToQuery, NullLoadEntityLogger.Instance, emailAddressCache);
+        await _cardDavDataAccess.Get(idsToQuery, NullLoadEntityLogger.Instance, emailAddressCache, cancellationToken);
       var cacheItems = emailAddressCache.Items;
       _emailAddressCacheDataAccess.Save(cacheItems);
 
@@ -87,18 +88,18 @@ namespace CalDavSynchronizer.Implementation
 
       using (var subLogger = logger.CreateSubLogger("DistLists"))
       {
-        await _distributionListSynchronizer.Synchronize(subLogger, distListContext);
+        await _distributionListSynchronizer.Synchronize(subLogger, distListContext, cancellationToken);
       }
     }
 
-    public async Task SynchronizePartial(IEnumerable<IIdWithHints<string, DateTime>> aIds, IEnumerable<IIdWithHints<WebResourceName, string>> bIds, ISynchronizationLogger logger)
+    public async Task SynchronizePartial(IEnumerable<IIdWithHints<string, DateTime>> aIds, IEnumerable<IIdWithHints<WebResourceName, string>> bIds, ISynchronizationLogger logger, CancellationToken cancellationToken)
     {
       var emailAddressCache = new EmailAddressCache();
       emailAddressCache.Items = _emailAddressCacheDataAccess.Load();
 
       using (var subLogger = logger.CreateSubLogger("Contacts"))
       {
-        await _contactSynchronizer.Synchronize(subLogger, emailAddressCache);
+        await _contactSynchronizer.Synchronize(subLogger, emailAddressCache, cancellationToken);
       }
 
       _emailAddressCacheDataAccess.Save(emailAddressCache.Items);

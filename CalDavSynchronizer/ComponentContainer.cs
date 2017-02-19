@@ -232,14 +232,14 @@ namespace CalDavSynchronizer
       }
     }
 
-    public async Task InitializeSchedulerAndStartAsync()
+    public async Task InitializeSchedulerAndStartAsync(CancellationToken cancellationToken)
     {
       _scheduler.Start();
 
       var options = _optionsDataAccess.Load ();
       var generalOptions = _generalOptionsDataAccess.LoadOptions ();
 
-      await _scheduler.SetOptions (options, generalOptions);
+      await _scheduler.SetOptions (options, generalOptions, cancellationToken);
       if (generalOptions.TriggerSyncAfterSendReceive)
       {
         s_logger.Info ("Triggering sync after startup");
@@ -449,7 +449,7 @@ namespace CalDavSynchronizer
       try
       {
         s_logger.Info ("Synchronization manually triggered");
-        await _scheduler.RunNow();
+        await _scheduler.RunNow(CancellationToken.None);
       }
       catch (Exception x)
       {
@@ -457,7 +457,7 @@ namespace CalDavSynchronizer
       }
     }
 
-    public async Task ShowOptionsAsync (Guid? initialVisibleProfile = null)
+    public async Task ShowOptionsAsync (CancellationToken cancellationToken, Guid? initialVisibleProfile = null)
     {
       if (_currentVisibleOptionsFormOrNull == null)
       {
@@ -468,7 +468,7 @@ namespace CalDavSynchronizer
           var newOptions = ShowWpfOptions (initialVisibleProfile, generalOptions, options);
 
           if (newOptions != null)
-            await ApplyNewOptions (options, newOptions, generalOptions);
+            await ApplyNewOptions (options, newOptions, generalOptions, cancellationToken);
         }
         finally
         {
@@ -519,10 +519,10 @@ namespace CalDavSynchronizer
       }
     }
 
-    private async Task ApplyNewOptions (Options[] oldOptions, Options[] newOptions, GeneralOptions generalOptions)
+    private async Task ApplyNewOptions (Options[] oldOptions, Options[] newOptions, GeneralOptions generalOptions, CancellationToken cancellationToken)
     {
       _optionsDataAccess.Save (newOptions);
-      await _scheduler.SetOptions (newOptions, generalOptions);
+      await _scheduler.SetOptions (newOptions, generalOptions, cancellationToken);
       _profileStatusesViewModel.EnsureProfilesDisplayed (newOptions);
       DeleteEntityChachesForChangedProfiles (oldOptions, newOptions);
       var changedOptions = CreateChangePairs (oldOptions, newOptions);
@@ -546,7 +546,7 @@ namespace CalDavSynchronizer
           select new ChangedOptions (o, no)).ToArray ();
     }
     
-    public async Task ShowGeneralOptionsAsync ()
+    public async Task ShowGeneralOptionsAsync (CancellationToken cancellationToken)
     {
       var generalOptions = _generalOptionsDataAccess.LoadOptions();
       using (var optionsForm = new GeneralOptionsForm())
@@ -564,7 +564,7 @@ namespace CalDavSynchronizer
 
           _generalOptionsDataAccess.SaveOptions (newOptions);
           UpdateGeneralOptionDependencies (newOptions);
-          await _scheduler.SetOptions (_optionsDataAccess.Load(), newOptions);
+          await _scheduler.SetOptions (_optionsDataAccess.Load(), newOptions, cancellationToken);
 
           if (newOptions.EnableTrayIcon != generalOptions.EnableTrayIcon)
           {
@@ -855,12 +855,12 @@ namespace CalDavSynchronizer
           return;
 
         var availableSynchronizerComponents =
-          (await _synchronizerFactory.CreateSynchronizerWithComponents (options, _generalOptionsDataAccess.LoadOptions ())).Item2;
+          (await _synchronizerFactory.CreateSynchronizerWithComponents (options, _generalOptionsDataAccess.LoadOptions (), CancellationToken.None)).Item2;
 
         if (availableSynchronizerComponents.CalDavDataAccess != null)
         {
           var entityName = new WebResourceName { Id = entityId, OriginalAbsolutePath = entityId };
-          var entities = await availableSynchronizerComponents.CalDavDataAccess.GetEntities (new[] { entityName });
+          var entities = await availableSynchronizerComponents.CalDavDataAccess.GetEntities (new[] { entityName }, CancellationToken.None);
           DisplayFirstEntityIfAvailable (entities.FirstOrDefault());
         }
         else if (availableSynchronizerComponents.CardDavDataAccess != null || availableSynchronizerComponents.DistListDataAccess != null)
@@ -870,10 +870,10 @@ namespace CalDavSynchronizer
           EntityWithId<WebResourceName, string> entity = null;
 
           if (availableSynchronizerComponents.CardDavDataAccess != null)
-            entity = (await availableSynchronizerComponents.CardDavDataAccess.GetEntities(new[] { entityName })).FirstOrDefault();
+            entity = (await availableSynchronizerComponents.CardDavDataAccess.GetEntities(new[] { entityName }, CancellationToken.None)).FirstOrDefault();
 
           if (entity == null && availableSynchronizerComponents.DistListDataAccess != null)
-            entity = (await availableSynchronizerComponents.DistListDataAccess.GetEntities(new[] { entityName })).FirstOrDefault();
+            entity = (await availableSynchronizerComponents.DistListDataAccess.GetEntities(new[] { entityName }, CancellationToken.None)).FirstOrDefault();
 
           DisplayFirstEntityIfAvailable(entity);
         }

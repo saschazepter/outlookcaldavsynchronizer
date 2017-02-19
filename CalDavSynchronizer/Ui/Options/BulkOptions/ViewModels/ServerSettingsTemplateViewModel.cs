@@ -18,6 +18,7 @@
 using System;
 using System.Reflection;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DataAccess;
@@ -97,7 +98,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
       options.CalenderUrl = resource.Id;
     }
 
-    public async Task<ServerResources> GetServerResources ()
+    public async Task<ServerResources> GetServerResources (CancellationToken cancellationToken)
     {
       string caldavUrlString ;
       string carddavUrlString;
@@ -125,7 +126,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
       var calDavDataAccess = new CalDavDataAccess (caldavUrl, webDavClientCaldav);
       var cardDavDataAccess = new CardDavDataAccess (carddavUrl, webDavClientCarddav, contentType => true);
 
-      return await GetUserResources (calDavDataAccess, cardDavDataAccess);
+      return await GetUserResources (calDavDataAccess, cardDavDataAccess, cancellationToken);
     }
 
     public void DiscoverAccountServerSettings()
@@ -141,14 +142,14 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
       UseAccountPassword = true;
     }
 
-    private static async Task<ServerResources> GetUserResources (CalDavDataAccess calDavDataAccess, CardDavDataAccess cardDavDataAccess)
+    private static async Task<ServerResources> GetUserResources (CalDavDataAccess calDavDataAccess, CardDavDataAccess cardDavDataAccess, CancellationToken cancellationToken)
     {
-      var calDavResources = await calDavDataAccess.GetUserResourcesNoThrow (true);
+      var calDavResources = await calDavDataAccess.GetUserResourcesNoThrow (true, cancellationToken);
       if (calDavResources.CalendarResources.Count == 0 && calDavResources.TaskListResources.Count == 0)
-        calDavResources = await calDavDataAccess.GetUserResourcesNoThrow (false);
-      var foundAddressBooks = await cardDavDataAccess.GetUserAddressBooksNoThrow (true);
+        calDavResources = await calDavDataAccess.GetUserResourcesNoThrow (false, cancellationToken);
+      var foundAddressBooks = await cardDavDataAccess.GetUserAddressBooksNoThrow (true, cancellationToken);
       if (foundAddressBooks.Count == 0)
-        foundAddressBooks = await cardDavDataAccess.GetUserAddressBooksNoThrow (false);
+        foundAddressBooks = await cardDavDataAccess.GetUserAddressBooksNoThrow (false, cancellationToken);
       return new ServerResources (calDavResources.CalendarResources, foundAddressBooks, calDavResources.TaskListResources);
     }
 

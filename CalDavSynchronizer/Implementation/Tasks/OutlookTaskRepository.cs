@@ -26,6 +26,7 @@ using GenSync.Logging;
 using Microsoft.Office.Interop.Outlook;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Implementation.Common;
 using CalDavSynchronizer.Implementation.Events;
@@ -66,7 +67,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       _queryFolderStrategy = queryFolderStrategy;
     }
 
-    public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetVersions (IEnumerable<IdWithAwarenessLevel<string>> idsOfEntitiesToQuery, int context)
+    public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetVersions (IEnumerable<IdWithAwarenessLevel<string>> idsOfEntitiesToQuery, int context, CancellationToken cancellationToken)
     {
       var result = new List<EntityVersion<string, DateTime>>();
 
@@ -96,7 +97,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       return GenericComObjectWrapper.Create ((Folder) _mapiNameSpace.GetFolderFromID (_folderId, _folderStoreId));
     }
 
-    public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetAllVersions (IEnumerable<string> idsOfknownEntities, int context)
+    public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetAllVersions (IEnumerable<string> idsOfknownEntities, int context, CancellationToken cancellationToken)
     {
       List<EntityVersion<string,DateTime>> tasks;
    
@@ -152,7 +153,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
     }
 
 #pragma warning disable 1998
-    public async Task<IReadOnlyList<EntityWithId<string, TaskItemWrapper>>> Get (ICollection<string> ids, ILoadEntityLogger logger, int context)
+    public async Task<IReadOnlyList<EntityWithId<string, TaskItemWrapper>>> Get (ICollection<string> ids, ILoadEntityLogger logger, int context, CancellationToken cancellationToken)
 #pragma warning restore 1998
     {
       return ids
@@ -164,7 +165,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
           .ToArray();
     }
 
-    public Task VerifyUnknownEntities (Dictionary<string, DateTime> unknownEntites, int context)
+    public Task VerifyUnknownEntities (Dictionary<string, DateTime> unknownEntites, int context, CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }
@@ -197,10 +198,11 @@ namespace CalDavSynchronizer.Implementation.Tasks
         string entityId,
         DateTime entityVersion,
         TaskItemWrapper entityToUpdate,
-        Func<TaskItemWrapper, Task<TaskItemWrapper>> entityModifier,
-        int context)
+        Func<TaskItemWrapper, CancellationToken, Task<TaskItemWrapper>> entityModifier,
+        int context, 
+        CancellationToken cancellationToken)
     {
-      entityToUpdate = await entityModifier (entityToUpdate);
+      entityToUpdate = await entityModifier (entityToUpdate, cancellationToken);
       entityToUpdate.Inner.Save();
       return new EntityVersion<string, DateTime> (entityToUpdate.Inner.EntryID, entityToUpdate.Inner.LastModificationTime);
     }
@@ -208,9 +210,10 @@ namespace CalDavSynchronizer.Implementation.Tasks
     public Task<bool> TryDelete (
       string entityId, 
       DateTime version,
-      int context)
+      int context, 
+      CancellationToken cancellationToken)
     {
-      var entityWithId = Get (new[] { entityId }, NullLoadEntityLogger.Instance, 0).Result.SingleOrDefault ();
+      var entityWithId = Get (new[] { entityId }, NullLoadEntityLogger.Instance, 0, cancellationToken).Result.SingleOrDefault ();
       if (entityWithId == null)
         return Task.FromResult (true);
 
@@ -222,12 +225,12 @@ namespace CalDavSynchronizer.Implementation.Tasks
       return Task.FromResult (true);
     }
 
-    public async Task<EntityVersion<string, DateTime>> Create (Func<TaskItemWrapper, Task<TaskItemWrapper>> entityInitializer, int context)
+    public async Task<EntityVersion<string, DateTime>> Create (Func<TaskItemWrapper, CancellationToken, Task<TaskItemWrapper>> entityInitializer, int context, CancellationToken cancellationToken)
     {
       using (var taskFolderWrapper = CreateFolderWrapper ())
       using (var wrapper = new TaskItemWrapper ((TaskItem) taskFolderWrapper.Inner.Items.Add (OlItemType.olTaskItem), entryId => (TaskItem) _mapiNameSpace.GetItemFromID (entryId, _folderStoreId)))
       {
-        using (var initializedWrapper = await entityInitializer (wrapper))
+        using (var initializedWrapper = await entityInitializer (wrapper, cancellationToken))
         {
           initializedWrapper.SaveAndReload ();
           var result = new EntityVersion<string, DateTime> (initializedWrapper.Inner.EntryID, initializedWrapper.Inner.LastModificationTime);

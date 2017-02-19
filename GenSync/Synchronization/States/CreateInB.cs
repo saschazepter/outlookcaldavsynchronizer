@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.EntityRelationManagement;
 using GenSync.EntityRepositories;
@@ -92,9 +93,9 @@ namespace GenSync.Synchronization.States
       bJobs.AddCreateJob (new JobWrapper (this, logger, context));
     }
 
-    private async Task<TBtypeEntity> InitializeEntity (TBtypeEntity entity, IEntityMappingLogger logger, TContext context)
+    private async Task<TBtypeEntity> InitializeEntity (TBtypeEntity entity, IEntityMappingLogger logger, TContext context, CancellationToken cancellationToken)
     {
-      return await _environment.Mapper.Map1To2 (_aEntity, entity, logger, context);
+      return await _environment.Mapper.Map1To2 (_aEntity, entity, logger, context, cancellationToken);
     }
 
     private void NotifyOperationSuceeded (EntityVersion<TBtypeEntityId, TBtypeEntityVersion> newVersion, IEntitySynchronizationLogger logger)
@@ -152,9 +153,9 @@ namespace GenSync.Synchronization.States
         _context = context;
       }
 
-      public async Task<TBtypeEntity> InitializeEntity (TBtypeEntity entity)
+      public async Task<TBtypeEntity> InitializeEntity (TBtypeEntity entity, CancellationToken cancellationToken)
       {
-        return await _state.InitializeEntity (entity, _logger, _context);
+        return await _state.InitializeEntity (entity, _logger, _context, cancellationToken);
       }
 
       public void NotifyOperationSuceeded (EntityVersion<TBtypeEntityId, TBtypeEntityVersion> result)

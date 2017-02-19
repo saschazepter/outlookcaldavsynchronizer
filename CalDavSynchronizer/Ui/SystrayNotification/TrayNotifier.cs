@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using CalDavSynchronizer.Properties;
 using CalDavSynchronizer.Utilities;
@@ -101,7 +102,7 @@ namespace CalDavSynchronizer.Ui.SystrayNotification
     {
       try
       {
-        _calDavSynchronizerCommands.ShowGeneralOptionsAsync();
+        _calDavSynchronizerCommands.ShowGeneralOptionsAsync(CancellationToken.None);
       }
       catch (Exception x)
       {
@@ -113,7 +114,7 @@ namespace CalDavSynchronizer.Ui.SystrayNotification
     {
       try
       {
-        _calDavSynchronizerCommands.ShowOptionsAsync();
+        _calDavSynchronizerCommands.ShowOptionsAsync(CancellationToken.None);
       }
       catch (Exception x)
       {

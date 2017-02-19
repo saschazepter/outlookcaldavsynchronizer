@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Diagnostics;
@@ -48,20 +49,20 @@ namespace CalDavSynchronizer.Implementation.Contacts
       _chunkedExecutor = chunkedExecutor;
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<IdWithAwarenessLevel<WebResourceName>> idsOfEntitiesToQuery, TContext context)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<IdWithAwarenessLevel<WebResourceName>> idsOfEntitiesToQuery, TContext context, CancellationToken cancellationToken)
     {
-      return _cardDavDataAccess.GetVersions (idsOfEntitiesToQuery.Select (i => i.Id));
+      return _cardDavDataAccess.GetVersions (idsOfEntitiesToQuery.Select (i => i.Id), cancellationToken);
     }
 
-    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions (IEnumerable<WebResourceName> idsOfknownEntities, TContext context)
+    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions (IEnumerable<WebResourceName> idsOfknownEntities, TContext context, CancellationToken cancellationToken)
     {
       using (AutomaticStopwatch.StartInfo (s_logger, "CardDavRepository.GetVersions"))
       {
-        return await _cardDavDataAccess.GetAllVersions();
+        return await _cardDavDataAccess.GetAllVersions(cancellationToken);
       }
     }
 
-    public async Task<IReadOnlyList<EntityWithId<WebResourceName, TEntity>>> Get (ICollection<WebResourceName> ids, ILoadEntityLogger logger, TContext context)
+    public async Task<IReadOnlyList<EntityWithId<WebResourceName, TEntity>>> Get (ICollection<WebResourceName> ids, ILoadEntityLogger logger, TContext context, CancellationToken cancellationToken)
     {
       if (ids.Count == 0)
         return new EntityWithId<WebResourceName, TEntity>[] { };
@@ -69,26 +70,27 @@ namespace CalDavSynchronizer.Implementation.Contacts
       return await _chunkedExecutor.ExecuteAsync(
         new List<EntityWithId<WebResourceName, TEntity>>(),
         ids,
-        async (chunk, result) =>
+        async (chunk, result, ct) =>
         {
-          var entities = await GetInternal(chunk, logger);
+          var entities = await GetInternal(chunk, logger, ct);
           result.AddRange(entities);
-        });
+        },
+        cancellationToken);
     }
 
-    private async Task<IReadOnlyList<EntityWithId<WebResourceName, TEntity>>> GetInternal (ICollection<WebResourceName> ids, ILoadEntityLogger logger)
+    private async Task<IReadOnlyList<EntityWithId<WebResourceName, TEntity>>> GetInternal (ICollection<WebResourceName> ids, ILoadEntityLogger logger, CancellationToken cancellationToken)
     {
       if (ids.Count == 0)
         return new EntityWithId<WebResourceName, TEntity>[] { };
 
       using (AutomaticStopwatch.StartInfo (s_logger, string.Format ("CardDavRepository.Get ({0} entitie(s))", ids.Count)))
       {
-        var entities = await _cardDavDataAccess.GetEntities (ids);
+        var entities = await _cardDavDataAccess.GetEntities (ids, cancellationToken);
         return ParallelDeserialize (entities, logger);
       }
     }
 
-    public Task VerifyUnknownEntities (Dictionary<WebResourceName, string> unknownEntites, TContext context)
+    public Task VerifyUnknownEntities (Dictionary<WebResourceName, string> unknownEntites, TContext context, CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }
@@ -125,11 +127,11 @@ namespace CalDavSynchronizer.Implementation.Contacts
       return result;
     }
     
-    public async Task<bool> TryDelete (WebResourceName entityId, string version, TContext context)
+    public async Task<bool> TryDelete (WebResourceName entityId, string version, TContext context, CancellationToken cancellationToken)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
-        return await _cardDavDataAccess.TryDeleteEntity (entityId, version);
+        return await _cardDavDataAccess.TryDeleteEntity (entityId, version, cancellationToken);
       }
     }
 
@@ -137,27 +139,28 @@ namespace CalDavSynchronizer.Implementation.Contacts
         WebResourceName entityId,
         string entityVersion,
         TEntity entityToUpdate,
-        Func<TEntity, Task<TEntity>> entityModifier,
-        TContext context)
+        Func<TEntity, CancellationToken, Task<TEntity>> entityModifier,
+        TContext context, 
+        CancellationToken cancellationToken)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
-        var updatedEntity = await entityModifier (entityToUpdate);
+        var updatedEntity = await entityModifier (entityToUpdate, cancellationToken);
         if (string.IsNullOrEmpty (GetUid (updatedEntity)))
           SetUid (updatedEntity, Guid.NewGuid().ToString());
-        return await _cardDavDataAccess.TryUpdateEntity (entityId, entityVersion, Serialize (updatedEntity));
+        return await _cardDavDataAccess.TryUpdateEntity (entityId, entityVersion, Serialize (updatedEntity), cancellationToken);
       }
     }
 
-    public async Task<EntityVersion<WebResourceName, string>> Create(Func<TEntity, Task<TEntity>> entityInitializer, TContext context)
+    public async Task<EntityVersion<WebResourceName, string>> Create(Func<TEntity, CancellationToken, Task<TEntity>> entityInitializer, TContext context, CancellationToken cancellationToken)
     {
       using (AutomaticStopwatch.StartDebug(s_logger))
       {
         TEntity newEntity = new TEntity();
         var uid = Guid.NewGuid().ToString();
         SetUid(newEntity, uid);
-        var initializedVcard = await entityInitializer(newEntity);
-        return await _cardDavDataAccess.CreateEntity(Serialize(initializedVcard), uid);
+        var initializedVcard = await entityInitializer(newEntity, cancellationToken);
+        return await _cardDavDataAccess.CreateEntity(Serialize(initializedVcard), uid, cancellationToken);
       }
     }
 

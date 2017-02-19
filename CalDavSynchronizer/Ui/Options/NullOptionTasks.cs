@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Ui.Options.Models;
 
@@ -56,12 +57,12 @@ namespace CalDavSynchronizer.Ui.Options
       throw new NotImplementedException();
     }
 
-    public Task<string> TestGoogleConnection(OptionsModel options,  string url)
+    public Task<string> TestGoogleConnection(OptionsModel options,  string url, CancellationToken cancellationToken)
     {
       throw new NotImplementedException();
     }
 
-    public Task<string> TestWebDavConnection(OptionsModel options)
+    public Task<string> TestWebDavConnection(OptionsModel options, CancellationToken cancellationToken)
     {
       throw new NotImplementedException();
     }

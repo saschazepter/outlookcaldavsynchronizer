@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using GenSync.Logging;
@@ -47,7 +48,7 @@ namespace CalDavSynchronizer.Ui.SystrayNotification.ViewModels
 
       ShowOptionsCommand = new DelegateCommand (_ =>
       {
-        _calDavSynchronizerCommands.ShowOptionsAsync (ProfileId);
+        _calDavSynchronizerCommands.ShowOptionsAsync (CancellationToken.None, ProfileId);
       });
       ShowLatestSynchronizationReportCommand = new DelegateCommand (_ =>
       {

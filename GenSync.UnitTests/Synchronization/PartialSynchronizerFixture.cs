@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.Synchronization;
 using GenSync.UnitTests.Synchronization.Stubs;
@@ -250,8 +251,8 @@ namespace GenSync.UnitTests.Synchronization
     [TestCase (GenericConflictResolution.BWins)]
     public async Task TwoWaySynchronize_AddedLocal_WithoutHint (GenericConflictResolution conflictWinner)
     {
-      await _localRepository.Create (v => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create ().Result);
-      await _localRepository.Create (v => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create ().Result);
+      await _localRepository.Create ((v,ct) => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
+      await _localRepository.Create ((v, ct) => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
 
       ExecuteMultipleTimes (() =>
       {
@@ -289,8 +290,8 @@ namespace GenSync.UnitTests.Synchronization
     [TestCase (GenericConflictResolution.BWins)]
     public async Task TwoWaySynchronize_AddedLocal_WithHint (GenericConflictResolution conflictWinner)
     {
-      await _localRepository.Create (v => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create ().Result);
-      await _localRepository.Create (v => Task.FromResult ("Item 2"), NullSynchronizationContextFactory.Instance.Create ().Result);
+      await _localRepository.Create ((v, ct) => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
+      await _localRepository.Create ((v, ct) => Task.FromResult ("Item 2"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
 
       ExecuteMultipleTimes (() =>
       {
@@ -328,8 +329,8 @@ namespace GenSync.UnitTests.Synchronization
     [TestCase (GenericConflictResolution.BWins)]
     public async Task TwoWaySynchronize_AddedLocal_WithWrongHint (GenericConflictResolution conflictWinner)
     {
-      await _localRepository.Create (v => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create ().Result);
-      await _localRepository.Create (v => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create ().Result);
+      await _localRepository.Create ((v, ct) => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
+      await _localRepository.Create ((v, ct) => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
 
       ExecuteMultipleTimes (() =>
       {

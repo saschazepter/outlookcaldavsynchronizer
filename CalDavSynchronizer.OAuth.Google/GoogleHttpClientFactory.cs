@@ -46,9 +46,9 @@ namespace CalDavSynchronizer.OAuth.Google
                                                                ClientSecret = "WG276vw5WCcc2H4SSaYJ03VO"
                                                            };
 
-    public static async Task<HttpClient> CreateHttpClient (string user, string userAgentHeader, IWebProxy proxy)
+    public static async Task<HttpClient> CreateHttpClient (string user, string userAgentHeader, IWebProxy proxy, CancellationToken cancellationToken)
     {
-      var userCredential = await LoginToGoogle (user, proxy);
+      var userCredential = await LoginToGoogle (user, proxy, cancellationToken);
 
       var client = new ProxySupportedHttpClientFactory (proxy).CreateHttpClient (new CreateHttpClientArgs() { ApplicationName = userAgentHeader });
       userCredential.Initialize (client);
@@ -56,7 +56,7 @@ namespace CalDavSynchronizer.OAuth.Google
       return client;
     }
 
-    private static async Task<UserCredential> LoginToGoogle (string user, IWebProxy proxyOrNull)
+    private static async Task<UserCredential> LoginToGoogle (string user, IWebProxy proxyOrNull, CancellationToken cancellationToken)
     {
       GoogleAuthorizationCodeFlow.Initializer initializer = new GoogleAuthorizationCodeFlow.Initializer();
 
@@ -73,7 +73,7 @@ namespace CalDavSynchronizer.OAuth.Google
               "https://www.google.com/m8/feeds/" // => contacts
           },
           user,
-          CancellationToken.None);
+          cancellationToken);
 
       return credential;
     }
@@ -84,22 +84,22 @@ namespace CalDavSynchronizer.OAuth.Google
     /// since it leads to a 'The "FindRibbons" task failed unexpectedly' Error
     /// ( see https://connect.microsoft.com/VisualStudio/feedback/details/651634/the-findribbons-task-failed-unexpectedly)
     /// </remarks>
-    public static async Task<TasksService> LoginToGoogleTasksService (string user, IWebProxy proxyOrNull)
+    public static async Task<TasksService> LoginToGoogleTasksService (string user, IWebProxy proxyOrNull, CancellationToken cancellationToken)
     {
-      var credential = await LoginToGoogle (user, proxyOrNull);
+      var credential = await LoginToGoogle (user, proxyOrNull, cancellationToken);
       var service = CreateTaskService (credential, proxyOrNull);
 
       try
       {
-        await service.Tasklists.List().ExecuteAsync();
+        await service.Tasklists.List().ExecuteAsync(cancellationToken);
         return service;
       }
       catch (GoogleApiException x)
       {
         s_logger.Error ("Trying to access google task service failed. Revoking  token and reauthorizing.", x);
 
-        await credential.RevokeTokenAsync (CancellationToken.None);
-        await GoogleWebAuthorizationBroker.ReauthorizeAsync (credential, CancellationToken.None);
+        await credential.RevokeTokenAsync (cancellationToken);
+        await GoogleWebAuthorizationBroker.ReauthorizeAsync (credential, cancellationToken);
         return CreateTaskService (credential, proxyOrNull);
       }
     }
@@ -124,10 +124,10 @@ namespace CalDavSynchronizer.OAuth.Google
         RefreshToken = credential.Token.RefreshToken
       };
     }
-    public static async Task<ContactsRequest> LoginToContactsService (string user, IWebProxy proxyOrNull)
+    public static async Task<ContactsRequest> LoginToContactsService (string user, IWebProxy proxyOrNull, CancellationToken cancellationToken)
     {
       var clientSecrets = CreateClientSecrets();
-      var credential = await LoginToGoogle (user, proxyOrNull);
+      var credential = await LoginToGoogle (user, proxyOrNull, cancellationToken);
 
       var parameters = CreateOAuth2Parameters (clientSecrets, credential);
       var contactsRequest = new ContactsRequest (CreateRequestSettings(parameters));
@@ -142,8 +142,8 @@ namespace CalDavSynchronizer.OAuth.Google
       {
         s_logger.Error ("Trying to access google contacts API failed. Revoking  token and reauthorizing.", x);
 
-        await credential.RevokeTokenAsync (CancellationToken.None);
-        await GoogleWebAuthorizationBroker.ReauthorizeAsync (credential, CancellationToken.None);
+        await credential.RevokeTokenAsync (cancellationToken);
+        await GoogleWebAuthorizationBroker.ReauthorizeAsync (credential, cancellationToken);
         parameters = CreateOAuth2Parameters (clientSecrets, credential);
         contactsRequest = new ContactsRequest (CreateRequestSettings(parameters) );
       }

@@ -17,14 +17,15 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using CalDavSynchronizer.ChangeWatching;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Reports;
 using CalDavSynchronizer.Utilities;
 using GenSync.Logging;
 using log4net;
+using Timer = System.Windows.Forms.Timer;
 
 namespace CalDavSynchronizer.Scheduling
 {
@@ -96,7 +97,7 @@ namespace CalDavSynchronizer.Scheduling
         using (_runLogger.LogStartSynchronizationRun())
         {
           foreach (var worker in _runnersById.Values)
-            await worker.RunAndRescheduleNoThrow (false);
+            await worker.RunAndRescheduleNoThrow (false, CancellationToken.None);
         }
         _synchronizationTimer.Start();
       }
@@ -106,7 +107,7 @@ namespace CalDavSynchronizer.Scheduling
       }
     }
 
-    public async Task SetOptions (Options[] options, GeneralOptions generalOptions)
+    public async Task SetOptions (Options[] options, GeneralOptions generalOptions, CancellationToken cancellationToken)
     {
       if (options == null)
         throw new ArgumentNullException (nameof (options));
@@ -128,7 +129,7 @@ namespace CalDavSynchronizer.Scheduling
                 _ensureSynchronizationContext,
                 _runLogger);
           }
-          await profileRunner.UpdateOptions (option, generalOptions);
+          await profileRunner.UpdateOptions (option, generalOptions, cancellationToken);
           workersById.Add (option.Id, profileRunner);
         }
         catch (Exception x)
@@ -139,12 +140,12 @@ namespace CalDavSynchronizer.Scheduling
       _runnersById = workersById;
     }
 
-    public async Task RunNow ()
+    public async Task RunNow (CancellationToken cancellationToken)
     {
       using (_runLogger.LogStartSynchronizationRun())
       {
         foreach (var worker in _runnersById.Values)
-          await worker.RunAndRescheduleNoThrow (true);
+          await worker.RunAndRescheduleNoThrow (true, cancellationToken);
       }
     }
   }

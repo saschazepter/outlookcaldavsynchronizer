@@ -21,6 +21,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DDayICalWorkaround;
@@ -91,7 +92,7 @@ namespace CalDavSynchronizer.Implementation.Events
       _outlookMajorVersion = Convert.ToInt32 (outlookMajorVersionString);
     }
 
-    public async Task<IICalendar> Map1To2 (AppointmentItemWrapper sourceWrapper, IICalendar existingTargetCalender, IEntityMappingLogger logger, IEventSynchronizationContext context)
+    public async Task<IICalendar> Map1To2 (AppointmentItemWrapper sourceWrapper, IICalendar existingTargetCalender, IEntityMappingLogger logger, IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
       var newTargetCalender = new iCalendar();
 
@@ -124,7 +125,7 @@ namespace CalDavSynchronizer.Implementation.Events
             else
             {
               var startIanaTzId = TimeZoneMapper.WindowsToIana (startTimeZoneID);
-              startIcalTimeZone = await _timeZoneCache.GetByTzIdOrNull (startIanaTzId);
+              startIcalTimeZone = await _timeZoneCache.GetByTzIdOrNull (startIanaTzId, cancellationToken);
               if (startIcalTimeZone != null)
                 newTargetCalender.TimeZones.Add (startIcalTimeZone);
             }
@@ -149,7 +150,7 @@ namespace CalDavSynchronizer.Implementation.Events
               else
               {
                 var endIanaTzId = TimeZoneMapper.WindowsToIana (endTimeZoneID);
-                endIcalTimeZone = await _timeZoneCache.GetByTzIdOrNull (endIanaTzId);
+                endIcalTimeZone = await _timeZoneCache.GetByTzIdOrNull (endIanaTzId, cancellationToken);
                 if (endIcalTimeZone != null)
                   newTargetCalender.TimeZones.Add (endIcalTimeZone);
               }
@@ -186,7 +187,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
       newTargetCalender.Events.Add (newTargetEvent);
 
-      Map1To2 (sourceWrapper.Inner, newTargetEvent, false, startIcalTimeZone, endIcalTimeZone, logger);
+      Map1To2 (sourceWrapper.Inner, newTargetEvent, false, startIcalTimeZone, endIcalTimeZone, logger, cancellationToken);
 
       for (int i = 0, newSequenceNumber = existingTargetCalender.Events.Count > 0 ? existingTargetCalender.Events.Max (e => e.Sequence) + 1 : 0;
           i < newTargetCalender.Events.Count;
@@ -198,7 +199,7 @@ namespace CalDavSynchronizer.Implementation.Events
       return newTargetCalender;
     }
 
-    private void Map1To2 (AppointmentItem source, IEvent target, bool isRecurrenceException, ITimeZone startIcalTimeZone, ITimeZone endIcalTimeZone, IEntityMappingLogger logger)
+    private void Map1To2 (AppointmentItem source, IEvent target, bool isRecurrenceException, ITimeZone startIcalTimeZone, ITimeZone endIcalTimeZone, IEntityMappingLogger logger, CancellationToken cancellationToken)
     {
       if (source.AllDayEvent)
       {
@@ -290,7 +291,7 @@ namespace CalDavSynchronizer.Implementation.Events
       }
 
       if (!isRecurrenceException)
-        MapRecurrance1To2 (source, target, startIcalTimeZone, endIcalTimeZone, logger);
+        MapRecurrance1To2 (source, target, startIcalTimeZone, endIcalTimeZone, logger, cancellationToken);
 
 
       target.Class = CommonEntityMapper.MapPrivacy1To2 (source.Sensitivity, _configuration.MapSensitivityPrivateToClassConfidential);
@@ -668,7 +669,7 @@ namespace CalDavSynchronizer.Implementation.Events
       }
     }
 
-    private void MapRecurrance1To2 (AppointmentItem source, IEvent target, ITimeZone startIcalTimeZone, ITimeZone endIcalTimeZone, IEntityMappingLogger logger)
+    private void MapRecurrance1To2 (AppointmentItem source, IEvent target, ITimeZone startIcalTimeZone, ITimeZone endIcalTimeZone, IEntityMappingLogger logger, CancellationToken cancellationToken)
     {
       if (source.IsRecurring)
       {
@@ -771,7 +772,7 @@ namespace CalDavSynchronizer.Implementation.Events
                   var targetException = new Event();
                   target.Calendar.Events.Add (targetException);
                   targetException.UID = target.UID;
-                  Map1To2 (wrapper.Inner, targetException, true, startIcalTimeZone, endIcalTimeZone, logger);
+                  Map1To2 (wrapper.Inner, targetException, true, startIcalTimeZone, endIcalTimeZone, logger, cancellationToken);
 
                   // check if new exception is already present in target
                   // if it is found and not already present as exdate then add a new exdate to avoid 2 events
@@ -1382,7 +1383,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
     private const int s_mailtoSchemaLength = 7; // length of "mailto:"
 
-    public Task<AppointmentItemWrapper> Map2To1 (IICalendar sourceCalendar, AppointmentItemWrapper target, IEntityMappingLogger logger, IEventSynchronizationContext context)
+    public Task<AppointmentItemWrapper> Map2To1 (IICalendar sourceCalendar, AppointmentItemWrapper target, IEntityMappingLogger logger, IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
       IEvent sourceMasterEvent = null;
       IReadOnlyCollection<IEvent> sourceExceptionEvents;
@@ -1416,7 +1417,7 @@ namespace CalDavSynchronizer.Implementation.Events
         s_logger.Warn ("Detected CalDav Event with contains only exceptions. Reconstructing master event.");
         logger.LogMappingWarning ("CalDav Ressources contains only exceptions. Reconstructing master event.");
         AddMasterEvent (sourceCalendar);
-        return Map2To1 (sourceCalendar, target, logger, context);
+        return Map2To1 (sourceCalendar, target, logger, context, cancellationToken);
       }
 
       // Map UID to GlobalAppointmentID for new meetings to avoid double events from Mail invites

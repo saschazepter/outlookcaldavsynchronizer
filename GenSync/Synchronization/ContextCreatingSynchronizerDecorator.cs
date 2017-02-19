@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.Logging;
 
@@ -39,19 +40,20 @@ namespace GenSync.Synchronization
       _contextFactory = contextFactory;
     }
 
-    public async Task Synchronize(ISynchronizationLogger logger)
+    public async Task Synchronize(ISynchronizationLogger logger, CancellationToken cancellationToken)
     {
-      var synchronizationContext = await _contextFactory.Create();
-      await _inner.Synchronize(logger, synchronizationContext);
-      await _contextFactory.SynchronizationFinished(synchronizationContext);
+      var synchronizationContext = await _contextFactory.Create(cancellationToken);
+      await _inner.Synchronize(logger, synchronizationContext, cancellationToken);
+      await _contextFactory.SynchronizationFinished(synchronizationContext, cancellationToken);
     }
 
     public async Task SynchronizePartial(
       IEnumerable<IIdWithHints<TAtypeEntityId, TAtypeEntityVersion>> aIds,
       IEnumerable<IIdWithHints<TBtypeEntityId, TBtypeEntityVersion>> bIds,
-      ISynchronizationLogger logger)
+      ISynchronizationLogger logger,
+      CancellationToken cancellationToken)
     {
-      await _inner.SynchronizePartial(aIds, bIds, logger, _contextFactory.Create, _contextFactory.SynchronizationFinished);
+      await _inner.SynchronizePartial(aIds, bIds, logger, _contextFactory.Create, _contextFactory.SynchronizationFinished, cancellationToken);
     }
   }
 }

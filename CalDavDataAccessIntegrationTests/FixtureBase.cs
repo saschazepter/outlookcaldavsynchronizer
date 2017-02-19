@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer;
 using CalDavSynchronizer.Contracts;
@@ -76,32 +77,32 @@ namespace CalDavDataAccessIntegrationTests
     [Test]
     public virtual async Task IsResourceCalender ()
     {
-      Assert.That (await _calDavDataAccess.IsResourceCalender(), Is.True);
+      Assert.That (await _calDavDataAccess.IsResourceCalender(CancellationToken.None), Is.True);
     }
 
     [Test]
     public virtual async Task DoesSupportCalendarQuery ()
     {
-      Assert.That (await _calDavDataAccess.DoesSupportCalendarQuery(), Is.True);
+      Assert.That (await _calDavDataAccess.DoesSupportCalendarQuery(CancellationToken.None), Is.True);
     }
 
     [Test]
     public async Task IsCalendarAccessSupported ()
     {
-      Assert.That (await _calDavDataAccess.IsCalendarAccessSupported(), Is.True);
+      Assert.That (await _calDavDataAccess.IsCalendarAccessSupported(CancellationToken.None), Is.True);
     }
 
     [Test]
     public async Task IsWriteable ()
     {
-      Assert.That (await _calDavDataAccess.GetPrivileges(), Is.EqualTo (AccessPrivileges.All));
+      Assert.That (await _calDavDataAccess.GetPrivileges(CancellationToken.None), Is.EqualTo (AccessPrivileges.All));
     }
 
     [Test]
     public virtual async Task Test_CRUD ()
     {
-      foreach (var evt in await _calDavDataAccess.GetEventVersions (null))
-        await _calDavDataAccess.TryDeleteEntity (evt.Id, evt.Version);
+      foreach (var evt in await _calDavDataAccess.GetEventVersions (null, CancellationToken.None))
+        await _calDavDataAccess.TryDeleteEntity (evt.Id, evt.Version, CancellationToken.None);
 
       var entitiesWithVersion = new List<EntityVersion<WebResourceName, string>>();
 
@@ -114,10 +115,10 @@ namespace CalDavDataAccessIntegrationTests
         entitiesWithVersion.Add (
             await _calDavDataAccess.CreateEntity (
                 SerializeCalendar (
-                    iCalendar), iCalendar.Events[0].UID));
+                    iCalendar), iCalendar.Events[0].UID, CancellationToken.None));
       }
 
-      var queriedEntitesWithVersion = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)));
+      var queriedEntitesWithVersion = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)), CancellationToken.None);
 
       Assert.That (queriedEntitesWithVersion.Count, Is.EqualTo (3));
 
@@ -130,10 +131,11 @@ namespace CalDavDataAccessIntegrationTests
       var updated = await _calDavDataAccess.TryUpdateEntity (
           entitiesWithVersion[1].Id,
           entitiesWithVersion[1].Version,
-          SerializeCalendar (updatedCalendar));
+          SerializeCalendar (updatedCalendar), 
+          CancellationToken.None);
 
       Assert.That (
-          (await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)))).Count,
+          (await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)), CancellationToken.None)).Count,
           Is.EqualTo (2));
 
       var updatedRevertedCalendar = CreateEntity (2);
@@ -141,19 +143,20 @@ namespace CalDavDataAccessIntegrationTests
       var updateReverted = await _calDavDataAccess.TryUpdateEntity (
           updated.Id,
           updated.Version,
-          SerializeCalendar (updatedRevertedCalendar));
+          SerializeCalendar (updatedRevertedCalendar), 
+          CancellationToken.None);
 
       Assert.That (
-          (await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)))).Count,
+          (await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)), CancellationToken.None)).Count,
           Is.EqualTo (3));
 
-      await _calDavDataAccess.TryDeleteEntity (updateReverted.Id, updateReverted.Version);
+      await _calDavDataAccess.TryDeleteEntity (updateReverted.Id, updateReverted.Version, CancellationToken.None);
 
       Assert.That (
-          (await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)))).Count,
+          (await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)), CancellationToken.None)).Count,
           Is.EqualTo (2));
 
-      var entites = await _calDavDataAccess.GetEntities (entitiesWithVersion.Take (4).Select (e => e.Id));
+      var entites = await _calDavDataAccess.GetEntities (entitiesWithVersion.Take (4).Select (e => e.Id), CancellationToken.None);
 
       if (!DeletedEntitesAreJustMarkedAsDeletedAndStillAvailableViaCalendarMultigetReport)
       {
@@ -174,8 +177,8 @@ namespace CalDavDataAccessIntegrationTests
 
     public virtual async Task Test_CRUD_WithoutTimeRangeFilter ()
     {
-      foreach (var evt in await _calDavDataAccess.GetEventVersions (null))
-        await _calDavDataAccess.TryDeleteEntity (evt.Id, evt.Version);
+      foreach (var evt in await _calDavDataAccess.GetEventVersions (null, CancellationToken.None))
+        await _calDavDataAccess.TryDeleteEntity (evt.Id, evt.Version, CancellationToken.None);
 
       var entitiesWithVersion = new List<EntityVersion<WebResourceName, string>> ();
 
@@ -188,10 +191,10 @@ namespace CalDavDataAccessIntegrationTests
         entitiesWithVersion.Add (
             await _calDavDataAccess.CreateEntity (
                 SerializeCalendar (
-                    iCalendar), iCalendar.Events[0].UID));
+                    iCalendar), iCalendar.Events[0].UID, CancellationToken.None));
       }
 
-      var queriedEntitesWithVersion = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)));
+      var queriedEntitesWithVersion = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)), CancellationToken.None);
 
       Assert.That (queriedEntitesWithVersion.Count, Is.EqualTo (5));
 
@@ -204,18 +207,19 @@ namespace CalDavDataAccessIntegrationTests
       var updated = await _calDavDataAccess.TryUpdateEntity (
           entitiesWithVersion[1].Id,
           entitiesWithVersion[1].Version,
-          SerializeCalendar (updatedCalendar));
+          SerializeCalendar (updatedCalendar), 
+          CancellationToken.None);
 
-      var queried2 = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)));
+      var queried2 = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)), CancellationToken.None);
 
       var updatedVersion = queried2.FirstOrDefault (v => WebResourceName.Comparer.Equals(v.Id,updated.Id));
       Assert.That (updatedVersion, Is.Not.Null);
       Assert.That (updatedVersion.Version, Is.EqualTo (updated.Version));
 
 
-      await _calDavDataAccess.TryDeleteEntity (updated.Id, updated.Version);
+      await _calDavDataAccess.TryDeleteEntity (updated.Id, updated.Version, CancellationToken.None);
 
-      var queried3 = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)));
+      var queried3 = await _calDavDataAccess.GetEventVersions (new DateTimeRange (DateTime.Now.AddDays (150), DateTime.Now.AddDays (450)), CancellationToken.None);
       Assert.That (queried3.Count,Is.EqualTo (4));
     }
 
@@ -230,14 +234,14 @@ namespace CalDavDataAccessIntegrationTests
     {
       var v = await _calDavDataAccess.CreateEntity (
           SerializeCalendar (
-              CreateEntity (1)), Guid.NewGuid().ToString());
+              CreateEntity (1)), Guid.NewGuid().ToString(), CancellationToken.None);
 
       Assert.That (
-          await _calDavDataAccess.TryDeleteEntity (v.Id, v.Version),
+          await _calDavDataAccess.TryDeleteEntity (v.Id, v.Version, CancellationToken.None),
           Is.True);
 
       Assert.That (
-          await _calDavDataAccess.TryDeleteEntity (v.Id, @"""bla"""),
+          await _calDavDataAccess.TryDeleteEntity (v.Id, @"""bla""", CancellationToken.None),
           Is.False);
     }
 
@@ -247,19 +251,21 @@ namespace CalDavDataAccessIntegrationTests
       var calendar = CreateEntity (1);
       var v = await _calDavDataAccess.CreateEntity (
           SerializeCalendar (calendar),
-          calendar.Events[0].UID);
+          calendar.Events[0].UID,
+          CancellationToken.None);
       calendar.Events[0].Summary += "xxx";
       var v2 = await _calDavDataAccess.TryUpdateEntity (
           v.Id,
           v.Version,
-          SerializeCalendar (calendar));
+          SerializeCalendar (calendar),
+          CancellationToken.None);
 
       Assert.That (
-          await _calDavDataAccess.TryDeleteEntity (v.Id, v.Version),
+          await _calDavDataAccess.TryDeleteEntity (v.Id, v.Version, CancellationToken.None),
           Is.False);
 
       Assert.That (
-          await _calDavDataAccess.TryDeleteEntity (v2.Id, v2.Version),
+          await _calDavDataAccess.TryDeleteEntity (v2.Id, v2.Version, CancellationToken.None),
           Is.True);
     }
     
@@ -269,14 +275,16 @@ namespace CalDavDataAccessIntegrationTests
       var calendar = CreateEntity (1);
       var v = await _calDavDataAccess.CreateEntity (
           SerializeCalendar (calendar),
-          calendar.Events[0].UID);
+          calendar.Events[0].UID, 
+          CancellationToken.None);
 
       calendar.Events[0].Summary += "xxx";
 
       var v2 = await _calDavDataAccess.TryUpdateEntity (
           v.Id,
           v.Version,
-          SerializeCalendar (calendar));
+          SerializeCalendar (calendar), 
+          CancellationToken.None);
 
       calendar.Events[0].Summary += "xxx";
 
@@ -284,7 +292,8 @@ namespace CalDavDataAccessIntegrationTests
           await _calDavDataAccess.TryUpdateEntity (
               v.Id,
               v.Version,
-              SerializeCalendar (calendar)),
+              SerializeCalendar (calendar), 
+              CancellationToken.None),
           Is.Null);
     }
 
@@ -293,16 +302,18 @@ namespace CalDavDataAccessIntegrationTests
     {
       var v = await _calDavDataAccess.CreateEntity (
           SerializeCalendar (
-              CreateEntity (1)), Guid.NewGuid ().ToString ());
+              CreateEntity (1)), Guid.NewGuid ().ToString (), 
+          CancellationToken.None);
 
-      await _calDavDataAccess.TryDeleteEntity (v.Id, v.Version);
+      await _calDavDataAccess.TryDeleteEntity (v.Id, v.Version, CancellationToken.None);
 
       Assert.That (
           await _calDavDataAccess.TryUpdateEntity (
               v.Id,
               v.Version,
               SerializeCalendar (
-                  CreateEntity (1))),
+                  CreateEntity (1)), 
+              CancellationToken.None),
           Is.Null);
     }
 
@@ -310,7 +321,7 @@ namespace CalDavDataAccessIntegrationTests
     public void CreateInvalidEntity ()
     {
       Assert.That (
-          async () => await _calDavDataAccess.CreateEntity ("Invalix CalDav Entity", Guid.NewGuid().ToString()),
+          async () => await _calDavDataAccess.CreateEntity ("Invalix CalDav Entity", Guid.NewGuid().ToString(), CancellationToken.None),
           Throws.Exception);
     }
 
@@ -319,10 +330,12 @@ namespace CalDavDataAccessIntegrationTests
     {
       var v = await _calDavDataAccess.CreateEntity (
           SerializeCalendar (
-              CreateEntity (1)), Guid.NewGuid().ToString());
+              CreateEntity (1)),
+          Guid.NewGuid().ToString(), 
+          CancellationToken.None);
 
       Assert.That (
-          async () => await _calDavDataAccess.TryUpdateEntity (v.Id, v.Version, "Invalid ICal"),
+          async () => await _calDavDataAccess.TryUpdateEntity (v.Id, v.Version, "Invalid ICal", CancellationToken.None),
           Throws.Exception);
     }
 

@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Threading;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.Ui;
 using CalDavSynchronizer.Utilities;
@@ -130,7 +131,7 @@ namespace CalDavSynchronizer
       try
       {
         ComponentContainer.EnsureSynchronizationContext ();
-        await _componentContainer.ShowOptionsAsync ();
+        await _componentContainer.ShowOptionsAsync (CancellationToken.None);
       }
       catch (Exception x)
       {
@@ -148,7 +149,7 @@ namespace CalDavSynchronizer
       try
       {
         ComponentContainer.EnsureSynchronizationContext ();
-        await _componentContainer.ShowGeneralOptionsAsync ();
+        await _componentContainer.ShowGeneralOptionsAsync (CancellationToken.None);
       }
       catch (Exception x)
       {

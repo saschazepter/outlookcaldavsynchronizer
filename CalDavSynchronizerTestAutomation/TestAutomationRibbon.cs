@@ -82,12 +82,14 @@ namespace CalDavSynchronizerTestAutomation
         var entitySynchronizationLogger = new EntitySynchronizationLogger ();
 
         await OutlookTestContext.EventRepository.Create (
-            async appointmentWrapper => await OutlookTestContext.EntityMapper.Map2To1 (
+            async (appointmentWrapper, ct) => await OutlookTestContext.EntityMapper.Map2To1 (
                 OutlookTestContext.DeserializeICalendar (dataInputWindow.Item2.Text),
                 appointmentWrapper,
                 entitySynchronizationLogger,
-                NullEventSynchronizationContext.Instance),
-            NullEventSynchronizationContext.Instance);
+                NullEventSynchronizationContext.Instance,
+                ct),
+            NullEventSynchronizationContext.Instance, 
+            CancellationToken.None);
 
         var reportWindow = CreateWindowWithTextBox();
         reportWindow.Item2.Text = "SynchronizationReport:\r\n" + Serializer<EntitySynchronizationReport>.Serialize (entitySynchronizationLogger.GetReport());

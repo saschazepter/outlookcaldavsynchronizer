@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.Logging;
 
@@ -26,11 +27,11 @@ namespace GenSync.EntityRepositories
   /// </summary>
   public interface IReadOnlyEntityRepository<TEntityId, TEntityVersion, TEntity, TContext>
   {
-    Task<IReadOnlyList<EntityVersion<TEntityId, TEntityVersion>>> GetVersions (IEnumerable<IdWithAwarenessLevel<TEntityId>> idsOfEntitiesToQuery, TContext context);
-    Task<IReadOnlyList<EntityVersion<TEntityId, TEntityVersion>>> GetAllVersions (IEnumerable<TEntityId> idsOfknownEntities, TContext context);
-    Task<IReadOnlyList<EntityWithId<TEntityId, TEntity>>> Get (ICollection<TEntityId> ids, ILoadEntityLogger logger, TContext context);
+    Task<IReadOnlyList<EntityVersion<TEntityId, TEntityVersion>>> GetVersions (IEnumerable<IdWithAwarenessLevel<TEntityId>> idsOfEntitiesToQuery, TContext context, CancellationToken cancellationToken);
+    Task<IReadOnlyList<EntityVersion<TEntityId, TEntityVersion>>> GetAllVersions (IEnumerable<TEntityId> idsOfknownEntities, TContext context, CancellationToken cancellationToken);
+    Task<IReadOnlyList<EntityWithId<TEntityId, TEntity>>> Get (ICollection<TEntityId> ids, ILoadEntityLogger logger, TContext context, CancellationToken cancellationToken);
 
-    Task VerifyUnknownEntities (Dictionary<TEntityId, TEntityVersion> unknownEntites, TContext context);
+    Task VerifyUnknownEntities (Dictionary<TEntityId, TEntityVersion> unknownEntites, TContext context, CancellationToken cancellationToken);
 
     void Cleanup (IReadOnlyDictionary<TEntityId, TEntity> entities);
   }

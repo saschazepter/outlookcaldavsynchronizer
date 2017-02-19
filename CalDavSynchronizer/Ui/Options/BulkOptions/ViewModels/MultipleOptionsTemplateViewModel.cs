@@ -23,6 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using CalDavSynchronizer.Contracts;
@@ -122,7 +123,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
       _discoverResourcesCommand.SetCanExecute (false);
       try
       {
-        var serverResources = await _serverSettingsViewModel.GetServerResources ();
+        var serverResources = await _serverSettingsViewModel.GetServerResources (CancellationToken.None);
 
         var calendars = serverResources.Calendars.Select (c => new CalendarDataViewModel (c)).ToArray();
         var addressBooks = serverResources.AddressBooks.Select (a => new AddressBookDataViewModel (a)).ToArray();

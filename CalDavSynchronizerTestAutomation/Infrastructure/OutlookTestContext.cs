@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer;
 using CalDavSynchronizer.Contracts;
@@ -100,30 +101,31 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
           QueryOutlookFolderByRequestingItemStrategy.Instance);
     }
 
-    public static IOutlookSynchronizer CreateEventSynchronizer (
-        SynchronizationMode mode,
-        ICalDavDataAccess calDavDataAccess,
-        IEntityRelationDataAccess<AppointmentId, DateTime, WebResourceName, string> entityRelationDataAccess = null,
-        Action<Options> optionsModifier = null)
+    public static IOutlookSynchronizer CreateEventSynchronizer(
+      SynchronizationMode mode,
+      ICalDavDataAccess calDavDataAccess,
+      IEntityRelationDataAccess<AppointmentId, DateTime, WebResourceName, string> entityRelationDataAccess = null,
+      Action<Options> optionsModifier = null)
     {
       var options = new Options()
-                    {
-                        ConflictResolution = ConflictResolution.Automatic,
-                        EmailAddress = "tester@test.com",
-                        IgnoreSynchronizationTimeRange = true,
-                        OutlookFolderEntryId = s_outlookFolderEntryId,
-                        OutlookFolderStoreId = s_outlookFolderStoreId,
-                        SynchronizationMode = mode,
-                        CalenderUrl = "http://invalidurl.net"
-                    };
+      {
+        ConflictResolution = ConflictResolution.Automatic,
+        EmailAddress = "tester@test.com",
+        IgnoreSynchronizationTimeRange = true,
+        OutlookFolderEntryId = s_outlookFolderEntryId,
+        OutlookFolderStoreId = s_outlookFolderStoreId,
+        SynchronizationMode = mode,
+        CalenderUrl = "http://invalidurl.net"
+      };
 
       if (optionsModifier != null)
-        optionsModifier (options);
+        optionsModifier(options);
 
-      return s_synchronizerFactory.CreateEventSynchronizer (
-          options,
-          calDavDataAccess,
-          entityRelationDataAccess ?? MockRepository.GenerateStub<IEntityRelationDataAccess<AppointmentId, DateTime, WebResourceName, string>>()).Result;
+      return s_synchronizerFactory.CreateEventSynchronizer(
+        options,
+        calDavDataAccess,
+        entityRelationDataAccess ?? MockRepository.GenerateStub<IEntityRelationDataAccess<AppointmentId, DateTime, WebResourceName, string>>(),
+        CancellationToken.None).Result;
     }
 
 
@@ -185,13 +187,13 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
       var entityUri = new WebResourceName("/e1");
 
       calDavDataAccess
-          .Expect (r => r.GetEventVersions (null))
+          .Expect (r => r.GetEventVersions (null, CancellationToken.None))
           .IgnoreArguments()
           .Return (Task.FromResult<IReadOnlyList<EntityVersion<WebResourceName, string>>> (
               new[] { EntityVersion.Create (entityUri, "v1") }));
 
       calDavDataAccess
-          .Expect (r => r.GetEntities (Arg<ICollection<WebResourceName>>.List.Equal (new[] { entityUri })))
+          .Expect (r => r.GetEntities (Arg<ICollection<WebResourceName>>.List.Equal (new[] { entityUri }), CancellationToken.None))
           .Return (Task.FromResult<IReadOnlyList<EntityWithId<WebResourceName, string>>> (
               new[] { EntityWithId.Create (entityUri, eventData) }));
 
@@ -200,7 +202,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
           calDavDataAccess,
           entityRelationDataAccess);
 
-      WaitForTask (synchronizer.Synchronize (NullSynchronizationLogger.Instance));
+      WaitForTask (synchronizer.Synchronize (NullSynchronizationLogger.Instance, CancellationToken.None));
     }
 
     /// <remarks>
@@ -229,12 +231,12 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
 
 
       calDavDataAccess
-          .Expect (r => r.GetEventVersions (null))
+          .Expect (r => r.GetEventVersions (null, CancellationToken.None))
           .IgnoreArguments()
           .Return (Task.FromResult<IReadOnlyList<EntityVersion<WebResourceName, string>>> (
               new EntityVersion<WebResourceName, string>[] { }));
       calDavDataAccess
-          .Expect (r => r.CreateEntity (null, Guid.NewGuid().ToString()))
+          .Expect (r => r.CreateEntity (null, Guid.NewGuid().ToString(), CancellationToken.None))
           .IgnoreArguments()
           .Return (Task.FromResult (
               EntityVersion.Create (new WebResourceName("http://bla.com"), "blubb")))
@@ -244,7 +246,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
           calDavDataAccess,
           entityRelationDataAccess,
           optionsModifier);
-      WaitForTask (synchronizer.Synchronize (NullSynchronizationLogger.Instance));
+      WaitForTask (synchronizer.Synchronize (NullSynchronizationLogger.Instance, CancellationToken.None));
       return calDavEvents;
     }
 
@@ -271,13 +273,13 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
       ICalDavDataAccess calDavDataAccess = MockRepository.GenerateMock<ICalDavDataAccess>();
       var entityUri = new WebResourceName("/e1");
       calDavDataAccess
-          .Expect (r => r.GetEventVersions (null))
+          .Expect (r => r.GetEventVersions (null, CancellationToken.None))
           .IgnoreArguments()
           .Return (Task.FromResult<IReadOnlyList<EntityVersion<WebResourceName, string>>> (
               new[] { EntityVersion.Create (entityUri, "v1") }));
 
       calDavDataAccess
-          .Expect (r => r.GetEntities (Arg<ICollection<WebResourceName>>.List.Equal (new[] { entityUri })))
+          .Expect (r => r.GetEntities (Arg<ICollection<WebResourceName>>.List.Equal (new[] { entityUri }), CancellationToken.None))
           .Return (Task.FromResult<IReadOnlyList<EntityWithId<WebResourceName, string>>> (
               new[] { EntityWithId.Create (entityUri, existingEventData) }));
 
@@ -285,7 +287,8 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
           .Expect (r => r.TryUpdateEntity (
               new WebResourceName("http://bla.com"),
               null,
-              null))
+              null, 
+              CancellationToken.None))
           .IgnoreArguments()
           .Return (Task.FromResult<EntityVersion<WebResourceName, string>> (
               EntityVersion.Create (new WebResourceName("http://bla.com"), "blubb")))
@@ -296,7 +299,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
           calDavDataAccess,
           entityRelationDataAccess);
 
-      WaitForTask (synchronizer.Synchronize (NullSynchronizationLogger.Instance));
+      WaitForTask (synchronizer.Synchronize (NullSynchronizationLogger.Instance, CancellationToken.None));
 
       return roundTrippedData;
     }

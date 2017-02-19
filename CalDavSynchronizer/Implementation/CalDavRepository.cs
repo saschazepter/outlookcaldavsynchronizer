@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DataAccess;
@@ -73,12 +74,12 @@ namespace CalDavSynchronizer.Implementation
       _dateTimeRangeProvider = dateTimeRangeProvider;
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<IdWithAwarenessLevel<WebResourceName>> idsOfEntitiesToQuery, TContext context)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<IdWithAwarenessLevel<WebResourceName>> idsOfEntitiesToQuery, TContext context, CancellationToken cancellationToken)
     {
-      return _calDavDataAccess.GetVersions (idsOfEntitiesToQuery.Select (i => i.Id));
+      return _calDavDataAccess.GetVersions (idsOfEntitiesToQuery.Select (i => i.Id), cancellationToken);
     }
 
-    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions (IEnumerable<WebResourceName> idsOfknownEntities, TContext context)
+    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions (IEnumerable<WebResourceName> idsOfknownEntities, TContext context, CancellationToken cancellationToken)
     {
       using (AutomaticStopwatch.StartInfo (s_logger, "CalDavRepository.GetVersions"))
       {
@@ -86,16 +87,16 @@ namespace CalDavSynchronizer.Implementation
         {
           case CalDavRepository.EntityType.Event:
 
-            return await _calDavDataAccess.GetEventVersions (_dateTimeRangeProvider.GetRange ());
+            return await _calDavDataAccess.GetEventVersions (_dateTimeRangeProvider.GetRange (), cancellationToken);
           case CalDavRepository.EntityType.Todo:
-            return await _calDavDataAccess.GetTodoVersions (_dateTimeRangeProvider.GetRange ());
+            return await _calDavDataAccess.GetTodoVersions (_dateTimeRangeProvider.GetRange (), cancellationToken);
           default:
             throw new NotImplementedException (string.Format ("EntityType '{0}' not implemented.", _entityType));
         }
       }
     }
 
-    public async Task<IReadOnlyList<EntityWithId<WebResourceName, IICalendar>>> Get (ICollection<WebResourceName> ids, ILoadEntityLogger logger, TContext context)
+    public async Task<IReadOnlyList<EntityWithId<WebResourceName, IICalendar>>> Get (ICollection<WebResourceName> ids, ILoadEntityLogger logger, TContext context, CancellationToken cancellationToken)
     {
       if (ids.Count == 0)
         return new EntityWithId<WebResourceName, IICalendar>[] { };
@@ -103,26 +104,27 @@ namespace CalDavSynchronizer.Implementation
       return await _chunkedExecutor.ExecuteAsync (
         new List<EntityWithId<WebResourceName, IICalendar>> (),
         ids,
-        async (chunk, result) =>
+        async (chunk, result, ct) =>
         {
-          var entities = await GetInternal (chunk, logger);
+          var entities = await GetInternal (chunk, logger, ct);
           result.AddRange (entities);
-        });
+        },
+        cancellationToken);
     }
 
-    private async Task<IReadOnlyList<EntityWithId<WebResourceName, IICalendar>>> GetInternal (ICollection<WebResourceName> ids, ILoadEntityLogger logger)
+    private async Task<IReadOnlyList<EntityWithId<WebResourceName, IICalendar>>> GetInternal (ICollection<WebResourceName> ids, ILoadEntityLogger logger, CancellationToken cancellationToken)
     {
       if (ids.Count == 0)
         return new EntityWithId<WebResourceName, IICalendar>[] { };
 
       using (AutomaticStopwatch.StartInfo (s_logger, string.Format ("CalDavRepository.Get ({0} entitie(s))", ids.Count)))
       {
-        var entities = await _calDavDataAccess.GetEntities (ids);
-        return await ParallelDeserialize (entities, logger);
+        var entities = await _calDavDataAccess.GetEntities (ids, cancellationToken);
+        return await ParallelDeserialize (entities, logger, cancellationToken);
       }
     }
 
-    public Task VerifyUnknownEntities (Dictionary<WebResourceName, string> unknownEntites, TContext context)
+    public Task VerifyUnknownEntities (Dictionary<WebResourceName, string> unknownEntites, TContext context, CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }
@@ -132,7 +134,7 @@ namespace CalDavSynchronizer.Implementation
       // nothing to do
     }
 
-    private Task<IReadOnlyList<EntityWithId<WebResourceName, IICalendar>>> ParallelDeserialize (IReadOnlyList<EntityWithId<WebResourceName, string>> serializedEntities, ILoadEntityLogger logger)
+    private Task<IReadOnlyList<EntityWithId<WebResourceName, IICalendar>>> ParallelDeserialize (IReadOnlyList<EntityWithId<WebResourceName, string>> serializedEntities, ILoadEntityLogger logger, CancellationToken cancellationToken)
     {
       return Task.Factory.StartNew (() =>
       {
@@ -140,6 +142,7 @@ namespace CalDavSynchronizer.Implementation
 
         Parallel.ForEach (
             serializedEntities,
+            new ParallelOptions() { CancellationToken = cancellationToken },
             () => Tuple.Create (new iCalendarSerializer (), new List<Tuple<WebResourceName, IICalendar>> ()),
             (serialized, loopState, threadLocal) =>
             {
@@ -210,11 +213,11 @@ namespace CalDavSynchronizer.Implementation
     }
 
 
-    public async Task<bool> TryDelete (WebResourceName entityId, string version, TContext context)
+    public async Task<bool> TryDelete (WebResourceName entityId, string version, TContext context, CancellationToken cancellationToken)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
-        return await _calDavDataAccess.TryDeleteEntity (entityId, version);
+        return await _calDavDataAccess.TryDeleteEntity (entityId, version, cancellationToken);
       }
     }
 
@@ -222,15 +225,16 @@ namespace CalDavSynchronizer.Implementation
         WebResourceName entityId,
         string entityVersion,
         IICalendar entityToUpdate,
-        Func<IICalendar, Task<IICalendar>> entityModifier,
-        TContext context)
+        Func<IICalendar, CancellationToken, Task<IICalendar>> entityModifier,
+        TContext context, 
+        CancellationToken cancellationToken)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
-        var updatedEntity = await entityModifier (entityToUpdate);
+        var updatedEntity = await entityModifier (entityToUpdate, cancellationToken);
         try
         {
-          return await _calDavDataAccess.TryUpdateEntity (entityId, entityVersion, SerializeCalendar (updatedEntity));
+          return await _calDavDataAccess.TryUpdateEntity (entityId, entityVersion, SerializeCalendar (updatedEntity), cancellationToken);
         }
         catch (WebDavClientException ex)
         {
@@ -238,7 +242,7 @@ namespace CalDavSynchronizer.Implementation
           {
             s_logger.Warn ("Server returned '403' ('Forbidden') for update, trying Delete and Recreate instead...");
 
-            await TryDelete (entityId, entityVersion, context);
+            await TryDelete (entityId, entityVersion, context, cancellationToken);
 
             var uid = Guid.NewGuid ().ToString ();
             if (updatedEntity.Events.Count > 0)
@@ -246,7 +250,7 @@ namespace CalDavSynchronizer.Implementation
             else
               updatedEntity.Todos[0].UID = uid;
 
-            return await _calDavDataAccess.CreateEntity (SerializeCalendar (updatedEntity), uid);
+            return await _calDavDataAccess.CreateEntity (SerializeCalendar (updatedEntity), uid, cancellationToken);
           }
           else
           {
@@ -256,14 +260,14 @@ namespace CalDavSynchronizer.Implementation
       }
     }
 
-    public async Task<EntityVersion<WebResourceName, string>> Create (Func<IICalendar, Task<IICalendar>> entityInitializer, TContext context)
+    public async Task<EntityVersion<WebResourceName, string>> Create (Func<IICalendar, CancellationToken, Task<IICalendar>> entityInitializer, TContext context, CancellationToken cancellationToken)
     {
       using (AutomaticStopwatch.StartDebug (s_logger))
       {
         IICalendar newCalendar = new iCalendar ();
-        newCalendar = await entityInitializer (newCalendar);
+        newCalendar = await entityInitializer (newCalendar, cancellationToken);
         var uid = (newCalendar.Events.Count > 0) ? newCalendar.Events[0].UID : newCalendar.Todos[0].UID;
-        return await _calDavDataAccess.CreateEntity (SerializeCalendar (newCalendar), uid);
+        return await _calDavDataAccess.CreateEntity (SerializeCalendar (newCalendar), uid, cancellationToken);
       }
     }
 

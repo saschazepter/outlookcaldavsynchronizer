@@ -26,6 +26,7 @@ using GenSync.EntityRepositories;
 using GenSync.Logging;
 using Microsoft.Office.Interop.Outlook;
 using System.Runtime.InteropServices;
+using System.Threading;
 using CalDavSynchronizer.Implementation.Common;
 using log4net;
 
@@ -64,7 +65,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       return GenericComObjectWrapper.Create ((Folder) _mapiNameSpace.GetFolderFromID (_folderId, _folderStoreId));
     }
 
-    public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetVersions (IEnumerable<IdWithAwarenessLevel<string>> idsOfEntitiesToQuery, Tcontext context)
+    public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetVersions (IEnumerable<IdWithAwarenessLevel<string>> idsOfEntitiesToQuery, Tcontext context, CancellationToken cancellationToken)
     {
       return Task.FromResult<IReadOnlyList<EntityVersion<string, DateTime>>> (
           idsOfEntitiesToQuery
@@ -75,7 +76,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
               .ToList ());
     }
 
-    public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetAllVersions (IEnumerable<string> idsOfknownEntities, Tcontext context)
+    public Task<IReadOnlyList<EntityVersion<string, DateTime>>> GetAllVersions (IEnumerable<string> idsOfknownEntities, Tcontext context, CancellationToken cancellationToken)
     {
       using (var addressbookFolderWrapper = CreateFolderWrapper())
       {
@@ -108,7 +109,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
     }
 
 #pragma warning disable 1998
-    public async Task<IReadOnlyList<EntityWithId<string, ContactItemWrapper>>> Get (ICollection<string> ids, ILoadEntityLogger logger, Tcontext context)
+    public async Task<IReadOnlyList<EntityWithId<string, ContactItemWrapper>>> Get (ICollection<string> ids, ILoadEntityLogger logger, Tcontext context, CancellationToken cancellationToken)
 #pragma warning restore 1998
     {
       return ids
@@ -120,7 +121,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
           .ToArray ();
     }
 
-    public Task VerifyUnknownEntities (Dictionary<string, DateTime> unknownEntites, Tcontext context)
+    public Task VerifyUnknownEntities (Dictionary<string, DateTime> unknownEntites, Tcontext context, CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }
@@ -135,10 +136,11 @@ namespace CalDavSynchronizer.Implementation.Contacts
       string entityId,
       DateTime entityVersion,
       ContactItemWrapper entityToUpdate,
-      Func<ContactItemWrapper, Task<ContactItemWrapper>> entityModifier,
-      Tcontext context)
+      Func<ContactItemWrapper, CancellationToken, Task<ContactItemWrapper>> entityModifier,
+      Tcontext context,
+      CancellationToken cancellationToken)
     {
-      entityToUpdate = await entityModifier (entityToUpdate);
+      entityToUpdate = await entityModifier (entityToUpdate, cancellationToken);
       entityToUpdate.Inner.Save ();
       return new EntityVersion<string, DateTime> (entityToUpdate.Inner.EntryID, entityToUpdate.Inner.LastModificationTime);
     }
@@ -146,9 +148,10 @@ namespace CalDavSynchronizer.Implementation.Contacts
     public Task<bool> TryDelete (
       string entityId,
       DateTime version,
-      Tcontext context)
+      Tcontext context, 
+      CancellationToken cancellationToken)
     {
-      var entityWithId = Get (new[] { entityId }, NullLoadEntityLogger.Instance, default (Tcontext)).Result.SingleOrDefault ();
+      var entityWithId = Get (new[] { entityId }, NullLoadEntityLogger.Instance, default (Tcontext), cancellationToken).Result.SingleOrDefault ();
       if (entityWithId == null)
         return Task.FromResult (true);
 
@@ -175,7 +178,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       return Task.FromResult (true);
     }
 
-    public async Task<EntityVersion<string, DateTime>> Create (Func<ContactItemWrapper, Task<ContactItemWrapper>> entityInitializer, Tcontext context)
+    public async Task<EntityVersion<string, DateTime>> Create (Func<ContactItemWrapper, CancellationToken, Task<ContactItemWrapper>> entityInitializer, Tcontext context, CancellationToken cancellationToken)
     {
       ContactItemWrapper newWrapper;
 
@@ -188,7 +191,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
 
       using (newWrapper)
       {
-        using (var initializedWrapper = await entityInitializer (newWrapper))
+        using (var initializedWrapper = await entityInitializer (newWrapper, cancellationToken))
         {
           initializedWrapper.SaveAndReload ();
           var result = new EntityVersion<string, DateTime> (initializedWrapper.Inner.EntryID, initializedWrapper.Inner.LastModificationTime);

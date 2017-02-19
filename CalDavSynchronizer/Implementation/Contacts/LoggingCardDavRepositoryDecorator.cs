@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using GenSync;
@@ -35,59 +36,60 @@ namespace CalDavSynchronizer.Implementation.Contacts
       _inner = inner;
     }
 
-    public async Task<bool> TryDelete(WebResourceName entityId, string version, ICardDavRepositoryLogger context)
+    public async Task<bool> TryDelete(WebResourceName entityId, string version, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
-      var result = await _inner.TryDelete(entityId, version, 0);
+      var result = await _inner.TryDelete(entityId, version, 0, cancellationToken);
       context.LogEntityDeleted(entityId);
       return result;
     }
 
-    public async Task<EntityVersion<WebResourceName, string>> TryUpdate(WebResourceName entityId, string version, vCard entityToUpdate, Func<vCard, Task<vCard>> entityModifier, ICardDavRepositoryLogger context)
+    public async Task<EntityVersion<WebResourceName, string>> TryUpdate(WebResourceName entityId, string version, vCard entityToUpdate, Func<vCard, CancellationToken, Task<vCard>> entityModifier, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
-      var result = await _inner.TryUpdate(entityId, version, entityToUpdate, entityModifier, 0);
+      var result = await _inner.TryUpdate(entityId, version, entityToUpdate, entityModifier, 0, cancellationToken);
       context.LogEntityExists(entityId, entityToUpdate);
       return result;
     }
 
-    public async Task<EntityVersion<WebResourceName, string>> Create(Func<vCard, Task<vCard>> entityInitializer, ICardDavRepositoryLogger context)
+    public async Task<EntityVersion<WebResourceName, string>> Create(Func<vCard, CancellationToken, Task<vCard>> entityInitializer, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
       vCard vCard = null;
       var result = await _inner.Create(
-        async e =>
+        async (e,ct) =>
         {
-          vCard = await entityInitializer(e);
+          vCard = await entityInitializer(e, ct);
           return vCard;
         },
-        0);
+        0,
+        cancellationToken);
       context.LogEntityExists(result.Id, vCard);
       return result;
     }
 
-    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions(IEnumerable<IdWithAwarenessLevel<WebResourceName>> idsOfEntitiesToQuery, ICardDavRepositoryLogger context)
+    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions(IEnumerable<IdWithAwarenessLevel<WebResourceName>> idsOfEntitiesToQuery, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
-      var result = await _inner.GetVersions(idsOfEntitiesToQuery, 0);
+      var result = await _inner.GetVersions(idsOfEntitiesToQuery, 0, cancellationToken);
       context.LogEntitiesExists(result.Select(e => e.Id));
       return result;
     }
 
-    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions(IEnumerable<WebResourceName> idsOfknownEntities, ICardDavRepositoryLogger context)
+    public async Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetAllVersions(IEnumerable<WebResourceName> idsOfknownEntities, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
-      var result = await _inner.GetAllVersions(idsOfknownEntities, 0);
+      var result = await _inner.GetAllVersions(idsOfknownEntities, 0, cancellationToken);
       context.LogEntitiesExists(result.Select(e => e.Id));
       return result;
     }
 
-    public async Task<IReadOnlyList<EntityWithId<WebResourceName, vCard>>> Get(ICollection<WebResourceName> ids, ILoadEntityLogger logger, ICardDavRepositoryLogger context)
+    public async Task<IReadOnlyList<EntityWithId<WebResourceName, vCard>>> Get(ICollection<WebResourceName> ids, ILoadEntityLogger logger, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
-      var result = await _inner.Get(ids, logger, 0);
+      var result = await _inner.Get(ids, logger, 0, cancellationToken);
       foreach (var entity in result)
         context.LogEntityExists(entity.Id, entity.Entity);
       return result;
     }
 
-    public Task VerifyUnknownEntities(Dictionary<WebResourceName, string> unknownEntites, ICardDavRepositoryLogger context)
+    public Task VerifyUnknownEntities(Dictionary<WebResourceName, string> unknownEntites, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
-      return _inner.VerifyUnknownEntities(unknownEntites, 0);
+      return _inner.VerifyUnknownEntities(unknownEntites, 0, cancellationToken);
     }
 
     public void Cleanup(IReadOnlyDictionary<WebResourceName, vCard> entities)

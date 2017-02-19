@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.EntityRelationManagement;
 using GenSync.EntityRepositories;
@@ -91,7 +92,7 @@ namespace GenSync.Synchronization
     }
     
 
-    public async Task Synchronize(ISynchronizationLogger logger, TContext synchronizationContext)
+    public async Task Synchronize(ISynchronizationLogger logger, TContext synchronizationContext, CancellationToken cancellationToken)
     {
       s_logger.InfoFormat("Entered. Syncstrategy '{0}' with Atype='{1}' and Btype='{2}'", _initialSyncStateCreationStrategy.GetType().Name, typeof(TAtypeEntity).Name, typeof(TBtypeEntity).Name);
 
@@ -103,8 +104,8 @@ namespace GenSync.Synchronization
         using (var interceptor = _synchronizationInterceptorFactory.Create())
         {
 
-          var newAVersionsTask = _atypeRepository.GetAllVersions(knownEntityRelations.Select(r => r.AtypeId), synchronizationContext);
-          var newBVersionsTask = _btypeRepository.GetAllVersions(knownEntityRelations.Select(r => r.BtypeId), synchronizationContext);
+          var newAVersionsTask = _atypeRepository.GetAllVersions(knownEntityRelations.Select(r => r.AtypeId), synchronizationContext, cancellationToken);
+          var newBVersionsTask = _btypeRepository.GetAllVersions(knownEntityRelations.Select(r => r.BtypeId), synchronizationContext, cancellationToken);
 
           var newAVersions = CreateDictionary(
             await newAVersionsTask,
@@ -124,7 +125,8 @@ namespace GenSync.Synchronization
               entityContainer,
               logger,
               synchronizationContext,
-              interceptor);
+              interceptor,
+              cancellationToken);
 
             _entityRelationDataAccess.SaveEntityRelationData(newEntityRelations);
           }
@@ -137,8 +139,9 @@ namespace GenSync.Synchronization
       IEnumerable<IIdWithHints<TAtypeEntityId, TAtypeEntityVersion>> aIds,
       IEnumerable<IIdWithHints<TBtypeEntityId, TBtypeEntityVersion>> bIds,
       ISynchronizationLogger logger,
-      Func<Task<TContext>> contextFactoryAsync,
-      Func<TContext, Task> syncronizationFinishedAsync)
+      Func<CancellationToken, Task<TContext>> contextFactoryAsync,
+      Func<TContext, CancellationToken, Task> syncronizationFinishedAsync, 
+      CancellationToken cancellationToken)
     {
       s_logger.InfoFormat(
         "Entered partial. Syncstrategy '{0}' with Atype='{1}' and Btype='{2}'",
@@ -150,9 +153,9 @@ namespace GenSync.Synchronization
 
       if (knownEntityRelations == null)
       {
-        var synchronizationContext = await contextFactoryAsync();
-        await Synchronize(logger, synchronizationContext);
-        await syncronizationFinishedAsync(synchronizationContext);
+        var synchronizationContext = await contextFactoryAsync(cancellationToken);
+        await Synchronize(logger, synchronizationContext, cancellationToken);
+        await syncronizationFinishedAsync(synchronizationContext, cancellationToken);
         return true;
       }
 
@@ -196,17 +199,17 @@ namespace GenSync.Synchronization
 
         using (var interceptor = _synchronizationInterceptorFactory.Create())
         {
-          var synchronizationContext = await contextFactoryAsync();
+          var synchronizationContext = await contextFactoryAsync(cancellationToken);
 
           Task<IReadOnlyList<EntityVersion<TAtypeEntityId, TAtypeEntityVersion>>> newAVersionsTask;
           if (aIdsWithAwarenessLevel.Count > 0)
-            newAVersionsTask = _atypeRepository.GetVersions(aIdsWithAwarenessLevel, synchronizationContext);
+            newAVersionsTask = _atypeRepository.GetVersions(aIdsWithAwarenessLevel, synchronizationContext, cancellationToken);
           else
             newAVersionsTask = Task.FromResult<IReadOnlyList<EntityVersion<TAtypeEntityId, TAtypeEntityVersion>>>(new EntityVersion<TAtypeEntityId, TAtypeEntityVersion>[] {});
 
           Task<IReadOnlyList<EntityVersion<TBtypeEntityId, TBtypeEntityVersion>>> newBVersionsTask;
           if (bIdsWithAwarenessLevel.Count > 0)
-            newBVersionsTask = _btypeRepository.GetVersions(bIdsWithAwarenessLevel, synchronizationContext);
+            newBVersionsTask = _btypeRepository.GetVersions(bIdsWithAwarenessLevel, synchronizationContext, cancellationToken);
           else
             newBVersionsTask = Task.FromResult<IReadOnlyList<EntityVersion<TBtypeEntityId, TBtypeEntityVersion>>>(new EntityVersion<TBtypeEntityId, TBtypeEntityVersion>[] {});
 
@@ -228,7 +231,8 @@ namespace GenSync.Synchronization
               entityContainer,
               logger,
               synchronizationContext,
-              interceptor);
+              interceptor,
+              cancellationToken);
 
             entityRelationsNotToUse.AddRange(newEntityRelations);
 
@@ -291,7 +295,8 @@ namespace GenSync.Synchronization
         EntityContainer entityContainer,
         ISynchronizationLogger logger,
         TContext synchronizationContext,
-        ISynchronizationInterceptor<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity, TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity, TContext> interceptor)
+        ISynchronizationInterceptor<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity, TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity, TContext> interceptor, 
+        CancellationToken cancellationToken)
     {
       var entitySyncStates = new EntitySyncStateContainer<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity, TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity, TContext>();
 
@@ -321,8 +326,8 @@ namespace GenSync.Synchronization
       HashSet<TBtypeEntityId> bEntitesToLoad = new HashSet<TBtypeEntityId>();
       entitySyncStates.Execute (s => s.AddRequiredEntitiesToLoad (aEntitesToLoad.Add, bEntitesToLoad.Add));
 
-      await _atypeRepository.VerifyUnknownEntities (newAVersions, synchronizationContext);
-      await _btypeRepository.VerifyUnknownEntities (newBVersions, synchronizationContext);
+      await _atypeRepository.VerifyUnknownEntities (newAVersions, synchronizationContext, cancellationToken);
+      await _btypeRepository.VerifyUnknownEntities (newBVersions, synchronizationContext, cancellationToken);
 
       if (newAVersions.Count > 0 && newBVersions.Count > 0)
       {
@@ -332,7 +337,7 @@ namespace GenSync.Synchronization
         foreach (var newB in newBVersions)
           bEntitesToLoad.Add (newB.Key);
 
-        await entityContainer.EnsureEntitiesLoaded(aEntitesToLoad, bEntitesToLoad, synchronizationContext);
+        await entityContainer.EnsureEntitiesLoaded(aEntitesToLoad, bEntitesToLoad, synchronizationContext, cancellationToken);
 
         var newAtypeEntities = GetSubSet(entityContainer.AEntities, newAVersions.Keys, _atypeIdComparer);
         var newBtypeEntities = GetSubSet(entityContainer.BEntities, newBVersions.Keys, _btypeIdComparer);
@@ -370,7 +375,7 @@ namespace GenSync.Synchronization
       entitySyncStates.TransformStates (s => interceptor.TransformInitialCreatedStates (s, _syncStateFactory));
       entitySyncStates.Execute(s => s.AddRequiredEntitiesToLoad(aEntitesToLoad.Add, bEntitesToLoad.Add));
 
-      await entityContainer.EnsureEntitiesLoaded (aEntitesToLoad, bEntitesToLoad, synchronizationContext);
+      await entityContainer.EnsureEntitiesLoaded (aEntitesToLoad, bEntitesToLoad, synchronizationContext, cancellationToken);
 
 
       // all the leftovers in newAVersions and newBVersions must be the added ones 
@@ -398,8 +403,8 @@ namespace GenSync.Synchronization
 
       using (var progress = totalProgress.StartProcessing (aJobs.TotalJobCount + bJobs.TotalJobCount))
       {
-        await _atypeWriteRepository.PerformOperations (aJobs.CreateJobs, aJobs.UpdateJobs, aJobs.DeleteJobs, progress, synchronizationContext);
-        await _btypeWriteRepository.PerformOperations (bJobs.CreateJobs, bJobs.UpdateJobs, bJobs.DeleteJobs, progress, synchronizationContext);
+        await _atypeWriteRepository.PerformOperations (aJobs.CreateJobs, aJobs.UpdateJobs, aJobs.DeleteJobs, progress, synchronizationContext, cancellationToken);
+        await _btypeWriteRepository.PerformOperations (bJobs.CreateJobs, bJobs.UpdateJobs, bJobs.DeleteJobs, progress, synchronizationContext, cancellationToken);
       }
 
       entitySyncStates.DoTransition (s => s.NotifyJobExecuted());
@@ -573,7 +578,7 @@ namespace GenSync.Synchronization
         get { return _loadedBEntities; }
       }
 
-      public async Task EnsureEntitiesLoaded (IEnumerable<TAtypeEntityId> aEntities, IEnumerable<TBtypeEntityId> bEntities, TContext context)
+      public async Task EnsureEntitiesLoaded (IEnumerable<TAtypeEntityId> aEntities, IEnumerable<TBtypeEntityId> bEntities, TContext context, CancellationToken cancellationToken)
       {
         var aEntitiesToLoad = aEntities.Except(_loadedAEntities.Keys, _context._atypeIdComparer).ToArray();
         var bEntitiesToLoad = bEntities.Except(_loadedBEntities.Keys, _context._btypeIdComparer).ToArray();
@@ -583,12 +588,12 @@ namespace GenSync.Synchronization
           _totalProgress.NotifyLoadCount(aEntitiesToLoad.Length, bEntitiesToLoad.Length);
           using (_totalProgress.StartARepositoryLoad())
           {
-            AddToDictionary(_loadedAEntities, await _context._atypeRepository.Get(aEntitiesToLoad, _aLogger, context));
+            AddToDictionary(_loadedAEntities, await _context._atypeRepository.Get(aEntitiesToLoad, _aLogger, context, cancellationToken));
           }
 
           using (_totalProgress.StartBRepositoryLoad())
           {
-            AddToDictionary(_loadedBEntities, await _context._btypeRepository.Get(bEntitiesToLoad, _bLogger, context));
+            AddToDictionary(_loadedBEntities, await _context._btypeRepository.Get(bEntitiesToLoad, _bLogger, context, cancellationToken));
           }
         }
       }

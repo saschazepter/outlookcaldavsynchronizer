@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.Synchronization;
 using Google.Contacts;
@@ -47,7 +48,7 @@ namespace CalDavSynchronizer.Implementation.GoogleContacts
       _chunkSize = chunkSize;
     }
 
-    public async Task<IGoogleContactContext> Create ()
+    public async Task<IGoogleContactContext> Create (CancellationToken cancellationToken)
     {
       return await Task.Run (() =>
       {
@@ -62,10 +63,10 @@ namespace CalDavSynchronizer.Implementation.GoogleContacts
           googleContactCache);
        
         return context;
-      });
+      }, cancellationToken);
     }
 
-    public Task SynchronizationFinished (IGoogleContactContext context)
+    public Task SynchronizationFinished (IGoogleContactContext context, CancellationToken cancellationToken)
     {
       return Task.FromResult(0);
     }

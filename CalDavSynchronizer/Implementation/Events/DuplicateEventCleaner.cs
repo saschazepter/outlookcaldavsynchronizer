@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.ComWrappers;
@@ -60,9 +61,9 @@ namespace CalDavSynchronizer.Implementation.Events
       _hashesById = new Dictionary<AppointmentId, int>(idComparer);
     }
 
-    public async Task NotifySynchronizationFinished ()
+    public async Task NotifySynchronizationFinished (CancellationToken cancellationToken)
     {
-      await DeleteDuplicates();
+      await DeleteDuplicates(cancellationToken);
     }
 
     public void AnnounceAppointment (AppointmentSlim appointment)
@@ -75,7 +76,7 @@ namespace CalDavSynchronizer.Implementation.Events
       _hashesById.Remove (id);
     }
 
-    public async Task<IEnumerable<AppointmentId>> DeleteAnnouncedEventsIfDuplicates(Predicate<AppointmentId> canBeDeleted)
+    public async Task<IEnumerable<AppointmentId>> DeleteAnnouncedEventsIfDuplicates(Predicate<AppointmentId> canBeDeleted, CancellationToken cancellationToken)
     {
       var appointmentIdsWithIdenticalHashCode = GetAppointmentIdsWithIdenticalHashCode();
 
@@ -86,7 +87,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
       foreach (var ids in appointmentIdsWithIdenticalHashCode)
       {
-        var appointments = await GetAppointmentsWithId(ids);
+        var appointments = await GetAppointmentsWithId(ids, cancellationToken);
         try
         {
           if (appointments.Length > 1)
@@ -145,7 +146,7 @@ namespace CalDavSynchronizer.Implementation.Events
               item.Subject);
     }
 
-    private async Task DeleteDuplicates()
+    private async Task DeleteDuplicates(CancellationToken cancellationToken)
     {
       var appointmentIdsWithIdenticalHashCode = GetAppointmentIdsWithIdenticalHashCode();
 
@@ -157,7 +158,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
       foreach (var ids in appointmentIdsWithIdenticalHashCode)
       {
-        var appointments = await GetAppointments(ids);
+        var appointments = await GetAppointments(ids, cancellationToken);
         if (appointments.Length > 1)
         {
           try
@@ -169,7 +170,7 @@ namespace CalDavSynchronizer.Implementation.Events
               if (GetDuplicationRelevantData(appointmentToDelete.Inner).Equals(appointmentToKeepData))
               {
                 s_logger.Info($"Deleting duplicate of '{appointmentToKeep.Inner.EntryID}'");
-                await DeleteAppointment(appointmentToDelete, relationsById);
+                await DeleteAppointment(appointmentToDelete, relationsById, cancellationToken);
               }
             }
           }
@@ -191,29 +192,29 @@ namespace CalDavSynchronizer.Implementation.Events
         .ToArray();
     }
 
-    private async Task DeleteAppointment (AppointmentItemWrapper item, Dictionary<AppointmentId, IEntityRelationData<AppointmentId, DateTime, WebResourceName, string>> relations)
+    private async Task DeleteAppointment (AppointmentItemWrapper item, Dictionary<AppointmentId, IEntityRelationData<AppointmentId, DateTime, WebResourceName, string>> relations, CancellationToken cancellationToken)
     {
       IEntityRelationData<AppointmentId, DateTime, WebResourceName, string> relation;
       var appointmentId = new AppointmentId(item.Inner.EntryID, item.Inner.GlobalAppointmentID);
       if (relations.TryGetValue (appointmentId, out relation))
       {
-        await _btypeRepository.TryDelete (relation.BtypeId, relation.BtypeVersion, NullEventSynchronizationContext.Instance);
+        await _btypeRepository.TryDelete (relation.BtypeId, relation.BtypeVersion, NullEventSynchronizationContext.Instance, cancellationToken);
         relations.Remove (appointmentId);
       }
       item.Inner.Delete();
     }
 
-    private async Task<AppointmentItemWrapper[]> GetAppointments(AppointmentId[] ids)
+    private async Task<AppointmentItemWrapper[]> GetAppointments(AppointmentId[] ids, CancellationToken cancellationToken)
     {
-      return (await Task.WhenAll(ids.Select(GetOrNull).Where(a => a != null))).ToArray();
+      return (await Task.WhenAll(ids.Select(i => GetOrNull(i,cancellationToken)).Where(a => a != null))).ToArray();
     }
 
-    private async Task<Tuple<AppointmentId, AppointmentItemWrapper>[]> GetAppointmentsWithId (AppointmentId[] ids)
+    private async Task<Tuple<AppointmentId, AppointmentItemWrapper>[]> GetAppointmentsWithId (AppointmentId[] ids, CancellationToken cancellationToken)
     {
-      return (await Task.WhenAll (ids.Select (async i => Tuple.Create( i, await GetOrNull (i) )))).Where (a => a.Item2 != null).ToArray();
+      return (await Task.WhenAll (ids.Select (async i => Tuple.Create( i, await GetOrNull (i, cancellationToken) )))).Where (a => a.Item2 != null).ToArray();
     }
 
-    async Task<AppointmentItemWrapper> GetOrNull (AppointmentId id)
+    async Task<AppointmentItemWrapper> GetOrNull (AppointmentId id, CancellationToken cancellationToken)
     {
       try
       {
@@ -221,7 +222,8 @@ namespace CalDavSynchronizer.Implementation.Events
           await _outlookRepository.Get (
             new[] { id },
             NullLoadEntityLogger.Instance,
-            NullEventSynchronizationContext.Instance);
+            NullEventSynchronizationContext.Instance,
+            cancellationToken);
 
         return itemById.FirstOrDefault ()?.Entity;
       }

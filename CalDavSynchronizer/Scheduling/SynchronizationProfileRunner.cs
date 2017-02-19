@@ -98,7 +98,7 @@ namespace CalDavSynchronizer.Scheduling
       _lastRun = DateTime.MinValue;
     }
 
-    public async Task UpdateOptions (Options options, GeneralOptions generalOptions)
+    public async Task UpdateOptions (Options options, GeneralOptions generalOptions, CancellationToken cancellationToken)
     {
       if (options == null)
         throw new ArgumentNullException (nameof (options));
@@ -111,7 +111,7 @@ namespace CalDavSynchronizer.Scheduling
       _profileName = options.Name;
       _profileId = options.Id;
       _proxyOptions = options.ProxyOptions;
-      _synchronizer = options.Inactive ? NullOutlookSynchronizer.Instance : await _synchronizerFactory.CreateSynchronizer (options, generalOptions);
+      _synchronizer = options.Inactive ? NullOutlookSynchronizer.Instance : await _synchronizerFactory.CreateSynchronizer (options, generalOptions, cancellationToken);
       _interval = TimeSpan.FromMinutes (options.SynchronizationIntervalInMinutes);
       _inactive = options.Inactive;
       _checkIfOnline = generalOptions.CheckIfOnline;
@@ -156,7 +156,7 @@ namespace CalDavSynchronizer.Scheduling
         await Task.Delay (_partialSyncDelay);
         using (_runLogger.LogStartSynchronizationRun())
         {
-          await RunAllPendingJobs();
+          await RunAllPendingJobs(CancellationToken.None);
         }
       }
       catch (Exception x)
@@ -165,7 +165,7 @@ namespace CalDavSynchronizer.Scheduling
       }
     }
 
-    public async Task RunAndRescheduleNoThrow (bool runNow)
+    public async Task RunAndRescheduleNoThrow (bool runNow, CancellationToken cancellationToken)
     {
       try
       {
@@ -175,7 +175,7 @@ namespace CalDavSynchronizer.Scheduling
         if (runNow || _interval > TimeSpan.Zero && DateTime.UtcNow > _lastRun + _interval)
         {
           _fullSyncPending = true;
-          await RunAllPendingJobs();
+          await RunAllPendingJobs(cancellationToken);
         }
       }
       catch (Exception x)
@@ -184,7 +184,7 @@ namespace CalDavSynchronizer.Scheduling
       }
     }
 
-    private async Task RunAllPendingJobs ()
+    private async Task RunAllPendingJobs (CancellationToken cancellationToken)
     {
       if (_checkIfOnline && !ConnectionTester.IsOnline (_proxyOptions))
       {
@@ -203,7 +203,7 @@ namespace CalDavSynchronizer.Scheduling
             {
               _fullSyncPending = false;
               Thread.MemoryBarrier(); // should not be required because there is just one thread entering multiple times
-              await RunAndRescheduleNoThrow();
+              await RunAndRescheduleNoThrow(cancellationToken);
             }
 
             if (_pendingOutlookItems.Count > 0)
@@ -215,7 +215,7 @@ namespace CalDavSynchronizer.Scheduling
                 s_logger.Debug ($"Partial sync: Going to sync '{itemsToSync.Length}' pending items ( {string.Join (", ", itemsToSync.Select (id => id.EntryId))} ).");
               }
               Thread.MemoryBarrier(); // should not be required because there is just one thread entering multiple times
-              await RunPartialNoThrow (itemsToSync);
+              await RunPartialNoThrow (itemsToSync, cancellationToken);
             }
           }
         }
@@ -226,7 +226,7 @@ namespace CalDavSynchronizer.Scheduling
       }
     }
 
-    private async Task RunAndRescheduleNoThrow ()
+    private async Task RunAndRescheduleNoThrow (CancellationToken cancellationToken)
     {
       try
       {
@@ -236,7 +236,7 @@ namespace CalDavSynchronizer.Scheduling
           {
             try
             {
-              await _synchronizer.Synchronize(logger);
+              await _synchronizer.Synchronize(logger, cancellationToken);
             }
             catch (Exception x)
             {
@@ -259,7 +259,7 @@ namespace CalDavSynchronizer.Scheduling
       }
     }
 
-    private async Task RunPartialNoThrow (IOutlookId[] itemsToSync)
+    private async Task RunPartialNoThrow (IOutlookId[] itemsToSync, CancellationToken cancellationToken)
     {
       try
       {
@@ -269,7 +269,7 @@ namespace CalDavSynchronizer.Scheduling
           {
             try
             {
-              await _synchronizer.SynchronizePartial(itemsToSync, logger);
+              await _synchronizer.SynchronizePartial(itemsToSync, logger, cancellationToken);
             }
             catch (Exception x)
             {

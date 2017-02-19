@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Implementation.TimeRangeFiltering;
@@ -31,36 +32,36 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
   {
     private readonly Dictionary<WebResourceName, Tuple<string, string>> _entites = new Dictionary<WebResourceName, Tuple<string, string>>(WebResourceName.Comparer);
 
-    public Task<bool> IsResourceCalender ()
+    public Task<bool> IsResourceCalender (CancellationToken cancellationToken)
     {
       return Task.FromResult (true);
     }
 
-    public Task<bool> DoesSupportCalendarQuery ()
+    public Task<bool> DoesSupportCalendarQuery (CancellationToken cancellationToken)
     {
       return Task.FromResult (true);
     }
 
-    public Task<bool> IsCalendarAccessSupported ()
+    public Task<bool> IsCalendarAccessSupported (CancellationToken cancellationToken)
     {
       return Task.FromResult (true);
     }
 
-    public Task<AccessPrivileges> GetPrivileges ()
+    public Task<AccessPrivileges> GetPrivileges (CancellationToken cancellationToken)
     {
       return Task.FromResult (AccessPrivileges.All);
     }
-    public Task<ArgbColor?> GetCalendarColorNoThrow ()
+    public Task<ArgbColor?> GetCalendarColorNoThrow (CancellationToken cancellationToken)
     {
       return Task.FromResult ((ArgbColor?)null);
     }
 
-    public Task<bool> SetCalendarColorNoThrow (ArgbColor argbColor)
+    public Task<bool> SetCalendarColorNoThrow (ArgbColor argbColor, CancellationToken cancellationToken)
     {
       throw new NotImplementedException();
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetEventVersions (DateTimeRange? range)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetEventVersions (DateTimeRange? range, CancellationToken cancellationToken)
     {
       if (range != null)
         throw new NotSupportedException ("range not supported");
@@ -69,7 +70,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
           _entites.Select (e => EntityVersion.Create (e.Key, e.Value.Item1)).ToList());
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetTodoVersions (DateTimeRange? range)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetTodoVersions (DateTimeRange? range, CancellationToken cancellationToken)
     {
       if (range != null)
         throw new NotSupportedException ("range not supported");
@@ -78,19 +79,19 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
           _entites.Select (e => EntityVersion.Create (e.Key, e.Value.Item1)).ToList());
     }
 
-    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<WebResourceName> eventUrls)
+    public Task<IReadOnlyList<EntityVersion<WebResourceName, string>>> GetVersions (IEnumerable<WebResourceName> eventUrls, CancellationToken cancellationToken)
     {
       return Task.FromResult<IReadOnlyList<EntityVersion<WebResourceName, string>>> (
           eventUrls.Select (id => EntityVersion.Create (id, _entites[id].Item1)).ToList());
     }
 
-    public Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities (IEnumerable<WebResourceName> eventUrls)
+    public Task<IReadOnlyList<EntityWithId<WebResourceName, string>>> GetEntities (IEnumerable<WebResourceName> eventUrls, CancellationToken cancellationToken)
     {
       return Task.FromResult<IReadOnlyList<EntityWithId<WebResourceName, string>>> (
           eventUrls.Select (id => EntityWithId.Create (id, _entites[id].Item2)).ToList());
     }
 
-    public Task<EntityVersion<WebResourceName, string>> CreateEntity (string iCalData, string uid)
+    public Task<EntityVersion<WebResourceName, string>> CreateEntity (string iCalData, string uid, CancellationToken cancellationToken)
     {
       var id = new WebResourceName( Guid.NewGuid().ToString());
       const int version = 1;
@@ -98,7 +99,7 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
       return Task.FromResult (EntityVersion.Create (id, version.ToString()));
     }
 
-    public Task<bool> TryDeleteEntity (WebResourceName uri, string etag)
+    public Task<bool> TryDeleteEntity (WebResourceName uri, string etag, CancellationToken cancellationToken)
     {
       if (!_entites.ContainsKey (uri))
         throw new Exception ("tried to delete non existing entity!");
@@ -113,7 +114,8 @@ namespace CalDavSynchronizerTestAutomation.Infrastructure
     public Task<EntityVersion<WebResourceName, string>> TryUpdateEntity (
         WebResourceName url,
         string version,
-        string iCalData)
+        string iCalData,
+        CancellationToken cancellationToken)
     {
       var existingVersion = _entites[url].Item1;
       if (version != existingVersion)

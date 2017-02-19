@@ -23,6 +23,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xaml;
@@ -70,7 +71,7 @@ namespace CalDavSynchronizer.Implementation.GoogleContacts
       _configuration = configuration;
     }
 
-    public Task<GoogleContactWrapper> Map1To2 (ContactItemWrapper source, GoogleContactWrapper targetWrapper, IEntityMappingLogger logger, IGoogleContactContext context)
+    public Task<GoogleContactWrapper> Map1To2 (ContactItemWrapper source, GoogleContactWrapper targetWrapper, IEntityMappingLogger logger, IGoogleContactContext context, CancellationToken cancellationToken)
     {
       var target = targetWrapper.Contact;
 
@@ -676,7 +677,7 @@ namespace CalDavSynchronizer.Implementation.GoogleContacts
       throw new NotImplementedException (string.Format ("Mapping for value '{0}' not implemented.", value));
     }
 
-    public Task<ContactItemWrapper> Map2To1 (GoogleContactWrapper sourceWrapper, ContactItemWrapper target, IEntityMappingLogger logger, IGoogleContactContext context)
+    public Task<ContactItemWrapper> Map2To1 (GoogleContactWrapper sourceWrapper, ContactItemWrapper target, IEntityMappingLogger logger, IGoogleContactContext context, CancellationToken cancellationToken)
     {
       var source = sourceWrapper.Contact;
 

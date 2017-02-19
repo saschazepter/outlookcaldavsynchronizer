@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.DataAccess;
 using DDay.iCal;
@@ -36,12 +37,12 @@ namespace CalDavSynchronizer.Implementation.Events
     {
     }
 
-    public Task<IEventSynchronizationContext> Create ()
+    public Task<IEventSynchronizationContext> Create (CancellationToken cancellationToken)
     {
       return Task.FromResult (NullEventSynchronizationContext.Instance);
     }
 
-    public Task SynchronizationFinished (IEventSynchronizationContext context)
+    public Task SynchronizationFinished (IEventSynchronizationContext context, CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }

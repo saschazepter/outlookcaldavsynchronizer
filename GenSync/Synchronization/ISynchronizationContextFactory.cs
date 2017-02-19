@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GenSync.Synchronization
@@ -33,13 +34,14 @@ namespace GenSync.Synchronization
     /// Is called at the beginning of every sync run, to create an context for the ongoing sync run
     /// </summary>
     /// <returns></returns>
-    Task<TContext> Create();
+    Task<TContext> Create(CancellationToken cancellationToken);
 
     /// <summary>
     /// Is called at the end of every sync run with the previously created context
     /// </summary>
     /// <param name="context"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task SynchronizationFinished(TContext context);
+    Task SynchronizationFinished(TContext context, CancellationToken cancellationToken);
   }
 }

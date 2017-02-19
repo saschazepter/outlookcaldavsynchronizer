@@ -20,6 +20,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Contracts;
 using CalDavSynchronizer.DDayICalWorkaround;
@@ -50,7 +51,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       _configuration = configuration;
     }
 
-    public Task<IICalendar> Map1To2 (TaskItemWrapper source, IICalendar existingTargetCalender, IEntityMappingLogger logger, int context)
+    public Task<IICalendar> Map1To2 (TaskItemWrapper source, IICalendar existingTargetCalender, IEntityMappingLogger logger, int context, CancellationToken cancellationToken)
     {
       var newTargetCalender = new iCalendar();
       var localIcalTimeZone = iCalTimeZone.FromSystemTimeZone (_localTimeZoneInfo, new DateTime (1970, 1, 1), true);
@@ -331,7 +332,7 @@ namespace CalDavSynchronizer.Implementation.Tasks
       }
     }
 
-    public Task<TaskItemWrapper> Map2To1 (IICalendar sourceCalendar, TaskItemWrapper target, IEntityMappingLogger logger, int context)
+    public Task<TaskItemWrapper> Map2To1 (IICalendar sourceCalendar, TaskItemWrapper target, IEntityMappingLogger logger, int context, CancellationToken cancellationToken)
     {
       var source = sourceCalendar.Todos[0];
       return Task.FromResult(Map2To1 (source, target, logger));

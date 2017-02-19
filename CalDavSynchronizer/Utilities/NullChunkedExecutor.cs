@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalDavSynchronizer.Utilities
@@ -30,9 +31,9 @@ namespace CalDavSynchronizer.Utilities
 
     }
 
-    public async Task<TExecutionContext> ExecuteAsync<TItem, TExecutionContext>(TExecutionContext executionContext, IEnumerable<TItem> items, Func<List<TItem>, TExecutionContext, Task> processChunk)
+    public async Task<TExecutionContext> ExecuteAsync<TItem, TExecutionContext>(TExecutionContext executionContext, IEnumerable<TItem> items, Func<List<TItem>, TExecutionContext, CancellationToken, Task> processChunk, CancellationToken cancellationToken)
     {
-      await processChunk(items.ToList(), executionContext);
+      await processChunk(items.ToList(), executionContext, cancellationToken);
       return executionContext;
     }
 

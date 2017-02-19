@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GenSync.Synchronization
@@ -27,12 +28,12 @@ namespace GenSync.Synchronization
     {
     }
 
-    public Task<int> Create()
+    public Task<int> Create(CancellationToken cancellationToken)
     {
       return Task.FromResult(0);
     }
 
-    public Task SynchronizationFinished(int context)
+    public Task SynchronizationFinished(int context, CancellationToken cancellationToken)
     {
       return Task.FromResult(0);
     }
@@ -47,12 +48,12 @@ namespace GenSync.Synchronization
       _contextFactory = contextFactory;
     }
 
-    public Task<T> Create()
+    public Task<T> Create(CancellationToken cancellationToken)
     {
       return Task.FromResult<T>(_contextFactory());
     }
 
-    public Task SynchronizationFinished(T context)
+    public Task SynchronizationFinished(T context, CancellationToken cancellationToken)
     {
       return Task.FromResult(0);
     }

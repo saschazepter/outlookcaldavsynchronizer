@@ -29,6 +29,7 @@ using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Exception = System.Exception;
 
@@ -52,7 +53,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       _configuration = configuration;
     }
 
-    public Task<vCard> Map1To2 (ContactItemWrapper source, vCard target, IEntityMappingLogger logger, ICardDavRepositoryLogger context)
+    public Task<vCard> Map1To2 (ContactItemWrapper source, vCard target, IEntityMappingLogger logger, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
       target.GivenName = source.Inner.FirstName;
       target.FamilyName = source.Inner.LastName;
@@ -218,7 +219,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       return Task.FromResult(target);
     }
 
-    public async Task<ContactItemWrapper> Map2To1 (vCard source, ContactItemWrapper target, IEntityMappingLogger logger, ICardDavRepositoryLogger context)
+    public async Task<ContactItemWrapper> Map2To1 (vCard source, ContactItemWrapper target, IEntityMappingLogger logger, ICardDavRepositoryLogger context, CancellationToken cancellationToken)
     {
       target.Inner.FirstName = source.GivenName;
       target.Inner.LastName = source.FamilyName;
@@ -345,7 +346,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       MapCertificate2To1 (source, target.Inner, logger);
 
       if (_configuration.MapContactPhoto)
-        await MapPhoto2To1 (source, target.Inner, logger);
+        await MapPhoto2To1 (source, target.Inner, logger, cancellationToken);
 
       if (source.Notes.Count > 0)
       {
@@ -610,7 +611,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
       }
     }
 
-    private async Task MapPhoto2To1 (vCard source, ContactItem target, IEntityMappingLogger logger)
+    private async Task MapPhoto2To1 (vCard source, ContactItem target, IEntityMappingLogger logger, CancellationToken cancellationToken)
     {
       if (source.Photos.Count > 0)
       {
@@ -625,7 +626,11 @@ namespace CalDavSynchronizer.Implementation.Contacts
           {
             using (var client = HttpUtility.CreateWebClient())
             {
-              await client.DownloadFileTaskAsync (contactPhoto.Url, picturePath);
+              var downloadTask = client.DownloadFileTaskAsync (contactPhoto.Url, picturePath);
+              using (cancellationToken.Register(() => client.CancelAsync()))
+              {
+                await downloadTask;
+              }
             }
           }
           else if (contactPhoto.IsLoaded)
@@ -649,7 +654,7 @@ namespace CalDavSynchronizer.Implementation.Contacts
           }
           File.Delete (picturePath);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!(ex is TaskCanceledException && cancellationToken.IsCancellationRequested))
         {
           s_logger.Warn ("Could not add picture for contact.", ex);
           logger.LogMappingWarning ("Could not add picture for contact.", ex);

@@ -19,6 +19,7 @@ using System;
 using System.Reflection;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Input;
 using CalDavSynchronizer.Contracts;
@@ -51,7 +52,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       _testConnectionCommand = new DelegateCommandWithoutCanExecuteDelegation (_ =>
       {
         ComponentContainer.EnsureSynchronizationContext();
-        TestConnectionAsync (CalenderUrl);
+        TestConnectionAsync (CalenderUrl, CancellationToken.None);
       });
 
 
@@ -89,13 +90,13 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
 
     public bool UseGoogleNativeApiAvailable => _model.UseGoogleNativeApiAvailable;
     
-    private async void TestConnectionAsync (string testUrl)
+    private async void TestConnectionAsync (string testUrl, CancellationToken cancellationToken)
     {
       _testConnectionCommand.SetCanExecute (false);
       _doAutoDiscoveryCommand.SetCanExecute (false);
       try
       {
-        var newUrl = await _optionTasks.TestGoogleConnection (_model, testUrl);
+        var newUrl = await _optionTasks.TestGoogleConnection (_model, testUrl, cancellationToken);
         if (newUrl != testUrl)
           CalenderUrl = newUrl;
       }
@@ -123,7 +124,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
         testUrl = OptionTasks.GoogleDavBaseUrl;
 
       ComponentContainer.EnsureSynchronizationContext();
-      TestConnectionAsync (testUrl);
+      TestConnectionAsync (testUrl, CancellationToken.None);
     }
 
     public static GoogleServerSettingsViewModel DesignInstance => new GoogleServerSettingsViewModel(OptionsModel.DesignInstance, NullOptionTasks.Instance, OptionsCollectionViewModel.DesignViewOptions)

@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.ChangeWatching;
 using CalDavSynchronizer.DataAccess;
@@ -39,18 +40,18 @@ namespace CalDavSynchronizer.Synchronization
       _synchronizer = synchronizer;
     }
 
-    public Task Synchronize (ISynchronizationLogger logger)
+    public Task Synchronize (ISynchronizationLogger logger, CancellationToken cancellationToken)
     {
-      return _synchronizer.Synchronize (logger);
+      return _synchronizer.Synchronize (logger, cancellationToken);
     }
 
-    public async Task SynchronizePartial (IEnumerable<IOutlookId> outlookIds, ISynchronizationLogger logger)
+    public async Task SynchronizePartial (IEnumerable<IOutlookId> outlookIds, ISynchronizationLogger logger, CancellationToken cancellationToken)
     {
       var idExtractor = new IdWithHintExtractor ();
       foreach (var outlookId in outlookIds)
         outlookId.Accept (idExtractor);
 
-      await _synchronizer.SynchronizePartial (idExtractor.Ids, new IIdWithHints<TBtypeEntityId, TBtypeEntityVersion>[] { }, logger);
+      await _synchronizer.SynchronizePartial (idExtractor.Ids, new IIdWithHints<TBtypeEntityId, TBtypeEntityVersion>[] { }, logger, cancellationToken);
     }
 
     class IdWithHintExtractor : IOutlookIdVisitor

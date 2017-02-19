@@ -22,6 +22,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using CalDavSynchronizer.Ui.ConnectionTests;
@@ -47,7 +48,7 @@ namespace CalDavSynchronizer.DataAccess
       s_logger.DebugFormat ("Created with Url '{0}'", _serverUrl);
     }
 
-    protected async Task<bool> HasOption (string requiredOption)
+    protected async Task<bool> HasOption (string requiredOption, CancellationToken cancellationToken)
     {
       IHttpHeaders headers;
       try
@@ -60,7 +61,8 @@ namespace CalDavSynchronizer.DataAccess
           null,
           null,
           null,
-          null);
+          null,
+          cancellationToken);
       }
       catch (WebDavClientException x) when (x.StatusCode == HttpStatusCode.NotFound)
       {
@@ -81,9 +83,9 @@ namespace CalDavSynchronizer.DataAccess
       }
     }
 
-    protected async Task<bool> IsResourceType (string @namespace, string name)
+    protected async Task<bool> IsResourceType (string @namespace, string name, CancellationToken cancellationToken)
     {
-      var properties = await GetResourceType (_serverUrl);
+      var properties = await GetResourceType (_serverUrl, cancellationToken);
 
       XmlNode resourceTypeNode = properties.XmlDocument.SelectSingleNode (
           string.Format ("/D:multistatus/D:response/D:propstat/D:prop/D:resourcetype/{0}:{1}", @namespace, name),
@@ -92,9 +94,9 @@ namespace CalDavSynchronizer.DataAccess
       return resourceTypeNode != null;
     }
 
-    public async Task<AccessPrivileges> GetPrivileges ()
+    public async Task<AccessPrivileges> GetPrivileges (CancellationToken cancellationToken)
     {
-      var properties = await GetCurrentUserPrivileges (_serverUrl, 0);
+      var properties = await GetCurrentUserPrivileges (_serverUrl, 0, cancellationToken);
 
       XmlNode privilegeWriteContent = properties.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/D:current-user-privilege-set/D:privilege/D:write-content", properties.XmlNamespaceManager);
       XmlNode privilegeBind = properties.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/D:current-user-privilege-set/D:privilege/D:bind", properties.XmlNamespaceManager);
@@ -111,20 +113,20 @@ namespace CalDavSynchronizer.DataAccess
       return privileges;
     }
 
-    protected async Task<string> GetEtag (Uri absoluteEntityUrl)
+    protected async Task<string> GetEtag (Uri absoluteEntityUrl, CancellationToken cancellationToken)
     {
-      var headers = await _webDavClient.ExecuteWebDavRequestAndReturnResponseHeaders (absoluteEntityUrl, "GET", null, null, null, null, null);
+      var headers = await _webDavClient.ExecuteWebDavRequestAndReturnResponseHeaders (absoluteEntityUrl, "GET", null, null, null, null, null, cancellationToken);
       if (headers.ETag != null)
       {
         return headers.ETag;
       }
       else
       {
-        return await GetEtagViaPropfind (absoluteEntityUrl);
+        return await GetEtagViaPropfind (absoluteEntityUrl, cancellationToken);
       }
     }
 
-    private async Task<string> GetEtagViaPropfind (Uri url)
+    private async Task<string> GetEtagViaPropfind (Uri url, CancellationToken cancellationToken)
     {
       var document = await _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -139,7 +141,8 @@ namespace CalDavSynchronizer.DataAccess
                             <D:getetag/>
                           </D:prop>
                         </D:propfind>
-                 "
+                 ", 
+          cancellationToken
           );
 
       XmlNode eTagNode = document.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/D:getetag", document.XmlNamespaceManager);
@@ -147,7 +150,7 @@ namespace CalDavSynchronizer.DataAccess
       return HttpUtility.GetQuotedEtag(eTagNode.InnerText);
     }
 
-    private Task<XmlDocumentWithNamespaceManager> GetResourceType (Uri url)
+    private Task<XmlDocumentWithNamespaceManager> GetResourceType (Uri url, CancellationToken cancellationToken)
     {
       return _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -162,11 +165,12 @@ namespace CalDavSynchronizer.DataAccess
                               <D:resourcetype/>
                            </D:prop>
                         </D:propfind>
-                 "
+                 ",
+          cancellationToken
           );
     }
 
-    protected async Task<bool> DoesSupportsReportSet (Uri url, int depth, string reportSetNamespace, string reportSet)
+    protected async Task<bool> DoesSupportsReportSet (Uri url, int depth, string reportSetNamespace, string reportSet, CancellationToken cancellationToken)
     {
       var document = await _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -181,7 +185,8 @@ namespace CalDavSynchronizer.DataAccess
                             <D:supported-report-set/>
                           </D:prop>
                         </D:propfind>
-                 "
+                 ",
+          cancellationToken
           );
 
       XmlNode reportSetNode = document.XmlDocument.SelectSingleNode (
@@ -194,7 +199,7 @@ namespace CalDavSynchronizer.DataAccess
       return reportSetNode != null;
     }
 
-    private Task<XmlDocumentWithNamespaceManager> GetCurrentUserPrivileges (Uri url, int depth)
+    private Task<XmlDocumentWithNamespaceManager> GetCurrentUserPrivileges (Uri url, int depth, CancellationToken cancellationToken)
     {
       return _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -209,11 +214,12 @@ namespace CalDavSynchronizer.DataAccess
                             <D:current-user-privilege-set/>
                           </D:prop>
                         </D:propfind>
-                 "
+                 ",
+          cancellationToken
           );
     }
 
-    protected Task<XmlDocumentWithNamespaceManager> GetCurrentUserPrincipal (Uri url)
+    protected Task<XmlDocumentWithNamespaceManager> GetCurrentUserPrincipal (Uri url, CancellationToken cancellationToken)
     {
       return _webDavClient.ExecuteWebDavRequestAndReadResponse (
           url,
@@ -230,11 +236,12 @@ namespace CalDavSynchronizer.DataAccess
                             <D:resourcetype/>
                           </D:prop>
                         </D:propfind>
-                 "
+                 ",
+          cancellationToken
           );
     }
 
-    public async Task<bool> TryDeleteEntity (WebResourceName uri, string etag)
+    public async Task<bool> TryDeleteEntity (WebResourceName uri, string etag, CancellationToken cancellationToken)
     {
       s_logger.DebugFormat ("Deleting entity '{0}'", uri);
 
@@ -253,7 +260,8 @@ namespace CalDavSynchronizer.DataAccess
             etag,
             null,
             null,
-            string.Empty);
+            string.Empty,
+            cancellationToken);
       }
       catch (WebDavClientException x) when (x.StatusCode == HttpStatusCode.NotFound  || x.StatusCode == HttpStatusCode.PreconditionFailed)
       {
@@ -271,9 +279,9 @@ namespace CalDavSynchronizer.DataAccess
       return true;
     }
 
-    protected async Task<Uri> GetCurrentUserPrincipalUrl (Uri calenderUrl)
+    protected async Task<Uri> GetCurrentUserPrincipalUrl (Uri calenderUrl, CancellationToken cancellationToken)
     {
-      var principalProperties = await GetCurrentUserPrincipal (calenderUrl);
+      var principalProperties = await GetCurrentUserPrincipal (calenderUrl, cancellationToken);
 
       XmlNode principalUrlNode = principalProperties.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/D:current-user-principal", principalProperties.XmlNamespaceManager) ??
                                  principalProperties.XmlDocument.SelectSingleNode ("/D:multistatus/D:response/D:propstat/D:prop/D:principal-URL", principalProperties.XmlNamespaceManager);

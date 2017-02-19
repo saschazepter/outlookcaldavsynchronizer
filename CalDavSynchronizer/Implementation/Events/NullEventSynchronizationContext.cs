@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.ProgressReport;
 using Microsoft.Office.Interop.Outlook;
@@ -31,7 +32,7 @@ namespace CalDavSynchronizer.Implementation.Events
     {
     }
 
-    public Task NotifySynchronizationFinished ()
+    public Task NotifySynchronizationFinished (CancellationToken cancellationToken)
     {
       return Task.FromResult (0);
     }
@@ -46,7 +47,7 @@ namespace CalDavSynchronizer.Implementation.Events
      
     }
 
-    public Task<IEnumerable<AppointmentId>> DeleteAnnouncedEventsIfDuplicates(Predicate<AppointmentId> canBeDeleted)
+    public Task<IEnumerable<AppointmentId>> DeleteAnnouncedEventsIfDuplicates(Predicate<AppointmentId> canBeDeleted, CancellationToken cancellationToken)
     {
       return Task.FromResult<IEnumerable<AppointmentId>>(new AppointmentId[0]);
     }

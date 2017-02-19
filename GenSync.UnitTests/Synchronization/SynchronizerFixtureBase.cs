@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using GenSync.EntityRelationManagement;
 using GenSync.EntityRepositories;
@@ -106,7 +107,7 @@ namespace GenSync.UnitTests.Synchronization
     {
       var synchronizer = CreateSynchronizer (strategy,matchingEntities);
 
-      synchronizer.Synchronize (NullSynchronizationLogger.Instance, 0).Wait();
+      synchronizer.Synchronize (NullSynchronizationLogger.Instance, 0, CancellationToken.None).Wait();
     }
 
     private void PartialSynchronizeInternal(
@@ -120,8 +121,9 @@ namespace GenSync.UnitTests.Synchronization
         aEntitesToSynchronize ?? new IIdWithHints<Identifier, int>[] {},
         bEntitesToSynchronize ?? new IIdWithHints<Identifier, int>[] {},
         NullSynchronizationLogger.Instance,
-        () => Task.FromResult(0),
-        c => Task.FromResult(0)).Wait();
+        ct => Task.FromResult(0),
+        (c,t) => Task.FromResult(0),
+        CancellationToken.None).Wait();
     }
 
     private Synchronizer<Identifier, int, string, Identifier, int, string, int> CreateSynchronizer (
@@ -199,11 +201,11 @@ namespace GenSync.UnitTests.Synchronization
 
     public async Task InitializeWithTwoEvents ()
     {
-      var v1 = await _localRepository.Create (v => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create ().Result);
-      var v2 = await _localRepository.Create (v => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create ().Result);
+      var v1 = await _localRepository.Create ((v, ct) => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
+      var v2 = await _localRepository.Create ((v, ct) => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
 
-      var v3 = await _serverRepository.Create (v => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create ().Result);
-      var v4 = await _serverRepository.Create (v => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create ().Result);
+      var v3 = await _serverRepository.Create ((v, ct) => Task.FromResult("Item 1"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
+      var v4 = await _serverRepository.Create ((v, ct) => Task.FromResult("Item 2"), NullSynchronizationContextFactory.Instance.Create (CancellationToken.None).Result, CancellationToken.None);
 
       _entityRelationData.Add (new EntityRelationData (
           v1.Id,

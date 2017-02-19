@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System.Threading;
 using System.Threading.Tasks;
 using CalDavSynchronizer.Ui.Options.Models;
 using Microsoft.Office.Interop.Outlook;
@@ -29,8 +30,8 @@ namespace CalDavSynchronizer.Ui.Options
     IProfileExportProcessor ProfileExportProcessor { get; }
     void SaveOptions(Contracts.Options[] options, string fileName);
     Contracts.Options[] LoadOptions (string fileName);
-    Task<string> TestGoogleConnection(OptionsModel options, string url);
-    Task<string> TestWebDavConnection(OptionsModel options);
+    Task<string> TestGoogleConnection(OptionsModel options, string url, CancellationToken cancellationToken);
+    Task<string> TestWebDavConnection(OptionsModel options, CancellationToken cancellationToken);
     OutlookFolderDescriptor GetDefaultCalendarFolderOrNull();
   }
 }
