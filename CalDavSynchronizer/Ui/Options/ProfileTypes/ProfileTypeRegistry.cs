@@ -34,14 +34,7 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
       AllTypes = allTypes;
     }
 
-    public static IProfileTypeRegistry Create(
-      IOptionsViewModelParent optionsViewModelParent,
-      IOutlookAccountPasswordProvider outlookAccountPasswordProvider,
-      IReadOnlyList<string> availableCategories,
-      IOptionTasks optionTasks,
-      ISettingsFaultFinder settingsFaultFinder,
-      GeneralOptions generalOptions,
-      IViewOptions viewOptions)
+    public static IProfileTypeRegistry Create(IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, ISettingsFaultFinder settingsFaultFinder, GeneralOptions generalOptions, IViewOptions viewOptions, ICancellationTokenFactory cancellationTokenFactory)
     {
       if (optionsViewModelParent == null) throw new ArgumentNullException(nameof(optionsViewModelParent));
       if (outlookAccountPasswordProvider == null) throw new ArgumentNullException(nameof(outlookAccountPasswordProvider));
@@ -53,7 +46,7 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
 
 
       var generic = new GenericProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions);
-      var google = new GoogleProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions);
+      var google = new GoogleProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions, cancellationTokenFactory);
       var all = new List<IProfileType> {generic, google};
       all.Add(new FruuxProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions));
       all.Add(new PosteoProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions));
@@ -65,7 +58,7 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
       all.Add(new CozyProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions));
       all.Add(new NextcloudProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions));
       all.Add(new MailboxOrgProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions));
-      all.Add(new EasyProjectProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions));
+      all.Add(new EasyProjectProfile(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions, cancellationTokenFactory));
     
       return new ProfileTypeRegistry(all, generic, google);
     }

@@ -49,7 +49,8 @@ namespace CalDavSynchronizer.UnitTest.Scheduling
           MockRepository.GenerateStub<ISynchronizationReportSink>(),
           MockRepository.GenerateStub<IFolderChangeWatcherFactory> (),
           delegate { },
-          MockRepository.GenerateStub<ISynchronizationRunLogger> ());
+          MockRepository.GenerateStub<ISynchronizationRunLogger> (),
+          NullCancellationTokenFactory.Instance);
 
       var options = new Options();
       var generalOptions = new GeneralOptions();

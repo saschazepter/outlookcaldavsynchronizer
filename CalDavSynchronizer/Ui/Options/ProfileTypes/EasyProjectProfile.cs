@@ -25,7 +25,7 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
 {
   class EasyProjectProfile : ProfileBase
   {
-    public EasyProjectProfile(IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, ISettingsFaultFinder settingsFaultFinder, GeneralOptions generalOptions, IViewOptions viewOptions) : base(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions)
+    public EasyProjectProfile(IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, ISettingsFaultFinder settingsFaultFinder, GeneralOptions generalOptions, IViewOptions viewOptions, ICancellationTokenFactory cancellationTokenFactory) : base(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions, cancellationTokenFactory)
     {
     }
 
@@ -59,7 +59,8 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
        new EasyProjectServerSettingsTemplateViewModel(OutlookAccountPasswordProvider, prototypeModel),
        OptionTasks,
        prototypeModel,
-       ViewOptions);
+       ViewOptions,
+       CancellationTokenFactory);
     }
   }
 }

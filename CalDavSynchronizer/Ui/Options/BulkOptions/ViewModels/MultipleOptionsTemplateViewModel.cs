@@ -48,6 +48,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
     private readonly IServerSettingsTemplateViewModel _serverSettingsViewModel;
     private readonly DelegateCommandWithoutCanExecuteDelegation _discoverResourcesCommand;
     private readonly DelegateCommandWithoutCanExecuteDelegation _getAccountSettingsCommand;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
     private bool _isSelected;
     private readonly IOptionsViewModelParent _parent;
@@ -60,7 +61,8 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
         IServerSettingsTemplateViewModel serverSettingsViewModel,
         IOptionTasks optionTasks, 
         OptionsModel prototypeModel,
-        IViewOptions viewOptions)
+        IViewOptions viewOptions,
+        ICancellationTokenFactory cancellationTokenFactory)
 
     {
       _parent = parent;
@@ -70,8 +72,10 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
       if (optionTasks == null) throw new ArgumentNullException(nameof(optionTasks));
       if (prototypeModel == null) throw new ArgumentNullException(nameof(prototypeModel));
       if (viewOptions == null) throw new ArgumentNullException(nameof(viewOptions));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       ViewOptions = viewOptions;
+      _cancellationTokenFactory = cancellationTokenFactory;
 
       _prototypeModel = prototypeModel;
 
@@ -123,7 +127,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
       _discoverResourcesCommand.SetCanExecute (false);
       try
       {
-        var serverResources = await _serverSettingsViewModel.GetServerResources (CancellationToken.None);
+        var serverResources = await _serverSettingsViewModel.GetServerResources (_cancellationTokenFactory.CreateCancellationToken("Discover Server Resources"));
 
         var calendars = serverResources.Calendars.Select (c => new CalendarDataViewModel (c)).ToArray();
         var addressBooks = serverResources.AddressBooks.Select (a => new AddressBookDataViewModel (a)).ToArray();

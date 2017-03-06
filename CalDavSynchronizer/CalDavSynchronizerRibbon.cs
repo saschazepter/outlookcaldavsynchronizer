@@ -61,7 +61,8 @@ namespace CalDavSynchronizer
       try
       {
         ComponentContainer.EnsureSynchronizationContext ();
-        await ThisAddIn.ComponentContainer.ShowOptionsAsync(CancellationToken.None);
+
+        await ThisAddIn.ComponentContainer.ShowOptionsAsync(ThisAddIn.ComponentContainer.CreateCancellationToken("Show Profiles"));
       }
       catch (Exception x)
       {
@@ -87,7 +88,7 @@ namespace CalDavSynchronizer
       try
       {
         ComponentContainer.EnsureSynchronizationContext ();
-        await ThisAddIn.ComponentContainer.ShowGeneralOptionsAsync(CancellationToken.None);
+        await ThisAddIn.ComponentContainer.ShowGeneralOptionsAsync(ThisAddIn.ComponentContainer.CreateCancellationToken ("Show General Options"));
       }
       catch (Exception x)
       {

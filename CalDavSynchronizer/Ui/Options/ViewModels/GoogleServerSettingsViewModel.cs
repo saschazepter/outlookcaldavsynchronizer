@@ -38,21 +38,24 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
 
     private readonly OptionsModel _model;
     private readonly IOptionTasks _optionTasks;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
-    public GoogleServerSettingsViewModel (OptionsModel model, IOptionTasks optionTasks, IViewOptions viewOptions)
+    public GoogleServerSettingsViewModel (OptionsModel model, IOptionTasks optionTasks, IViewOptions viewOptions, ICancellationTokenFactory cancellationTokenFactory)
     {
       if (model == null) throw new ArgumentNullException(nameof(model));
       if (optionTasks == null) throw new ArgumentNullException(nameof(optionTasks));
       if (viewOptions == null) throw new ArgumentNullException(nameof(viewOptions));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       _model = model;
       _optionTasks = optionTasks;
       ViewOptions = viewOptions;
+      _cancellationTokenFactory = cancellationTokenFactory;
       _doAutoDiscoveryCommand = new DelegateCommandWithoutCanExecuteDelegation (_ => DoAutoDiscovery());
       _testConnectionCommand = new DelegateCommandWithoutCanExecuteDelegation (_ =>
       {
         ComponentContainer.EnsureSynchronizationContext();
-        TestConnectionAsync (CalenderUrl, CancellationToken.None);
+        TestConnectionAsync (CalenderUrl,_cancellationTokenFactory.CreateCancellationToken("Test Connection"));
       });
 
 
@@ -124,11 +127,10 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
         testUrl = OptionTasks.GoogleDavBaseUrl;
 
       ComponentContainer.EnsureSynchronizationContext();
-      TestConnectionAsync (testUrl, CancellationToken.None);
+      TestConnectionAsync (testUrl, _cancellationTokenFactory.CreateCancellationToken("Discover Server Resources"));
     }
 
-    public static GoogleServerSettingsViewModel DesignInstance => new GoogleServerSettingsViewModel(OptionsModel.DesignInstance, NullOptionTasks.Instance, OptionsCollectionViewModel.DesignViewOptions)
-    {
+    public static GoogleServerSettingsViewModel DesignInstance => new GoogleServerSettingsViewModel(OptionsModel.DesignInstance, NullOptionTasks.Instance, OptionsCollectionViewModel.DesignViewOptions, NullCancellationTokenFactory.Instance){
       CalenderUrl = "http://calendar.url",
       EmailAddress = "bla@dot.com",
       UseGoogleNativeApi = true

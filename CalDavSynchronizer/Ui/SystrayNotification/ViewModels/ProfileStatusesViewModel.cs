@@ -35,13 +35,16 @@ namespace CalDavSynchronizer.Ui.SystrayNotification.ViewModels
     public ObservableCollection<ProfileStatusViewModel> Profiles { get; } = new ObservableCollection<ProfileStatusViewModel>();
     private readonly Dictionary<Guid, ProfileStatusViewModel> _profileStatusViewModelsById = new Dictionary<Guid, ProfileStatusViewModel>();
     private readonly ICalDavSynchronizerCommands _calDavSynchronizerCommands;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
-    public ProfileStatusesViewModel (ICalDavSynchronizerCommands calDavSynchronizerCommands)
+    public ProfileStatusesViewModel (ICalDavSynchronizerCommands calDavSynchronizerCommands, ICancellationTokenFactory cancellationTokenFactory)
     {
       if (calDavSynchronizerCommands == null)
         throw new ArgumentNullException (nameof (calDavSynchronizerCommands));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       _calDavSynchronizerCommands = calDavSynchronizerCommands;
+      _cancellationTokenFactory = cancellationTokenFactory;
       _timer = new Timer();
       _timer.Tick += delegate
       {
@@ -57,7 +60,7 @@ namespace CalDavSynchronizer.Ui.SystrayNotification.ViewModels
       ProfileStatusViewModel profileStatusViewModel;
       if (!_profileStatusViewModelsById.TryGetValue (profileId, out profileStatusViewModel))
       {
-        profileStatusViewModel = new ProfileStatusViewModel (profileId, _calDavSynchronizerCommands);
+        profileStatusViewModel = new ProfileStatusViewModel (profileId, _calDavSynchronizerCommands, _cancellationTokenFactory);
         Profiles.Add (profileStatusViewModel);
         _profileStatusViewModelsById.Add (profileId, profileStatusViewModel);
       }
@@ -106,7 +109,7 @@ namespace CalDavSynchronizer.Ui.SystrayNotification.ViewModels
     {
       get
       {
-        var viewModel = new ProfileStatusesViewModel(NullCalDavSynchronizerCommands.Instance);
+        var viewModel = new ProfileStatusesViewModel(NullCalDavSynchronizerCommands.Instance, NullCancellationTokenFactory.Instance);
 
         viewModel.Profiles.Add (ProfileStatusViewModel.CreateDesignInstance ("Profile 1", null, null));
         viewModel.Profiles.Add (ProfileStatusViewModel.CreateDesignInstance ("Profile 2", SyncronizationRunResult.Ok, 7));

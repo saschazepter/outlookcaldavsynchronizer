@@ -40,6 +40,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
     private readonly TimeRangeViewModel _timeRangeViewModel;
     private ISubOptionsViewModel _mappingConfigurationViewModel;
     private readonly IReadOnlyList<string> _availableCategories;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
     public GenericOptionsViewModel (
       IOptionsViewModelParent parent,
@@ -47,7 +48,8 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       IOptionTasks optionTasks,
       OptionsModel model,
       IReadOnlyList<string> availableCategories,
-      IViewOptions viewOptions)
+      IViewOptions viewOptions,
+      ICancellationTokenFactory cancellationTokenFactory)
         : base (viewOptions, model)
     {
       if (parent == null) throw new ArgumentNullException(nameof(parent));
@@ -55,10 +57,12 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       if (optionTasks == null) throw new ArgumentNullException(nameof(optionTasks));
       if (model == null) throw new ArgumentNullException(nameof(model));
       if (availableCategories == null) throw new ArgumentNullException(nameof(availableCategories));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
 
       Model = model;
       _availableCategories = availableCategories;
+      _cancellationTokenFactory = cancellationTokenFactory;
 
       _syncSettingsViewModel = new SyncSettingsViewModel(model, viewOptions);
       _networkSettingsViewModel = new NetworkSettingsViewModel(model);
@@ -106,7 +110,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       if (Model.MappingConfigurationModelOrNull == null)
         MappingConfigurationViewModel = null;
       else if (Model.MappingConfigurationModelOrNull is EventMappingConfigurationModel && !(MappingConfigurationViewModel is EventMappingConfigurationViewModel))
-        MappingConfigurationViewModel = new EventMappingConfigurationViewModel(_availableCategories, (EventMappingConfigurationModel)Model.MappingConfigurationModelOrNull, Model);
+        MappingConfigurationViewModel = new EventMappingConfigurationViewModel(_availableCategories, (EventMappingConfigurationModel)Model.MappingConfigurationModelOrNull, Model, _cancellationTokenFactory);
       else if (Model.MappingConfigurationModelOrNull is ContactMappingConfigurationModel && !(MappingConfigurationViewModel is ContactMappingConfigurationViewModel))
         MappingConfigurationViewModel = new ContactMappingConfigurationViewModel((ContactMappingConfigurationModel)Model.MappingConfigurationModelOrNull);
       else if (Model.MappingConfigurationModelOrNull is TaskMappingConfigurationModel && !(MappingConfigurationViewModel is TaskMappingConfigurationViewModel))
@@ -131,7 +135,8 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       NullOptionTasks.Instance,
       OptionsModel.DesignInstance,
       new[] {"Cat1", "Cat2"},
-      OptionsCollectionViewModel.DesignViewOptions)
+      OptionsCollectionViewModel.DesignViewOptions,
+      NullCancellationTokenFactory.Instance)
     {
       IsActive = true,
       Name = "Test Profile",

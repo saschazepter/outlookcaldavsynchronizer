@@ -25,7 +25,7 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
 {
   public class GoogleProfile : ProfileBase
   {
-    public GoogleProfile(IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, ISettingsFaultFinder settingsFaultFinder, GeneralOptions generalOptions, IViewOptions viewOptions) : base(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions)
+    public GoogleProfile(IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, ISettingsFaultFinder settingsFaultFinder, GeneralOptions generalOptions, IViewOptions viewOptions, ICancellationTokenFactory cancellationTokenFactory) : base(optionsViewModelParent, outlookAccountPasswordProvider, availableCategories, optionTasks, settingsFaultFinder, generalOptions, viewOptions, cancellationTokenFactory)
     {
     }
 
@@ -56,18 +56,20 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
         new GoogleServerSettingsTemplateViewModel(OutlookAccountPasswordProvider, prototypeModel),
         OptionTasks,
         prototypeModel,
-        ViewOptions);
+        ViewOptions,
+        CancellationTokenFactory);
     }
 
     public override IOptionsViewModel CreateViewModel(OptionsModel model)
     {
       return new GenericOptionsViewModel(
         OptionsViewModelParent,
-        new GoogleServerSettingsViewModel(model, OptionTasks, ViewOptions),
+        new GoogleServerSettingsViewModel(model, OptionTasks, ViewOptions, CancellationTokenFactory),
         OptionTasks,
         model,
         AvailableCategories,
-        ViewOptions);
+        ViewOptions,
+        CancellationTokenFactory);
     }
 
     public bool IsGoogleProfile(Contracts.Options options)

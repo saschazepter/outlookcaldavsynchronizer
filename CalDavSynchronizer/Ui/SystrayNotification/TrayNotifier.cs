@@ -31,13 +31,16 @@ namespace CalDavSynchronizer.Ui.SystrayNotification
 
     private readonly NotifyIcon _nofifyIcon;
     private readonly ICalDavSynchronizerCommands _calDavSynchronizerCommands;
-    
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
-    public TrayNotifier (ICalDavSynchronizerCommands calDavSynchronizerCommands)
+
+    public TrayNotifier (ICalDavSynchronizerCommands calDavSynchronizerCommands, ICancellationTokenFactory cancellationTokenFactory)
     {
       if (calDavSynchronizerCommands == null)
         throw new ArgumentNullException (nameof (calDavSynchronizerCommands));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
       _calDavSynchronizerCommands = calDavSynchronizerCommands;
+      _cancellationTokenFactory = cancellationTokenFactory;
 
       var trayMenu = new ContextMenu();
       trayMenu.MenuItems.Add ("Synchronize now", delegate { SynchronizeNow(); });
@@ -102,7 +105,7 @@ namespace CalDavSynchronizer.Ui.SystrayNotification
     {
       try
       {
-        _calDavSynchronizerCommands.ShowGeneralOptionsAsync(CancellationToken.None);
+        _calDavSynchronizerCommands.ShowGeneralOptionsAsync(_cancellationTokenFactory.CreateCancellationToken("Show General Options"));
       }
       catch (Exception x)
       {
@@ -114,7 +117,7 @@ namespace CalDavSynchronizer.Ui.SystrayNotification
     {
       try
       {
-        _calDavSynchronizerCommands.ShowOptionsAsync(CancellationToken.None);
+        _calDavSynchronizerCommands.ShowOptionsAsync(_cancellationTokenFactory.CreateCancellationToken("Show Profiles"));
       }
       catch (Exception x)
       {

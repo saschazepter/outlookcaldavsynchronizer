@@ -113,5 +113,10 @@ namespace CalDavSynchronizer
     {
       StatusChanged?.Invoke(this, e);
     }
+
+    public CancellationToken CreateCancellationToken(string operationName)
+    {
+      return CancellationToken.None;
+    }
   }
 }

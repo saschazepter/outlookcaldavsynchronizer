@@ -38,16 +38,19 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
     private readonly DelegateCommandWithoutCanExecuteDelegation _testConnectionCommand;
     private readonly DelegateCommandWithoutCanExecuteDelegation _getAccountSettingsCommand;
     private readonly DelegateCommandWithoutCanExecuteDelegation _createDavResourceCommand;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
-    public ServerSettingsViewModel(OptionsModel model, IOptionTasks optionTasks, IViewOptions viewOptions)
+    public ServerSettingsViewModel (OptionsModel model, IOptionTasks optionTasks, IViewOptions viewOptions, ICancellationTokenFactory cancellationTokenFactory)
     {
       if (model == null) throw new ArgumentNullException(nameof(model));
       if (optionTasks == null) throw new ArgumentNullException(nameof(optionTasks));
       if (viewOptions == null) throw new ArgumentNullException(nameof(viewOptions));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       _model = model;
       _optionTasks = optionTasks;
       ViewOptions = viewOptions;
+      _cancellationTokenFactory = cancellationTokenFactory;
 
       _testConnectionCommand = new DelegateCommandWithoutCanExecuteDelegation(_ =>
       {
@@ -106,7 +109,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       set { _model.UseAccountPassword = value; }
     }
 
-    public static ServerSettingsViewModel DesignInstance => new ServerSettingsViewModel(OptionsModel.DesignInstance, NullOptionTasks.Instance, OptionsCollectionViewModel.DesignViewOptions)
+    public static ServerSettingsViewModel DesignInstance => new ServerSettingsViewModel(OptionsModel.DesignInstance, NullOptionTasks.Instance, OptionsCollectionViewModel.DesignViewOptions, NullCancellationTokenFactory.Instance)
     {
       CalenderUrl = "http://calendar.url",
       EmailAddress = "bla@dot.com",
@@ -120,7 +123,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       _testConnectionCommand.SetCanExecute(false);
       try
       {
-        CalenderUrl = await _optionTasks.TestWebDavConnection(_model, CancellationToken.None);
+        CalenderUrl = await _optionTasks.TestWebDavConnection(_model, _cancellationTokenFactory.CreateCancellationToken("Test Connection"));
       }
       catch (Exception x)
       {
@@ -142,7 +145,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
       _createDavResourceCommand.SetCanExecute(false);
       try
       {
-        CalenderUrl = await OptionTasks.CreateDavResource(_model, CalenderUrl, CancellationToken.None);
+        CalenderUrl = await OptionTasks.CreateDavResource(_model, CalenderUrl, _cancellationTokenFactory.CreateCancellationToken("Create Server Resource"));
       }
       catch (Exception x)
       {

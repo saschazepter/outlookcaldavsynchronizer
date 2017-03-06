@@ -37,18 +37,21 @@ namespace CalDavSynchronizer.Ui.SystrayNotification.ViewModels
 
     private int? _lastRunMinutesAgo;
     private readonly ICalDavSynchronizerCommands _calDavSynchronizerCommands;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
-    public ProfileStatusViewModel (Guid profileId, ICalDavSynchronizerCommands calDavSynchronizerCommands)
+    public ProfileStatusViewModel (Guid profileId, ICalDavSynchronizerCommands calDavSynchronizerCommands, ICancellationTokenFactory cancellationTokenFactory)
     {
       if (calDavSynchronizerCommands == null)
         throw new ArgumentNullException (nameof (calDavSynchronizerCommands));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       ProfileId = profileId;
       _calDavSynchronizerCommands = calDavSynchronizerCommands;
+      _cancellationTokenFactory = cancellationTokenFactory;
 
       ShowOptionsCommand = new DelegateCommand (_ =>
       {
-        _calDavSynchronizerCommands.ShowOptionsAsync (CancellationToken.None, ProfileId);
+        _calDavSynchronizerCommands.ShowOptionsAsync (_cancellationTokenFactory.CreateCancellationToken("Show Profiles"), ProfileId);
       });
       ShowLatestSynchronizationReportCommand = new DelegateCommand (_ =>
       {
@@ -121,7 +124,7 @@ namespace CalDavSynchronizer.Ui.SystrayNotification.ViewModels
 
     public static ProfileStatusViewModel CreateDesignInstance (string profileName, SyncronizationRunResult? status, int? lastRunMinutesAgo)
     {
-      var viewModel = new ProfileStatusViewModel (Guid.NewGuid(), NullCalDavSynchronizerCommands.Instance);
+      var viewModel = new ProfileStatusViewModel (Guid.NewGuid(), NullCalDavSynchronizerCommands.Instance, NullCancellationTokenFactory.Instance);
       viewModel._profileName = profileName;
       viewModel._lastResult = status;
       viewModel._lastRunMinutesAgo = lastRunMinutesAgo;

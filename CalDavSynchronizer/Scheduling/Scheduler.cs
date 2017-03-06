@@ -42,13 +42,15 @@ namespace CalDavSynchronizer.Scheduling
     private readonly IFolderChangeWatcherFactory _folderChangeWatcherFactory;
     private readonly Action _ensureSynchronizationContext;
     private readonly ISynchronizationRunLogger _runLogger;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
     public Scheduler (
       ISynchronizerFactory synchronizerFactory,
       ISynchronizationReportSink reportSink,
       Action ensureSynchronizationContext, 
       IFolderChangeWatcherFactory folderChangeWatcherFactory,
-      ISynchronizationRunLogger runLogger)
+      ISynchronizationRunLogger runLogger,
+      ICancellationTokenFactory cancellationTokenFactory)
     {
       if (synchronizerFactory == null)
         throw new ArgumentNullException (nameof (synchronizerFactory));
@@ -58,6 +60,7 @@ namespace CalDavSynchronizer.Scheduling
         throw new ArgumentNullException (nameof (folderChangeWatcherFactory));
       if (runLogger == null)
         throw new ArgumentNullException (nameof (runLogger));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
       if (reportSink == null)
         throw new ArgumentNullException (nameof (reportSink));
 
@@ -66,6 +69,7 @@ namespace CalDavSynchronizer.Scheduling
       _ensureSynchronizationContext = ensureSynchronizationContext;
       _folderChangeWatcherFactory = folderChangeWatcherFactory;
       _runLogger = runLogger;
+      _cancellationTokenFactory = cancellationTokenFactory;
       _synchronizationTimer.Tick += SynchronizationTimer_Tick;
       _synchronizationTimer.Interval = (int) _timerInterval.TotalMilliseconds;
     }
@@ -97,7 +101,7 @@ namespace CalDavSynchronizer.Scheduling
         using (_runLogger.LogStartSynchronizationRun())
         {
           foreach (var worker in _runnersById.Values)
-            await worker.RunAndRescheduleNoThrow (false, CancellationToken.None);
+            await worker.RunAndRescheduleNoThrow (false, _cancellationTokenFactory.CreateCancellationToken("Synchronize (scheduled)"));
         }
         _synchronizationTimer.Start();
       }
@@ -127,7 +131,8 @@ namespace CalDavSynchronizer.Scheduling
                 _reportSink,
                 _folderChangeWatcherFactory,
                 _ensureSynchronizationContext,
-                _runLogger);
+                _runLogger,
+                _cancellationTokenFactory);
           }
           await profileRunner.UpdateOptions (option, generalOptions, cancellationToken);
           workersById.Add (option.Id, profileRunner);

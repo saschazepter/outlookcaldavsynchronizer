@@ -150,7 +150,7 @@ namespace CalDavSynchronizer
               _applicationDataDirectory,
               GetOrCreateConfigFileName (_applicationDataDirectory, _session.CurrentProfileName)
               ));
-      _profileStatusesViewModel = new ProfileStatusesViewModel(this);
+      _profileStatusesViewModel = new ProfileStatusesViewModel(this, this);
       _uiService = new UiService(_profileStatusesViewModel);
 
       _queryFolderStrategyWrapper = new OutlookFolderStrategyWrapper(QueryOutlookFolderByRequestingItemStrategy.Instance);
@@ -181,7 +181,8 @@ namespace CalDavSynchronizer
           EnsureSynchronizationContext,
           new FolderChangeWatcherFactory (
               _session),
-          _synchronizationStatus);
+          _synchronizationStatus,
+          this);
 
       var options = _optionsDataAccess.Load();
 
@@ -198,7 +199,7 @@ namespace CalDavSynchronizer
 
       _reportGarbageCollection = new ReportGarbageCollection (_synchronizationReportRepository, TimeSpan.FromDays (generalOptions.MaxReportAgeInDays));
 
-      _trayNotifier = generalOptions.EnableTrayIcon ? new TrayNotifier (this) : NullTrayNotifer.Instance;
+      _trayNotifier = generalOptions.EnableTrayIcon ? new TrayNotifier (this, this) : NullTrayNotifer.Instance;
 
       try
       {
@@ -449,7 +450,7 @@ namespace CalDavSynchronizer
       try
       {
         s_logger.Info ("Synchronization manually triggered");
-        await _scheduler.RunNow(CancellationToken.None);
+        await _scheduler.RunNow(CreateCancellationToken("Synchronize (manual)"));
       }
       catch (Exception x)
       {
@@ -501,7 +502,7 @@ namespace CalDavSynchronizer
           GetProfileDataDirectory,
           _uiService, 
           optionTasks,
-          p => ProfileTypeRegistry.Create(p, _outlookAccountPasswordProvider, categories, optionTasks, faultFinder, generalOptions, viewOptions),
+          p => ProfileTypeRegistry.Create(p, _outlookAccountPasswordProvider, categories, optionTasks, faultFinder, generalOptions, viewOptions, this),
           viewOptions);
 
       _currentVisibleOptionsFormOrNull = viewModel;
@@ -569,7 +570,7 @@ namespace CalDavSynchronizer
           if (newOptions.EnableTrayIcon != generalOptions.EnableTrayIcon)
           {
             _trayNotifier.Dispose();
-            _trayNotifier = newOptions.EnableTrayIcon ? new TrayNotifier (this) : NullTrayNotifer.Instance;
+            _trayNotifier = newOptions.EnableTrayIcon ? new TrayNotifier (this, this) : NullTrayNotifer.Instance;
           }
 
           if (_syncObject != null && newOptions.TriggerSyncAfterSendReceive != generalOptions.TriggerSyncAfterSendReceive)
@@ -848,6 +849,8 @@ namespace CalDavSynchronizer
 
     public async void DiplayBEntityAsync (Guid synchronizationProfileId, string entityId)
     {
+      var cancellationToken = CreateCancellationToken ("Display Server Entity");
+
       try
       {
         var options = GetOptionsOrNull (synchronizationProfileId);
@@ -855,12 +858,12 @@ namespace CalDavSynchronizer
           return;
 
         var availableSynchronizerComponents =
-          (await _synchronizerFactory.CreateSynchronizerWithComponents (options, _generalOptionsDataAccess.LoadOptions (), CancellationToken.None)).Item2;
+          (await _synchronizerFactory.CreateSynchronizerWithComponents (options, _generalOptionsDataAccess.LoadOptions (), cancellationToken)).Item2;
 
         if (availableSynchronizerComponents.CalDavDataAccess != null)
         {
           var entityName = new WebResourceName { Id = entityId, OriginalAbsolutePath = entityId };
-          var entities = await availableSynchronizerComponents.CalDavDataAccess.GetEntities (new[] { entityName }, CancellationToken.None);
+          var entities = await availableSynchronizerComponents.CalDavDataAccess.GetEntities (new[] { entityName }, cancellationToken);
           DisplayFirstEntityIfAvailable (entities.FirstOrDefault());
         }
         else if (availableSynchronizerComponents.CardDavDataAccess != null || availableSynchronizerComponents.DistListDataAccess != null)
@@ -870,10 +873,10 @@ namespace CalDavSynchronizer
           EntityWithId<WebResourceName, string> entity = null;
 
           if (availableSynchronizerComponents.CardDavDataAccess != null)
-            entity = (await availableSynchronizerComponents.CardDavDataAccess.GetEntities(new[] { entityName }, CancellationToken.None)).FirstOrDefault();
+            entity = (await availableSynchronizerComponents.CardDavDataAccess.GetEntities(new[] { entityName }, cancellationToken)).FirstOrDefault();
 
           if (entity == null && availableSynchronizerComponents.DistListDataAccess != null)
-            entity = (await availableSynchronizerComponents.DistListDataAccess.GetEntities(new[] { entityName }, CancellationToken.None)).FirstOrDefault();
+            entity = (await availableSynchronizerComponents.DistListDataAccess.GetEntities(new[] { entityName }, cancellationToken)).FirstOrDefault();
 
           DisplayFirstEntityIfAvailable(entity);
         }
@@ -882,7 +885,11 @@ namespace CalDavSynchronizer
           MessageBox.Show ($"The type of profile '{options.Name}' doesn't provide a way to display server entities.");
         }
       }
-      catch (Exception x)
+      catch (Exception x) when (x is TaskCanceledException && cancellationToken.IsCancellationRequested)
+      {
+      
+      }
+      catch (Exception x) 
       {
         ExceptionHandler.Instance.DisplayException (x, s_logger);
       }
@@ -926,6 +933,11 @@ namespace CalDavSynchronizer
     public ToolbarSettings LoadToolBarSettings()
     {
       return _generalOptionsDataAccess.LoadToolBarSettings();
+    }
+
+    public CancellationToken CreateCancellationToken(string operationName)
+    {
+      return CancellationToken.None;
     }
   }
 }

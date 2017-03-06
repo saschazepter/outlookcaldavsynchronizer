@@ -39,30 +39,33 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels.Mapping
 
     private readonly EventMappingConfigurationModel _model;
     private readonly OptionsModel _optionsModel;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
     private bool _isSelected;
     private bool _isExpanded;
 
 
-    public EventMappingConfigurationViewModel(IReadOnlyList<string> availableCategories, EventMappingConfigurationModel model, OptionsModel optionsModel)
+    public EventMappingConfigurationViewModel(IReadOnlyList<string> availableCategories, EventMappingConfigurationModel model, OptionsModel optionsModel, ICancellationTokenFactory cancellationTokenFactory)
     {
       if (availableCategories == null)
         throw new ArgumentNullException(nameof(availableCategories));
       if (model == null) throw new ArgumentNullException(nameof(model));
       if (optionsModel == null) throw new ArgumentNullException(nameof(optionsModel));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       AvailableCategories = availableCategories;
       _model = model;
       _optionsModel = optionsModel;
+      _cancellationTokenFactory = cancellationTokenFactory;
       SetServerCalendarColorCommand = new DelegateCommand(_ =>
       {
         ComponentContainer.EnsureSynchronizationContext();
-        SetServerCalendarColorAsync(CancellationToken.None);
+        SetServerCalendarColorAsync(_cancellationTokenFactory.CreateCancellationToken("Set Server Calendar Color"));
       });
       GetServerCalendarColorCommand = new DelegateCommand(_ =>
       {
         ComponentContainer.EnsureSynchronizationContext();
-        GetServerCalendarColorAsync(CancellationToken.None);
+        GetServerCalendarColorAsync(_cancellationTokenFactory.CreateCancellationToken("Get Server Calendar Color"));
       });
 
       Items = new[] { new CustomPropertyMappingViewModel(model) };
@@ -305,7 +308,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels.Mapping
 
     public IEnumerable<ITreeNodeViewModel> Items { get; }
 
-    public static EventMappingConfigurationViewModel DesignInstance = new EventMappingConfigurationViewModel(new[] { "Cat1", "Cat2" }, new EventMappingConfigurationModel(new EventMappingConfiguration()), OptionsModel.DesignInstance)
+    public static EventMappingConfigurationViewModel DesignInstance = new EventMappingConfigurationViewModel(new[] { "Cat1", "Cat2" }, new EventMappingConfigurationModel(new EventMappingConfiguration()), OptionsModel.DesignInstance, NullCancellationTokenFactory.Instance)
     {
       CategoryShortcutKey = OlCategoryShortcutKey.olCategoryShortcutKeyCtrlF4,
       CreateEventsInUtc = true,

@@ -23,7 +23,7 @@ using CalDavSynchronizer.Scheduling;
 
 namespace CalDavSynchronizer
 {
-  public interface IComponentContainer : ICalDavSynchronizerCommands, IDisposable
+  public interface IComponentContainer : ICalDavSynchronizerCommands, IDisposable, ICancellationTokenFactory
   {
     event EventHandler SynchronizationFailedWhileReportsFormWasNotVisible;
     event EventHandler<SchedulerStatusEventArgs> StatusChanged;

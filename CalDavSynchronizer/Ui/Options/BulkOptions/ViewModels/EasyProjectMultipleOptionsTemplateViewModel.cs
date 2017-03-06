@@ -57,6 +57,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
     private readonly IOptionTasks _optionTasks;
     private bool _isExpanded;
     private readonly OptionsModel _prototypeModel;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
     private string _selectedFolderName;
     private OutlookFolderDescriptor _selectedFolder;
@@ -66,7 +67,8 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
         IServerSettingsTemplateViewModel serverSettingsViewModel,
         IOptionTasks optionTasks,
         OptionsModel prototypeModel, 
-        IViewOptions viewOptions)
+        IViewOptions viewOptions, 
+        ICancellationTokenFactory cancellationTokenFactory)
     {
 
       _parent = parent;
@@ -75,21 +77,23 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
      if (optionTasks == null) throw new ArgumentNullException(nameof(optionTasks));
       if (prototypeModel == null) throw new ArgumentNullException(nameof(prototypeModel));
       if (viewOptions == null) throw new ArgumentNullException(nameof(viewOptions));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       _prototypeModel = prototypeModel;
       ViewOptions = viewOptions;
+      _cancellationTokenFactory = cancellationTokenFactory;
 
 
       _discoverResourcesCommand = new DelegateCommandWithoutCanExecuteDelegation (_ =>
       {
         ComponentContainer.EnsureSynchronizationContext();
-        DiscoverResourcesAsync(CancellationToken.None);
+        DiscoverResourcesAsync(_cancellationTokenFactory.CreateCancellationToken("Discover Resources"));
       });
 
       _mergeResourcesCommand = new DelegateCommandWithoutCanExecuteDelegation(_ =>
       {
         ComponentContainer.EnsureSynchronizationContext();
-        MergeResourcesAsync(CancellationToken.None);
+        MergeResourcesAsync(_cancellationTokenFactory.CreateCancellationToken("Merge Resources"));
       });
 
       SelectFolderCommand = new DelegateCommand(_ => SelectFolder());

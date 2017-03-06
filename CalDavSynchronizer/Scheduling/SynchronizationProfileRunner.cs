@@ -61,6 +61,7 @@ namespace CalDavSynchronizer.Scheduling
     private IItemCollectionChangeWatcher _folderChangeWatcher;
     private readonly Action _ensureSynchronizationContext;
     private readonly ISynchronizationRunLogger _runLogger;
+    private readonly ICancellationTokenFactory _cancellationTokenFactory;
 
     private volatile bool _fullSyncPending = false;
     // There is no threadsafe Datastructure required, since there will be no concurrent threads
@@ -76,7 +77,8 @@ namespace CalDavSynchronizer.Scheduling
         ISynchronizationReportSink reportSink,
         IFolderChangeWatcherFactory folderChangeWatcherFactory,
         Action ensureSynchronizationContext, 
-        ISynchronizationRunLogger runLogger)
+        ISynchronizationRunLogger runLogger, 
+        ICancellationTokenFactory cancellationTokenFactory)
     {
       if (synchronizerFactory == null)
         throw new ArgumentNullException (nameof (synchronizerFactory));
@@ -88,12 +90,14 @@ namespace CalDavSynchronizer.Scheduling
         throw new ArgumentNullException (nameof (ensureSynchronizationContext));
       if (runLogger == null)
         throw new ArgumentNullException (nameof (runLogger));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       _synchronizerFactory = synchronizerFactory;
       _reportSink = reportSink;
       _folderChangeWatcherFactory = folderChangeWatcherFactory;
       _ensureSynchronizationContext = ensureSynchronizationContext;
       _runLogger = runLogger;
+      _cancellationTokenFactory = cancellationTokenFactory;
       // Set to min, to ensure that it runs on the first run after startup
       _lastRun = DateTime.MinValue;
     }
@@ -156,7 +160,7 @@ namespace CalDavSynchronizer.Scheduling
         await Task.Delay (_partialSyncDelay);
         using (_runLogger.LogStartSynchronizationRun())
         {
-          await RunAllPendingJobs(CancellationToken.None);
+          await RunAllPendingJobs(_cancellationTokenFactory.CreateCancellationToken("Synchzronize (partial)"));
         }
       }
       catch (Exception x)

@@ -34,8 +34,9 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
     protected readonly ISettingsFaultFinder SettingsFaultFinder;
     protected readonly GeneralOptions GeneralOptions;
     protected readonly IViewOptions ViewOptions;
+    protected readonly ICancellationTokenFactory CancellationTokenFactory;
 
-    protected ProfileBase(IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, ISettingsFaultFinder settingsFaultFinder, GeneralOptions generalOptions, IViewOptions viewOptions)
+    protected ProfileBase(IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, ISettingsFaultFinder settingsFaultFinder, GeneralOptions generalOptions, IViewOptions viewOptions, ICancellationTokenFactory cancellationTokenFactory)
     {
       if (optionsViewModelParent == null) throw new ArgumentNullException(nameof(optionsViewModelParent));
       if (outlookAccountPasswordProvider == null) throw new ArgumentNullException(nameof(outlookAccountPasswordProvider));
@@ -44,6 +45,7 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
       if (settingsFaultFinder == null) throw new ArgumentNullException(nameof(settingsFaultFinder));
       if (generalOptions == null) throw new ArgumentNullException(nameof(generalOptions));
       if (viewOptions == null) throw new ArgumentNullException(nameof(viewOptions));
+      if (cancellationTokenFactory == null) throw new ArgumentNullException(nameof(cancellationTokenFactory));
 
       OptionsViewModelParent = optionsViewModelParent;
       OutlookAccountPasswordProvider = outlookAccountPasswordProvider;
@@ -52,6 +54,7 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
       SettingsFaultFinder = settingsFaultFinder;
       GeneralOptions = generalOptions;
       ViewOptions = viewOptions;
+      CancellationTokenFactory = cancellationTokenFactory;
     }
 
     public abstract string Name { get; }
@@ -114,11 +117,12 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
     {
       var optionsViewModel = new GenericOptionsViewModel(
         OptionsViewModelParent,
-        new ServerSettingsViewModel(model, OptionTasks, ViewOptions),
+        new ServerSettingsViewModel(model, OptionTasks, ViewOptions, CancellationTokenFactory),
         OptionTasks,
         model,
         AvailableCategories,
-        ViewOptions);
+        ViewOptions,
+        CancellationTokenFactory);
 
       return optionsViewModel;
     }
@@ -141,7 +145,8 @@ namespace CalDavSynchronizer.Ui.Options.ProfileTypes
         new ServerSettingsTemplateViewModel(OutlookAccountPasswordProvider, prototypeModel),
         OptionTasks,
         prototypeModel,
-        ViewOptions);
+        ViewOptions,
+        CancellationTokenFactory);
       return optionsViewModel;
     }
   }

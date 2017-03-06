@@ -253,6 +253,7 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="AsyncOperationRegistry.cs" />
     <Compile Include="AutomaticUpdates\AvailableVersionService.cs" />
     <Compile Include="AutomaticUpdates\IAvailableVersionService.cs" />
     <Compile Include="AutomaticUpdates\NewerVersionFoundEventArgs.cs" />
