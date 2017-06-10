@@ -316,6 +316,7 @@
     <Compile Include="Implementation\DistributionLists\EventEntityMatchDataFactory.cs" />
     <Compile Include="Implementation\Events\EventEntityMatchData.cs" />
     <Compile Include="Implementation\Events\EventEntityMatchDataFactory.cs" />
+    <Compile Include="Implementation\Events\SafetyMarginSyncStateCreationStrategyDecorator.cs" />
     <Compile Include="Implementation\ExceptionHandlingStrategy.cs" />
     <Compile Include="Implementation\Common\IQueryOutlookContactItemFolderStrategy.cs" />
     <Compile Include="Implementation\Common\IQueryOutlookDistListItemFolderStrategy.cs" />
