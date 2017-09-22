@@ -54,9 +54,9 @@
     </GroupBox>
     <GroupBox Header="Privacy settings">
       <StackPanel>
-        <CheckBox  IsChecked="{Binding MapSensitivityPrivateToClassConfidential}">Map Outlook Private flag to DAV CLASS:CONFIDENTIAL instead of PRIVATE</CheckBox>
-        <CheckBox  IsChecked="{Binding MapClassConfidentialToSensitivityPrivate}">Map DAV CLASS:CONFIDENTIAL to Outlook Private flag instead of Confidential</CheckBox>
-        <CheckBox  IsChecked="{Binding MapClassPublicToSensitivityPrivate}">Map DAV CLASS:PUBLIC and default events to Outlook Private flag instead of Public</CheckBox>
+        <CheckBox  IsChecked="{Binding MapSensitivityPrivateToClassConfidential}">Map 'Outlook Private' -&gt; 'DAV CLASS:CONFIDENTIAL' (instead of PRIVATE)</CheckBox>
+        <CheckBox  IsChecked="{Binding MapClassConfidentialToSensitivityPrivate}">Map 'Outlook Private' &lt;- 'DAV CLASS:CONFIDENTIAL' (instead of Confidential)</CheckBox>
+        <CheckBox  IsChecked="{Binding MapClassPublicToSensitivityPrivate}">Map 'Outlook Private' &lt;--&gt; 'DAV CLASS:PUBLIC' and 'DAV default' (instead of Public)</CheckBox>
       </StackPanel>
     </GroupBox>
     <GroupBox Header="Scheduling settings">

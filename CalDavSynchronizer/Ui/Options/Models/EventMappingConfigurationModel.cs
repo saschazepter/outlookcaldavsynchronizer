@@ -244,7 +244,11 @@ namespace CalDavSynchronizer.Ui.Options.Models
       get { return _mapClassConfidentialToSensitivityPrivate; }
       set
       {
-        CheckedPropertyChange (ref _mapClassConfidentialToSensitivityPrivate, value);
+        if (CheckedPropertyChange(ref _mapClassConfidentialToSensitivityPrivate, value))
+        {
+          if(_mapClassConfidentialToSensitivityPrivate)
+            MapClassPublicToSensitivityPrivate = false;
+        }
       }
     }
 
@@ -253,7 +257,14 @@ namespace CalDavSynchronizer.Ui.Options.Models
       get { return _mapClassPublicToSensitivityPrivate; }
       set
       {
-        CheckedPropertyChange (ref _mapClassPublicToSensitivityPrivate, value);
+        if (CheckedPropertyChange(ref _mapClassPublicToSensitivityPrivate, value))
+        {
+          if (_mapClassPublicToSensitivityPrivate)
+          {
+            MapSensitivityPrivateToClassConfidential = false;
+            MapClassConfidentialToSensitivityPrivate = false;
+          }
+        }
       }
     }
 
@@ -271,7 +282,11 @@ namespace CalDavSynchronizer.Ui.Options.Models
       get { return _mapSensitivityPrivateToClassConfidential; }
       set
       {
-        CheckedPropertyChange (ref _mapSensitivityPrivateToClassConfidential, value);
+        if (CheckedPropertyChange(ref _mapSensitivityPrivateToClassConfidential, value))
+        {
+          if(_mapSensitivityPrivateToClassConfidential)
+            MapClassPublicToSensitivityPrivate = false;
+        }
       }
     }
 
