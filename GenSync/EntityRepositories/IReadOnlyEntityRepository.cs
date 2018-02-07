@@ -32,4 +32,52 @@ namespace GenSync.EntityRepositories
     void Cleanup (TEntity entity);
     void Cleanup (IEnumerable<TEntity> entities);
   }
+
+
+  public interface IExtendedReadOnlyEntityRepository<TEntityId, TEntityVersion, TEntity, TOtherEntityId, TOtherEntityVersion, TContext>
+  {
+    Task<IEnumerable<EntityVersion<TEntityId, TEntityVersion>>> GetVersions(IEnumerable<IdWithAwarenessLevel<TEntityId>> idsOfEntitiesToQuery, TContext context, IGetVersionsLogger logger);
+    Task VerifyUnknownEntities(Dictionary<TEntityId, TEntityVersion> unknownEntites, TContext context);
+    Task<IEnumerable<EntityWithId<TEntityId, TEntity>>> Get(ICollection<TEntityId> ids, ILoadEntityLogger logger, TContext context);
+    void Cleanup(TEntity entity);
+    void Cleanup(IEnumerable<TEntity> entities);
+  }
+
+  public interface IExtendedVersionAwareEntityRepository<TEntityId, TEntityVersion, TOtherEntityId, TOtherEntityVersion, TContext>
+  {
+    Task<IEnumerable<ExtendedEntityVersion<TEntityId, TEntityVersion, TOtherEntityId, TOtherEntityVersion>>> GetAllVersions(TContext context, IGetVersionsLogger logger);
+  }
+
+  public class ExtendedEntityVersion<TEntityId, TEntityVersion, TOtherEntityId, TOtherEntityVersion>
+  {
+    public TEntityId Id { get; }
+    public readonly TEntityVersion Version;
+    public readonly ExtendedEntityRelation<TEntityVersion, TOtherEntityId, TOtherEntityVersion> RelationOrNull;
+
+    public ExtendedEntityVersion(TEntityVersion version, ExtendedEntityRelation<TEntityVersion, TOtherEntityId, TOtherEntityVersion> relationOrNull, TEntityId id)
+    {
+      if (id == null) throw new ArgumentNullException(nameof(id));
+      Version = version;
+      RelationOrNull = relationOrNull;
+      Id = id;
+    }
+  }
+
+  public class ExtendedEntityRelation<TEntityVersion, TOtherEntityId, TOtherEntityVersion>
+  {
+    public readonly TEntityVersion AtypeVersion;
+    public readonly TOtherEntityId BtypeId;
+    public readonly TOtherEntityVersion BtypeVersion;
+
+    public ExtendedEntityRelation(TEntityVersion atypeVersion, TOtherEntityId btypeId, TOtherEntityVersion btypeVersion)
+    {
+      if (atypeVersion == null) throw new ArgumentNullException(nameof(atypeVersion));
+      if (btypeId == null) throw new ArgumentNullException(nameof(btypeId));
+      if (btypeVersion == null) throw new ArgumentNullException(nameof(btypeVersion));
+
+      AtypeVersion = atypeVersion;
+      BtypeId = btypeId;
+      BtypeVersion = btypeVersion;
+    }
+  }
 }
