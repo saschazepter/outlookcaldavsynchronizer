@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GenSync.EntityRelationManagement;
 using GenSync.Logging;
 
 namespace GenSync.EntityRepositories
@@ -52,32 +53,14 @@ namespace GenSync.EntityRepositories
   {
     public TEntityId Id { get; }
     public readonly TEntityVersion Version;
-    public readonly ExtendedEntityRelation<TEntityVersion, TOtherEntityId, TOtherEntityVersion> RelationOrNull;
+    public readonly IEntityRelationData<TEntityId, TEntityVersion, TOtherEntityId, TOtherEntityVersion> RelationOrNull;
 
-    public ExtendedEntityVersion(TEntityVersion version, ExtendedEntityRelation<TEntityVersion, TOtherEntityId, TOtherEntityVersion> relationOrNull, TEntityId id)
+    public ExtendedEntityVersion(TEntityId id, TEntityVersion version, IEntityRelationData<TEntityId, TEntityVersion, TOtherEntityId, TOtherEntityVersion> relationOrNull)
     {
       if (id == null) throw new ArgumentNullException(nameof(id));
       Version = version;
       RelationOrNull = relationOrNull;
       Id = id;
-    }
-  }
-
-  public class ExtendedEntityRelation<TEntityVersion, TOtherEntityId, TOtherEntityVersion>
-  {
-    public readonly TEntityVersion AtypeVersion;
-    public readonly TOtherEntityId BtypeId;
-    public readonly TOtherEntityVersion BtypeVersion;
-
-    public ExtendedEntityRelation(TEntityVersion atypeVersion, TOtherEntityId btypeId, TOtherEntityVersion btypeVersion)
-    {
-      if (atypeVersion == null) throw new ArgumentNullException(nameof(atypeVersion));
-      if (btypeId == null) throw new ArgumentNullException(nameof(btypeId));
-      if (btypeVersion == null) throw new ArgumentNullException(nameof(btypeVersion));
-
-      AtypeVersion = atypeVersion;
-      BtypeId = btypeId;
-      BtypeVersion = btypeVersion;
     }
   }
 }

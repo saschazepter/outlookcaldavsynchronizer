@@ -15,10 +15,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
+using GenSync.EntityRelationManagement;
+
 namespace GenSync.InitialEntityMatching
 {
   public interface IMatchDataFactory<TEntity, TMatchData>
   {
     TMatchData CreateMatchData(TEntity entity);
+  }
+
+  public interface IExtendedMatchDataFactory<TEntityId, TEntityVersion, TEntity, TOtherEntityId, TOtherEntityVersion, TMatchData>
+  {
+    ExtendedMatchData<TEntityId, TEntityVersion, TOtherEntityId, TOtherEntityVersion, TMatchData> CreateMatchData(TEntity entity);
+  }
+
+  public class ExtendedMatchData<TEntityId, TEntityVersion, TOtherEntityId, TOtherEntityVersion, TMatchData>
+  {
+    public readonly TMatchData MatchData;
+    public readonly IEntityRelationData<TOtherEntityId, TOtherEntityVersion, TEntityId, TEntityVersion> RelationOrNull;
+
+    public ExtendedMatchData(TMatchData matchData, IEntityRelationData<TOtherEntityId, TOtherEntityVersion, TEntityId, TEntityVersion> relationOrNull)
+    {
+      if (matchData == null) throw new ArgumentNullException(nameof(matchData));
+      MatchData = matchData;
+      RelationOrNull = relationOrNull;
+    }
   }
 }
