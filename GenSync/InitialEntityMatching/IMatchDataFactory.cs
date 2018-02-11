@@ -33,13 +33,13 @@ namespace GenSync.InitialEntityMatching
   public class ExtendedMatchData<TEntityId, TEntityVersion, TOtherEntityId, TOtherEntityVersion, TMatchData>
   {
     public readonly TMatchData MatchData;
-    public readonly IEntityRelationData<TOtherEntityId, TOtherEntityVersion, TEntityId, TEntityVersion> RelationOrNull;
+    public readonly bool IsKnown;
 
-    public ExtendedMatchData(TMatchData matchData, IEntityRelationData<TOtherEntityId, TOtherEntityVersion, TEntityId, TEntityVersion> relationOrNull)
+    public ExtendedMatchData(TMatchData matchData, bool isKnown)
     {
       if (matchData == null) throw new ArgumentNullException(nameof(matchData));
       MatchData = matchData;
-      RelationOrNull = relationOrNull;
+      IsKnown = isKnown;
     }
   }
 }

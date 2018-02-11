@@ -119,13 +119,13 @@ namespace GenSync.Synchronization
         using (var aEntityContainer = new EntityContainer<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity, TContext>(_aTypeRepository, _atypeIdComparer, _chunkSize, _chunkedExecutor))
         using (var bEntityContainer = new EntityContainer<TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity, TContext>(_bTypeRepository, _btypeIdComparer, _chunkSize, _chunkedExecutor))
         {
-          var knownBtypeVersionsById = new Dictionary<TBtypeEntityId, IEntityRelationData<TAtypeEntityId, TAtypeEntityVersion, TBtypeEntityId, TBtypeEntityVersion>>(_btypeIdComparer);
+          var knownBtypes = new HashSet<TBtypeEntityId>(_btypeIdComparer);
 
           TBMatchData CreateBtypeMatchData(EntityWithId<TBtypeEntityId, TBtypeEntity> entity)
           {
             var transformed = _bMatchDataFactory.CreateMatchData(entity.Entity);
-            if (transformed.RelationOrNull != null)
-              knownBtypeVersionsById.Add(entity.Id, transformed.RelationOrNull);
+            if (transformed.IsKnown)
+              knownBtypes.Add(entity.Id);
             return transformed.MatchData;
           }
 
@@ -150,19 +150,13 @@ namespace GenSync.Synchronization
 
           foreach (var b in bVersionsById)
           {
-            if (knownBtypeVersionsById.TryGetValue(b.Key, out var relationData))
+            if (knownBtypes.Contains(b.Key))
             {
               aDeltaLogInfo.IncDeleted();
-              if (_btypeVersionComparer.Equals(b.Value, relationData.BtypeVersion))
-              {
-                entitySynchronizationStates.Add(_initialSyncStateCreationStrategy.CreateFor_Deleted_Unchanged(relationData));
-                bDeltaLogInfo.IncUnchanged();
-              }
-              else
-              {
-                entitySynchronizationStates.Add(_initialSyncStateCreationStrategy.CreateFor_Deleted_Changed(relationData, b.Value));
-                bDeltaLogInfo.IncChanged();
-              }
+
+              // since teh relation is attached to a and a was deleted, it cannot be determined if b is changed or unchanged. Therefore changed is assumed
+              entitySynchronizationStates.Add(_initialSyncStateCreationStrategy.CreateFor_Deleted_Changed(relationData, b.Value));
+              bDeltaLogInfo.IncChanged();
             }
             else
             {
@@ -181,76 +175,76 @@ namespace GenSync.Synchronization
           logger.LogDeltas(aDeltaLogInfo, bDeltaLogInfo);
 
 
-          try
-          {
-            var chunks = _entitySyncStateChunkCreator.CreateChunks(entitySynchronizationContexts, _atypeIdComparer, _btypeIdComparer).ToArray();
-            var entitySynchronizationLoggerFactory = new SynchronizationLoggerBoundEntitySynchronizationLoggerFactory<TAtypeEntity, TBtypeEntity>(logger, _fullEntitySynchronizationLoggerFactory);
+          //try
+          //{
+          //  var chunks = _entitySyncStateChunkCreator.CreateChunks(entitySynchronizationContexts, _atypeIdComparer, _btypeIdComparer).ToArray();
+          //  var entitySynchronizationLoggerFactory = new SynchronizationLoggerBoundEntitySynchronizationLoggerFactory<TAtypeEntity, TBtypeEntity>(logger, _fullEntitySynchronizationLoggerFactory);
 
-            using (var totalProgress = _totalProgressFactory.Create())
-            {
-              totalProgress.NotifyWork(chunks.Aggregate(0, (acc, c) => acc + c.AEntitesToLoad.Count + c.BEntitesToLoad.Count), chunks.Length);
+          //  using (var totalProgress = _totalProgressFactory.Create())
+          //  {
+          //    totalProgress.NotifyWork(chunks.Aggregate(0, (acc, c) => acc + c.AEntitesToLoad.Count + c.BEntitesToLoad.Count), chunks.Length);
 
-              foreach ((var aEntitesToLoad, var bEntitesToLoad, var currentBatch) in chunks)
-              {
-                var chunkLogger = totalProgress.StartChunk();
+          //    foreach ((var aEntitesToLoad, var bEntitesToLoad, var currentBatch) in chunks)
+          //    {
+          //      var chunkLogger = totalProgress.StartChunk();
 
-                IReadOnlyDictionary<TAtypeEntityId, TAtypeEntity> aEntitiesById;
-                using (chunkLogger.StartARepositoryLoad(aEntitesToLoad.Count))
-                {
-                  aEntitiesById = await aEntityContainer.GetEntities(aEntitesToLoad, logger.ALoadEntityLogger, synchronizationContext);
-                }
+          //      IReadOnlyDictionary<TAtypeEntityId, TAtypeEntity> aEntitiesById;
+          //      using (chunkLogger.StartARepositoryLoad(aEntitesToLoad.Count))
+          //      {
+          //        aEntitiesById = await aEntityContainer.GetEntities(aEntitesToLoad, logger.ALoadEntityLogger, synchronizationContext);
+          //      }
 
-                IReadOnlyDictionary<TBtypeEntityId, TBtypeEntity> bEntitiesById;
-                using (chunkLogger.StartBRepositoryLoad(bEntitesToLoad.Count))
-                {
-                  bEntitiesById = await bEntityContainer.GetEntities(bEntitesToLoad, logger.BLoadEntityLogger, synchronizationContext);
-                }
+          //      IReadOnlyDictionary<TBtypeEntityId, TBtypeEntity> bEntitiesById;
+          //      using (chunkLogger.StartBRepositoryLoad(bEntitesToLoad.Count))
+          //      {
+          //        bEntitiesById = await bEntityContainer.GetEntities(bEntitesToLoad, logger.BLoadEntityLogger, synchronizationContext);
+          //      }
 
-                currentBatch.ForEach(s => s.FetchRequiredEntities(aEntitiesById, bEntitiesById));
-                currentBatch.ForEach(s => s.Resolve());
+          //      currentBatch.ForEach(s => s.FetchRequiredEntities(aEntitiesById, bEntitiesById));
+          //      currentBatch.ForEach(s => s.Resolve());
 
-                // since resolve may change to an new state, required entities have to be fetched again.
-                // an state is allowed only to resolve to another state, if the following states requires equal or less entities!
-                currentBatch.ForEach(s => s.FetchRequiredEntities(aEntitiesById, bEntitiesById));
+          //      // since resolve may change to an new state, required entities have to be fetched again.
+          //      // an state is allowed only to resolve to another state, if the following states requires equal or less entities!
+          //      currentBatch.ForEach(s => s.FetchRequiredEntities(aEntitiesById, bEntitiesById));
 
-                var aJobs = new JobList<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity>();
-                var bJobs = new JobList<TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity>();
+          //      var aJobs = new JobList<TAtypeEntityId, TAtypeEntityVersion, TAtypeEntity>();
+          //      var bJobs = new JobList<TBtypeEntityId, TBtypeEntityVersion, TBtypeEntity>();
 
-                currentBatch.ForEach(s => s.AddSyncronizationJob(aJobs, bJobs, entitySynchronizationLoggerFactory, synchronizationContext));
+          //      currentBatch.ForEach(s => s.AddSyncronizationJob(aJobs, bJobs, entitySynchronizationLoggerFactory, synchronizationContext));
 
-                totalAJobs = totalAJobs.Add(aJobs.Count);
-                totalBJobs = totalBJobs.Add(bJobs.Count);
+          //      totalAJobs = totalAJobs.Add(aJobs.Count);
+          //      totalBJobs = totalBJobs.Add(bJobs.Count);
 
-                try
-                {
-                  using (var progress = chunkLogger.StartProcessing(aJobs.TotalJobCount + bJobs.TotalJobCount))
-                  {
-                    await _atypeWriteRepository.PerformOperations(aJobs.CreateJobs, aJobs.UpdateJobs, aJobs.DeleteJobs, progress, synchronizationContext);
-                    await _btypeWriteRepository.PerformOperations(bJobs.CreateJobs, bJobs.UpdateJobs, bJobs.DeleteJobs, progress, synchronizationContext);
-                  }
+          //      try
+          //      {
+          //        using (var progress = chunkLogger.StartProcessing(aJobs.TotalJobCount + bJobs.TotalJobCount))
+          //        {
+          //          await _atypeWriteRepository.PerformOperations(aJobs.CreateJobs, aJobs.UpdateJobs, aJobs.DeleteJobs, progress, synchronizationContext);
+          //          await _btypeWriteRepository.PerformOperations(bJobs.CreateJobs, bJobs.UpdateJobs, bJobs.DeleteJobs, progress, synchronizationContext);
+          //        }
 
-                  currentBatch.ForEach(s => s.NotifyJobExecuted());
-                }
-                catch (Exception x)
-                {
-                  if (_exceptionHandlingStrategy.DoesGracefullyAbortSynchronization(x))
-                  {
-                    entitySynchronizationContexts.ForEach(s => s.Abort());
-                    SaveNewRelations(entitySynchronizationContexts, saveNewRelations);
-                  }
-                  throw;
-                }
-              }
-            }
-          }
-          finally
-          {
-            s_logger.InfoFormat($"A repository jobs: {totalAJobs}");
-            s_logger.InfoFormat($"B repository jobs: {totalBJobs}");
-            logger.LogJobs(totalAJobs.ToString(), totalBJobs.ToString());
-          }
+          //        currentBatch.ForEach(s => s.NotifyJobExecuted());
+          //      }
+          //      catch (Exception x)
+          //      {
+          //        if (_exceptionHandlingStrategy.DoesGracefullyAbortSynchronization(x))
+          //        {
+          //          entitySynchronizationContexts.ForEach(s => s.Abort());
+          //          SaveNewRelations(entitySynchronizationContexts, saveNewRelations);
+          //        }
+          //        throw;
+          //      }
+          //    }
+          //  }
+          //}
+          //finally
+          //{
+          //  s_logger.InfoFormat($"A repository jobs: {totalAJobs}");
+          //  s_logger.InfoFormat($"B repository jobs: {totalBJobs}");
+          //  logger.LogJobs(totalAJobs.ToString(), totalBJobs.ToString());
+          //}
 
-          SaveNewRelations(entitySynchronizationContexts, saveNewRelations);
+          //SaveNewRelations(entitySynchronizationContexts, saveNewRelations);
 
 
         }
