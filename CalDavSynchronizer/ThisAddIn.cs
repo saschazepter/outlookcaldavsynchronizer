@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Windows.Forms;
@@ -43,6 +44,10 @@ namespace CalDavSynchronizer
     public static IComponentContainer ComponentContainer { get; private set; }
     private Timer _startupTimer;
 
+    private Inspectors _inspectors;
+    private Dictionary<Inspector, InspectorWrapper> inspectorWrappersValue =
+      new Dictionary<Inspector, InspectorWrapper>();
+
     public static event EventHandler SynchronizationFailedWhileReportsFormWasNotVisible;
     public static event EventHandler<SchedulerStatusEventArgs> StatusChanged;
     private void OnSynchronizationFailedWhileReportsFormWasNotVisible ()
@@ -50,6 +55,14 @@ namespace CalDavSynchronizer
       var handler = SynchronizationFailedWhileReportsFormWasNotVisible;
       if (handler != null)
         handler (this, EventArgs.Empty);
+    }
+
+    public Dictionary<Inspector, InspectorWrapper> InspectorWrappers
+    {
+      get
+      {
+        return inspectorWrappersValue;
+      }
     }
 
     private void ThisAddIn_Startup (object sender, EventArgs e)
@@ -74,6 +87,16 @@ namespace CalDavSynchronizer
         _startupTimer.Tick += StartupTimer_Tick;
         _startupTimer.Interval = 2000;
         _startupTimer.Enabled = true;
+
+        _inspectors = Application.Inspectors;
+        _inspectors.NewInspector +=
+          new InspectorsEvents_NewInspectorEventHandler(
+            Inspectors_NewInspector);
+
+        foreach (Inspector inspector in _inspectors)
+        {
+          Inspectors_NewInspector(inspector);
+        }
 
         s_logger.Info ("Startup exiting.");
       }
@@ -178,12 +201,25 @@ namespace CalDavSynchronizer
 
     private void ThisAddIn_Shutdown (object sender, EventArgs e)
     {
+      _inspectors.NewInspector -=
+        new InspectorsEvents_NewInspectorEventHandler(
+          Inspectors_NewInspector);
+      _inspectors = null;
+      inspectorWrappersValue = null;
+    }
+
+    void Inspectors_NewInspector(Inspector inspector)
+    {
+      if (inspector.CurrentItem is AppointmentItem)
+      {
+        InspectorWrappers.Add(inspector, new InspectorWrapper(inspector));
+      }
     }
 
     protected override IRibbonExtension[] CreateRibbonObjects ()
     {
       System.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo(GeneralOptionsDataAccess.CultureName);
-      return new IRibbonExtension[] { new CalDavSynchronizerRibbon() };
+      return new IRibbonExtension[] { new CalDavSynchronizerRibbon(), new ManageTaskPaneRibbon() };
     }
 
     #region VSTO generated code

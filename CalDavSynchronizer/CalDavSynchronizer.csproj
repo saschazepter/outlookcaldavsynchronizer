@@ -214,6 +214,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>StringResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Implementation\ComWrappers\InspectorWrapper.cs" />
     <Compile Include="Implementation\Events\CalendarResourceResolver.cs" />
     <Compile Include="Implementation\Events\ICalendarResourceResolver.cs" />
     <Compile Include="IOneTimeTaskRunner.cs" />
@@ -415,6 +416,21 @@
     <Compile Include="Ui\ConnectionTests\AccessPrivileges.cs" />
     <Compile Include="Ui\ConnectionTests\CalendarOwnerProperties.cs" />
     <Compile Include="Ui\DelegateCommandHandlingRequerySuggested.cs" />
+    <Compile Include="Ui\EasyBrowserControl.xaml.cs">
+      <DependentUpon>EasyBrowserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Ui\EasyCustomTaskPaneUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Ui\EasyCustomTaskPaneUserControl.Designer.cs">
+      <DependentUpon>EasyCustomTaskPaneUserControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ManageTaskPaneRibbon.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ManageTaskPaneRibbon.Designer.cs">
+      <DependentUpon>ManageTaskPaneRibbon.cs</DependentUpon>
+    </Compile>
     <Compile Include="Ui\NullProgressUi.cs" />
     <Compile Include="Ui\NullUiService.cs" />
     <Compile Include="Ui\Options\BulkOptions\ViewModels\KolabMultipleOptionsTemplateViewModel.cs" />
@@ -769,6 +785,9 @@
     <EmbeddedResource Include="Ui\ColorPicker.resx">
       <DependentUpon>ColorPicker.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Ui\EasyCustomTaskPaneUserControl.resx">
+      <DependentUpon>EasyCustomTaskPaneUserControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Ui\GenericElementHostWindow.resx">
       <DependentUpon>GenericElementHostWindow.cs</DependentUpon>
     </EmbeddedResource>
@@ -777,6 +796,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Ui\AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ManageTaskPaneRibbon.resx">
+      <DependentUpon>ManageTaskPaneRibbon.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Ui\Options\SelectResourceForm.resx">
       <DependentUpon>SelectResourceForm.cs</DependentUpon>
@@ -947,6 +969,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Ui\EasyBrowserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Ui\Options\Views\GeneralOptionsWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
