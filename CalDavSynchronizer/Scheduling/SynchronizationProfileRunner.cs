@@ -217,7 +217,7 @@ namespace CalDavSynchronizer.Scheduling
       {
         try
         {
-          if (_profile.CheckIfOnline && !await ConnectionTester.IsOnline(_profile.ProxyOptionsOrNull))
+          if (_profile.CheckIfOnline && await Task.Run(async () => !await ConnectionTester.IsOnline(_profile.ProxyOptionsOrNull)))
           {
             s_logger.WarnFormat("Skipping synchronization profile '{0}' (Id: '{1}') because network is not available", _profile.ProfileName, _profileId);
             return;
