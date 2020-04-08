@@ -167,6 +167,8 @@ namespace CalDavSynchronizer
       _uiService = new UiService();
       var options = _optionsDataAccess.Load();
 
+      application.ItemSend += new  ApplicationEvents_11_ItemSendEventHandler(Application_ItemSend);
+
       _permanentStatusesViewModel = new PermanentStatusesViewModel(_uiService, this, options);
       _permanentStatusesViewModel.OptionsRequesting += PermanentStatusesViewModel_OptionsRequesting;
 
@@ -236,6 +238,33 @@ namespace CalDavSynchronizer
       _oneTimeTaskRunner = new OneTimeTaskRunner(_outlookSession);
 
       DDayICalWorkaround.DDayICalCustomization.InitializeNoThrow();
+    }
+
+    private static void Application_ItemSend(object Item, ref bool Cancel)
+    {
+      if (!(Item is MeetingItem)) return;
+
+      try
+      {
+        using (var meetingWrapper = GenericComObjectWrapper.Create ((MeetingItem) Item))
+        {
+          if (meetingWrapper.Inner != null && StringComparer.InvariantCultureIgnoreCase.Compare (meetingWrapper.Inner.MessageClass, "IPM.Schedule.Meeting.Request") == 0)
+          {
+            using (var appointmentWrapper = GenericComObjectWrapper.Create (meetingWrapper.Inner.GetAssociatedAppointment(false)))
+            {
+              using (var inspectorWrapper = GenericComObjectWrapper.Create (appointmentWrapper.Inner.GetInspector))
+              {
+                inspectorWrapper.Inner.Close (OlInspectorClose.olSave);
+              }
+            }
+            Cancel = true;
+          }
+        }
+      }
+      catch (COMException ex)
+      {
+        s_logger.Warn ("Can't access AppointmentItem to cancel sending meeting request.", ex);
+      }
     }
 
     private void PermanentStatusesViewModel_OptionsRequesting(object sender, OptionsEventArgs e)
