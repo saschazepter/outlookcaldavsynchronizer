@@ -60,6 +60,11 @@ namespace CalDavSynchronizer.Implementation.DistributionLists.VCard
               yield return distributionListMember;
             }
           }
+          else
+          {
+            distributionListMember = new DistributionListMember(member.EmailAddress, member.DisplayName);
+            yield return distributionListMember;
+          }
         }
         else
         {
