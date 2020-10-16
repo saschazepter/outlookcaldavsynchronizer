@@ -36,11 +36,12 @@ namespace CalDavSynchronizer.Implementation.Contacts
     private static readonly ILog s_logger = LogManager.GetLogger(MethodInfo.GetCurrentMethod().DeclaringType);
     private readonly vCardStandardWriter _vCardStandardWriter;
 
-    public CardDavRepository(ICardDavDataAccess cardDavDataAccess, bool writeImAsImpp, IEqualityComparer<string> versionComparer) : base(cardDavDataAccess, versionComparer)
+    public CardDavRepository(ICardDavDataAccess cardDavDataAccess, bool writeImAsImpp, bool writeMemberOX, IEqualityComparer<string> versionComparer) : base(cardDavDataAccess, versionComparer)
     {
       _vCardStandardWriter = new vCardStandardWriter()
       {
-        WriteImAsImpp = writeImAsImpp
+        WriteImAsImpp = writeImAsImpp,
+        WriteMemberOX = writeMemberOX
       };
     }
 

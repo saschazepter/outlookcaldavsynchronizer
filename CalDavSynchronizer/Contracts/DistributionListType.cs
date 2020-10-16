@@ -22,5 +22,6 @@ namespace CalDavSynchronizer.Contracts
     Sogo = 0,
     VCardGroup = 1,
     VCardGroupWithUid = 2,
+    VCardGroupOX = 3,
   }
 }

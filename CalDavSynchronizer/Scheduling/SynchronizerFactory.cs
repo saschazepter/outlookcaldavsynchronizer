@@ -756,13 +756,14 @@ namespace CalDavSynchronizer.Scheduling
 
           case DistributionListType.VCardGroup:
           case DistributionListType.VCardGroupWithUid:
+          case DistributionListType.VCardGroupOX:
             var vCardTypeDetector = new VCardTypeDetector (synchronizerComponents.BtypeRepository, new VCardTypeCache (new VCardTypeCacheDataAccess (Path.Combine (synchronizerComponents.StorageDataDirectory, "vcardTypeCache.xml"))));
 
             var contactRepository = new TypeFilteringVCardRepositoryDecorator<ICardDavRepositoryLogger> (synchronizerComponents.BtypeRepository, VCardType.Contact, vCardTypeDetector);
             synchronizerComponents.BtypeRepository = contactRepository;
             var contactSynchronizer = CreateContactSynchronizer(synchronizerComponents, componentsToFill,options, generalOptions);
 
-            var contactGroupCardDavRepository = new CardDavRepository<DistributionListSychronizationContext> (synchronizerComponents.CardDavDataAccess, false, synchronizerComponents.BtypeVersionComparer);
+            var contactGroupCardDavRepository = new CardDavRepository<DistributionListSychronizationContext> (synchronizerComponents.CardDavDataAccess, false, synchronizerComponents.MappingParameters.DistributionListType == DistributionListType.VCardGroupOX, synchronizerComponents.BtypeVersionComparer);
 
             var contactGroupRepository = new TypeFilteringVCardRepositoryDecorator<DistributionListSychronizationContext> (contactGroupCardDavRepository, VCardType.Group, vCardTypeDetector);
 
@@ -855,7 +856,7 @@ namespace CalDavSynchronizer.Scheduling
 
       var btypeVersionComparer = EqualityComparer<string>.Default;
 
-      var cardDavRepository = new CardDavRepository<int>(cardDavDataAccess, mappingParameters.WriteImAsImpp, btypeVersionComparer);
+      var cardDavRepository = new CardDavRepository<int>(cardDavDataAccess, mappingParameters.WriteImAsImpp, false, btypeVersionComparer);
       var btypeRepository = new LoggingCardDavRepositoryDecorator(
         cardDavRepository);
 
