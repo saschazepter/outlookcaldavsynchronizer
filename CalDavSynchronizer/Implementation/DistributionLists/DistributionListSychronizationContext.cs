@@ -103,9 +103,8 @@ namespace CalDavSynchronizer.Implementation.DistributionLists
       }
       else
       {
-        var logMessage = $"Did not find cacheEntry for Uid '{uid}'";
-        logger.WarnFormat(logMessage);
-        synchronizationLogger.LogWarning(logMessage);
+        var logMessage = $"Did not find cacheEntry for Uid, could be a contact from a different collection '{uid}'";
+        logger.InfoFormat(logMessage);
         return (null, null);
       }
     }
