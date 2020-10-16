@@ -1942,6 +1942,7 @@ namespace Thought.vCards
           else if (value.StartsWith("urn:uuid:", StringComparison.InvariantCultureIgnoreCase))
           {
             member.Uid = value.Substring(9); //skip urn:uuid:
+			member.EmailAddress = property.Subproperties.GetValue("X-EMAIL");
             card.Members.Add(member);
           }
         }
