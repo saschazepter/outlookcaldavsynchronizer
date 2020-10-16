@@ -21,6 +21,7 @@ namespace Thought.vCards
         private bool embedInternetImages;
         private bool embedLocalImages;
         private bool writeImAsImpp;
+        private bool writeMemberOX;
         private vCardStandardWriterOptions options;
         private string productId;
         private const string TYPE = "TYPE";
@@ -57,6 +58,7 @@ namespace Thought.vCards
         {
             this.embedLocalImages = true;
             this.writeImAsImpp = false;
+            this.writeMemberOX = false;
         }
 
 
@@ -95,27 +97,43 @@ namespace Thought.vCards
             }
         }
 
-      /// <summary>
-      ///     Indicates whether or not IM addresses
-      ///     should be written as IMPP attributes
-      ///     instead of X-PROTOCOL e.g. X-AIM
-      /// </summary>
-      public bool WriteImAsImpp
-      {
-        get
-        {
-          return this.writeImAsImpp;
-        }
-        set
-        {
-          this.writeImAsImpp = value;
-        }
-      }
+       /// <summary>
+       ///     Indicates whether or not IM addresses
+       ///     should be written as IMPP attributes
+       ///     instead of X-PROTOCOL e.g. X-AIM
+       /// </summary>
+       public bool WriteImAsImpp
+       {
+         get
+         {
+           return this.writeImAsImpp;
+         }
+         set
+         {
+           this.writeImAsImpp = value;
+         }
+       }
 
-    /// <summary>
-    ///     Extended options for the vCard writer.
-    /// </summary>
-    public vCardStandardWriterOptions Options
+       /// <summary>
+       ///     Indicates whether or not X-ADDRESSBOOKMEBER
+       ///     should be written as Open-Xchange format
+       ///     with X-CN and X-EMAIL included
+       /// </summary>
+       public bool WriteMemberOX
+       {
+           get
+           {
+               return this.writeMemberOX;
+           }
+           set
+           {
+               this.writeMemberOX = value;
+           }
+       }
+        /// <summary>
+        ///     Extended options for the vCard writer.
+        /// </summary>
+        public vCardStandardWriterOptions Options
         {
             get
             {
@@ -917,29 +935,35 @@ namespace Thought.vCards
         vCard card)
     {
 
-      foreach (vCardMember member in card.Members)
-      {
-        var isEmailAddressSpecified = !string.IsNullOrEmpty(member.EmailAddress);
-        if (isEmailAddressSpecified || !string.IsNullOrEmpty(member.Uid))
-        {
+            foreach (vCardMember member in card.Members)
+            {
 
-          vCardProperty property = new vCardProperty();
+                var isEmailAddressSpecified = !string.IsNullOrEmpty(member.EmailAddress);
+                var isUidSpecified = !string.IsNullOrEmpty(member.Uid);
 
-          property.Name = "X-ADDRESSBOOKSERVER-MEMBER";
+                if (isEmailAddressSpecified || isUidSpecified)
+                {
 
-          property.Value = isEmailAddressSpecified ? "mailto:" + member.EmailAddress : "urn:uuid:" + member.Uid;
+                    vCardProperty property = new vCardProperty();
 
-          if (!string.IsNullOrEmpty(member.DisplayName))
-          {
-            property.Subproperties.Add("CN", member.DisplayName);
-          }
+                    property.Name = "X-ADDRESSBOOKSERVER-MEMBER";
 
-          properties.Add(property);
 
-        }
+                    property.Value = isUidSpecified ? "urn:uuid:" + member.Uid : "mailto:" + member.EmailAddress;
 
-      }
 
+                    if (!string.IsNullOrEmpty(member.DisplayName))
+                    {
+                        property.Subproperties.Add(writeMemberOX ? "X-CN" : "CN", member.DisplayName);
+                    }
+                    if (writeMemberOX && isEmailAddressSpecified)
+                    {
+                        property.Subproperties.Add("X-EMAIL", member.EmailAddress);
+                    }
+                    properties.Add(property);
+
+                }
+            }
     }
 
     #endregion

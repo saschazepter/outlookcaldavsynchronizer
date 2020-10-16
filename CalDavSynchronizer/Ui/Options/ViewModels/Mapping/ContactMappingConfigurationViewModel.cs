@@ -142,6 +142,7 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels.Mapping
                                                                                          new Item<DistributionListType> (DistributionListType.Sogo,  Strings.Get($"SOGo VLIST")),
                                                                                          new Item<DistributionListType> (DistributionListType.VCardGroup,  Strings.Get($"vCard with KIND:group")),
                                                                                          new Item<DistributionListType> (DistributionListType.VCardGroupWithUid,  Strings.Get($"iCloud group")),
+                                                                                         new Item<DistributionListType> (DistributionListType.VCardGroupOX,  Strings.Get($"Open-Xchange")),
                                                                                      };
 
     public static ContactMappingConfigurationViewModel DesignInstance => new ContactMappingConfigurationViewModel(new ContactMappingConfigurationModel(new ContactMappingConfiguration()))

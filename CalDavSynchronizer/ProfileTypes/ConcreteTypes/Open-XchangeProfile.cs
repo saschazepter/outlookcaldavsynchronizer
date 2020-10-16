@@ -52,6 +52,13 @@ namespace CalDavSynchronizer.ProfileTypes.ConcreteTypes
       return data;
     }
 
+    public override ContactMappingConfiguration CreateContactMappingConfiguration()
+    {
+      var data = base.CreateContactMappingConfiguration();
+      data.MapDistributionLists = true;
+      data.DistributionListType = DistributionListType.VCardGroupOX;
+      return data;
+    }
     class ProfileModelFactory : ProfileModelFactoryBase
     {
       public ProfileModelFactory(IProfileType profileType, IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, GeneralOptions generalOptions, IViewOptions viewOptions, OptionModelSessionData sessionData)

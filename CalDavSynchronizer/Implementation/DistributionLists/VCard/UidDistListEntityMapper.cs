@@ -37,11 +37,10 @@ namespace CalDavSynchronizer.Implementation.DistributionLists.VCard
       {
         targetMember.Uid = uid;
       }
-      else
-      {
-        targetMember.EmailAddress = recipientWrapper.Inner.Address;
-        targetMember.DisplayName = nameWithoutEmail;
-      }
+     
+      targetMember.EmailAddress = recipientWrapper.Inner.Address;
+      targetMember.DisplayName = nameWithoutEmail;
+      
       return targetMember;
     }
 
