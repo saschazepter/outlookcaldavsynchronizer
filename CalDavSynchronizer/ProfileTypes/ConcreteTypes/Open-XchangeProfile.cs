@@ -59,6 +59,13 @@ namespace CalDavSynchronizer.ProfileTypes.ConcreteTypes
       data.DistributionListType = DistributionListType.VCardGroupOX;
       return data;
     }
+
+    public override TaskMappingConfiguration CreateTaskMappingConfiguration()
+    {
+      var data = base.CreateTaskMappingConfiguration();
+      data.MapRecurringTasks = false;
+      return data;
+    }
     class ProfileModelFactory : ProfileModelFactoryBase
     {
       public ProfileModelFactory(IProfileType profileType, IOptionsViewModelParent optionsViewModelParent, IOutlookAccountPasswordProvider outlookAccountPasswordProvider, IReadOnlyList<string> availableCategories, IOptionTasks optionTasks, GeneralOptions generalOptions, IViewOptions viewOptions, OptionModelSessionData sessionData)
