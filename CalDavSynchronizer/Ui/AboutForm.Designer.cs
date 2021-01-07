@@ -83,7 +83,7 @@ namespace CalDavSynchronizer.Ui
       this._captionLabel.Name = "_captionLabel";
       this._captionLabel.Size = new System.Drawing.Size(289, 31);
       this._captionLabel.TabIndex = 2;
-      this._captionLabel.Text = "CalDav Synchronizer";
+      this._captionLabel.Text = "Outlook Sync for OX";
       // 
       // _versionLabel
       // 
