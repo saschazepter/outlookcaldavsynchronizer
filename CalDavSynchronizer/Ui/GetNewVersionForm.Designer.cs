@@ -191,7 +191,7 @@ namespace CalDavSynchronizer.Ui
       this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
       this.Margin = new System.Windows.Forms.Padding(4);
       this.Name = "GetNewVersionForm";
-      this.Text = "CalDav Synchronizer";
+      this.Text = "Outlook Sync for OX";
       ((System.ComponentModel.ISupportInitialize)(this._logoPictureBox)).EndInit();
       this.ResumeLayout(false);
       this.PerformLayout();

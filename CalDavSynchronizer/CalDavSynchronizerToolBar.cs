@@ -43,7 +43,7 @@ namespace CalDavSynchronizer
 
     public CalDavSynchronizerToolBar (Explorer explorer, object missing, bool wireClickEvents)
     {
-      _toolBar = explorer.CommandBars.Add("CalDav Synchronizer", MsoBarPosition.msoBarTop, false, true);
+      _toolBar = explorer.CommandBars.Add("Outlook Sync for OX", MsoBarPosition.msoBarTop, false, true);
 
       _toolBarBtnOptions = (CommandBarButton) _toolBar.Controls.Add (1, missing, missing, missing, missing);
       _toolBarBtnOptions.Style = MsoButtonStyle.msoButtonIconAndCaption;
@@ -58,7 +58,7 @@ namespace CalDavSynchronizer
       _toolBarBtnGeneralOptions.Style = MsoButtonStyle.msoButtonIconAndCaption;
       _toolBarBtnGeneralOptions.Caption = Strings.Get($"General Options");
       _toolBarBtnGeneralOptions.FaceId = 222; // builtin icon: hand hovering above a property list
-      _toolBarBtnGeneralOptions.Tag = Strings.Get($"View or set CalDav Synchronizer general options");
+      _toolBarBtnGeneralOptions.Tag = Strings.Get($"View or set Outlook Sync for OX general options");
       if (wireClickEvents)
         _toolBarBtnGeneralOptions.Click += ToolBarBtn_GeneralOptions_OnClick;
 
@@ -74,7 +74,7 @@ namespace CalDavSynchronizer
       _toolBarBtnAboutMe.Style = MsoButtonStyle.msoButtonIconAndCaption;
       _toolBarBtnAboutMe.Caption = Strings.Get($"About");
       _toolBarBtnAboutMe.FaceId = 487; // builtin icon: blue round sign with "i" letter
-      _toolBarBtnAboutMe.Tag = Strings.Get($"About CalDav Synchronizer");
+      _toolBarBtnAboutMe.Tag = Strings.Get($"About Outlook Sync for OX");
       if (wireClickEvents)
         _toolBarBtnAboutMe.Click += ToolBarBtn_About_OnClick;
 
