@@ -72,7 +72,7 @@ namespace CalDavSynchronizer
 {
   public class ComponentContainer : IComponentContainer, IReportsViewModelParent, ISynchronizationReportSink
   {
-    public const string MessageBoxTitle = "CalDav Synchronizer";
+    public const string MessageBoxTitle = "Outlook Sync for OX";
     private static readonly ILog s_logger = LogManager.GetLogger (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
     // ReSharper disable once ConvertToConstant.Local
     private static readonly int c_requiredEntityCacheVersion = 3;
