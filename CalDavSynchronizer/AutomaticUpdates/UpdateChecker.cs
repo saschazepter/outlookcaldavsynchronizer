@@ -106,7 +106,7 @@ namespace CalDavSynchronizer.AutomaticUpdates
               new NewerVersionFoundEventArgs (
                   availableVersion,
                   _availableVersionService.GetWhatsNewNoThrow (currentVersion, availableVersion),
-                  _availableVersionService.DownloadLink));
+                  _availableVersionService.GetDownloadLink(availableVersion)));
         }
       }
       catch (Exception x)

@@ -137,18 +137,6 @@ namespace CalDavSynchronizer.Ui
         if (_latestSetupProcess != null)
         {
           _latestSetupProcess.EnableRaisingEvents = true;
-          _latestSetupProcess.Exited += delegate
-          {
-            try
-            {
-              _latestSetupProcess = null;
-              Process.Start (WebResourceUrls.ReadMeFileDownloadSite.ToString());
-            }
-            catch (Exception x)
-            {
-              s_logger.Error ("Error while downloading readme.md", x);
-            }
-          };
         }
 
         DialogResult = DialogResult.OK;
