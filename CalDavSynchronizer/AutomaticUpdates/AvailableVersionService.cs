@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 using log4net;
 using CalDavSynchronizer.DataAccess;
 using CalDavSynchronizer.Globalization;
+using System.Text;
 
 namespace CalDavSynchronizer.AutomaticUpdates
 {
@@ -34,7 +35,8 @@ namespace CalDavSynchronizer.AutomaticUpdates
       {
         site = client.DownloadString (WebResourceUrls.SiteContainingCurrentVersion);
       }
-      var match = Regex.Match (site, @"OutlookCalDavSynchronizer-(?<Major>\d+).(?<Minor>\d+).(?<Build>\d+).zip");
+      // latest version is last indexed file in directory due to sorting, so we find the first match from RightToLeft
+      var match = Regex.Match (site, @"OSfO-(?<Major>\d+).(?<Minor>\d+).(?<Build>\d+).zip", RegexOptions.RightToLeft);
       
       if (match.Success)
       {
@@ -60,7 +62,7 @@ namespace CalDavSynchronizer.AutomaticUpdates
         using (var client = HttpUtility.CreateWebClient())
         {
           readme = client
-              .DownloadString (WebResourceUrls.ReadMeFile)
+              .DownloadString (WebResourceUrls.ChangelogFile)
               .Replace ("\n", Environment.NewLine).Replace ("\t", "   ");
         }
 
@@ -70,10 +72,10 @@ namespace CalDavSynchronizer.AutomaticUpdates
         if (start == -1 || end == -1)
         {
           if (start == -1)
-            s_logger.ErrorFormat ("Did not find Version '{0}' in readme.md", newVersion);
+            s_logger.ErrorFormat ("Did not find Version '{0}' in Changelog.md", newVersion);
 
           if (end == -1)
-            s_logger.ErrorFormat ("Did not find Version '{0}' in readme.md", oldVersion);
+            s_logger.ErrorFormat ("Did not find Version '{0}' in Changelog.md", oldVersion);
 
           return Strings.Get($"Did not find any news.");
         }
@@ -94,9 +96,14 @@ namespace CalDavSynchronizer.AutomaticUpdates
       return match.Success ? match.Index : -1;
     }
 
-    public Uri DownloadLink
+    public Uri GetDownloadLink (Version version)
     {
-      get { return WebResourceUrls.LatestVersionZipFile; }
+      var downloadLink = new StringBuilder();
+      downloadLink.Append (WebResourceUrls.SiteContainingCurrentVersion.OriginalString);
+      downloadLink.Append ("OSfO-");
+      downloadLink.Append (version.ToString (3));
+      downloadLink.Append (".zip");
+      return new Uri (downloadLink.ToString()); 
     }
   }
 }
