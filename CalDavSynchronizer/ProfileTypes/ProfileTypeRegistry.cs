@@ -44,9 +44,10 @@ namespace CalDavSynchronizer.ProfileTypes
 
     private static IProfileTypeRegistry Create()
     {
+      var ox = new OpenXchangeProfile();
       var generic = new GenericProfile();
       var google = new GoogleProfile();
-      var all = new List<IProfileType> { generic, google };
+      var all = new List<IProfileType> { ox, google };
       all.Add(new CalendariCloudProfile());
       all.Add(new ContactsiCloudProfile());
       all.Add(new FruuxProfile());
@@ -59,7 +60,6 @@ namespace CalDavSynchronizer.ProfileTypes
       all.Add(new CozyProfile());
       all.Add(new NextcloudProfile());
       all.Add(new MailboxOrgProfile());
-      all.Add(new OpenXchangeProfile());
       all.Add(new EasyProjectProfile());
       all.Add(new WebDeProfile());
       all.Add(new SmarterMailProfile());
@@ -68,6 +68,7 @@ namespace CalDavSynchronizer.ProfileTypes
       all.Add(new SwisscomProfile());
       all.Add(new EGroupwareProfile());
       all.Add(new FastMailProfile());
+      all.Add(generic);
 
       return new ProfileTypeRegistry(all, generic, google);
     }
