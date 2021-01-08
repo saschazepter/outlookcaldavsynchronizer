@@ -717,6 +717,11 @@ namespace CalDavSynchronizer
           MessageBox.Show (Strings.Get($"No newer version available."), MessageBoxTitle);
         }
       }
+      catch (WebException x) when (x.Message.Contains("401"))
+      {
+        s_logger.Error(null, x);
+        MessageBox.Show("You are not authorized to update Outlook Sync for OX, please contact FUAGO support via OSfO@fuago.io", MessageBoxTitle);
+      }
       catch (Exception x)
       {
         ExceptionHandler.Instance.DisplayException (x, s_logger);
