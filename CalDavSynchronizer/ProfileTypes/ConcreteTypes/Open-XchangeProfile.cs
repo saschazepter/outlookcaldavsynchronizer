@@ -36,7 +36,7 @@ namespace CalDavSynchronizer.ProfileTypes.ConcreteTypes
     public override Contracts.Options CreateOptions()
     {
       var data = base.CreateOptions();
-      data.CalenderUrl = "https://[Your OX server]/caldav/";
+      data.CalenderUrl = "https://your-ox-domain.com/caldav/";
       data.EnableChangeTriggeredSynchronization = true;
       data.MappingConfiguration = CreateEventMappingConfiguration();
       return data;
