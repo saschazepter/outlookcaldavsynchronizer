@@ -37,6 +37,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
 
     private readonly IOutlookAccountPasswordProvider _outlookAccountPasswordProvider;
     private readonly OptionsModel _prototypeModel;
+    private bool _calenderUrlIsUpdated;
 
 
     public ServerSettingsTemplateViewModel (IOutlookAccountPasswordProvider outlookAccountPasswordProvider, OptionsModel prototypeModel, ProfileModelOptions modelOptions)
@@ -44,6 +45,7 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
       _outlookAccountPasswordProvider = outlookAccountPasswordProvider ?? throw new ArgumentNullException(nameof(outlookAccountPasswordProvider));
       _prototypeModel = prototypeModel ?? throw new ArgumentNullException(nameof(prototypeModel));
       ModelOptions = modelOptions ?? throw new ArgumentNullException(nameof(modelOptions));
+      _calenderUrlIsUpdated = false;
 
       RegisterPropertyChangePropagation(prototypeModel, nameof(prototypeModel.CalenderUrl), nameof(CalenderUrl));
       RegisterPropertyChangePropagation(prototypeModel, nameof(prototypeModel.UserName), nameof(UserName));
@@ -57,7 +59,13 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
     public string CalenderUrl
     {
       get { return _prototypeModel.CalenderUrl; }
-      set { _prototypeModel.CalenderUrl = value; }
+      set { 
+            _prototypeModel.CalenderUrl = value;
+            if (!string.IsNullOrEmpty(value))
+            {
+              _calenderUrlIsUpdated = true;
+            }
+          }
     }
 
     public string UserName
@@ -136,11 +144,14 @@ namespace CalDavSynchronizer.Ui.Options.BulkOptions.ViewModels
     {
       var serverAccountSettings = _outlookAccountPasswordProvider.GetAccountServerSettings (null);
       EmailAddress = serverAccountSettings.EmailAddress;
-      string path = !string.IsNullOrEmpty (CalenderUrl) ? new Uri (CalenderUrl).AbsolutePath : string.Empty; 
-  
-      bool success;
-      var dnsDiscoveredUrl = OptionTasks.DoSrvLookup (EmailAddress, OlItemType.olAppointmentItem, out success);
-      CalenderUrl = success ? dnsDiscoveredUrl : "https://" + serverAccountSettings.ServerString+path;
+
+      if (!_calenderUrlIsUpdated)
+      {
+        string path = !string.IsNullOrEmpty(CalenderUrl) ? new Uri(CalenderUrl).AbsolutePath : string.Empty;
+        bool success;
+        var dnsDiscoveredUrl = OptionTasks.DoSrvLookup (EmailAddress, OlItemType.olAppointmentItem, out success);
+        CalenderUrl = success ? dnsDiscoveredUrl : "https://" + serverAccountSettings.ServerString + path;
+      }
       UserName = serverAccountSettings.UserName;
       UseAccountPassword = true;
     }
