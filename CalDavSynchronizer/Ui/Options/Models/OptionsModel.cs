@@ -46,6 +46,7 @@ namespace CalDavSynchronizer.Ui.Options.Models
     private OutlookFolderDescriptor _selectedFolderOrNull;
 
     private string _calenderUrl;
+    private bool _calenderUrlIsUpdated;
     private string _emailAddress;
     private SecureString _password;
     private bool _useAccountPassword;
@@ -168,10 +169,18 @@ namespace CalDavSynchronizer.Ui.Options.Models
       get { return _calenderUrl; }
       set
       {
-        CheckedPropertyChange(ref _calenderUrl, value);
+        if (CheckedPropertyChange(ref _calenderUrl, value))
+        {
+          if (!string.IsNullOrEmpty(value))
+          {
+            _calenderUrlIsUpdated = true;
+          }
+        }
       }
     }
 
+    public bool CalenderUrlIsUpdated => _calenderUrlIsUpdated;
+   
     public string UserName
     {
       get { return _userName; }
@@ -428,6 +437,7 @@ namespace CalDavSynchronizer.Ui.Options.Models
       FolderAccountName = data.OutlookFolderAccountName;
 
       _calenderUrl = data.CalenderUrl;
+      _calenderUrlIsUpdated = false;
       _userName = data.UserName;
       _password = data.Password;
       _emailAddress = data.EmailAddress;
