@@ -677,7 +677,7 @@ namespace CalDavSynchronizer.Ui.Options
 
     public void ValidateBulkProfile (OptionsModel options, AccessPrivileges privileges, CalendarOwnerProperties ownerPropertiesOrNull)
     {
-      if (!privileges.HasFlag (AccessPrivileges.Modify) && DoesModeRequireWriteableServerResource (options.SynchronizationMode))
+      if (!(privileges.HasFlag (AccessPrivileges.Modify) && privileges.HasFlag (AccessPrivileges.Create)) && DoesModeRequireWriteableServerResource (options.SynchronizationMode))
       {
         options.SynchronizationMode = SynchronizationMode.ReplicateServerIntoOutlook;
       }
