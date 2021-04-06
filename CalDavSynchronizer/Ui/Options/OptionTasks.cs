@@ -798,7 +798,7 @@ namespace CalDavSynchronizer.Ui.Options
 
       if (result.ResourceType.HasFlag(ResourceType.AddressBook))
       {
-        if (!result.AccessPrivileges.HasFlag(AccessPrivileges.Modify)
+        if (!(result.AccessPrivileges.HasFlag(AccessPrivileges.Modify) && result.AccessPrivileges.HasFlag(AccessPrivileges.Create))
             && OptionTasks.DoesModeRequireWriteableServerResource(options.SynchronizationMode))
         {
           options.SynchronizationMode = readOnlyDefaultMode;
