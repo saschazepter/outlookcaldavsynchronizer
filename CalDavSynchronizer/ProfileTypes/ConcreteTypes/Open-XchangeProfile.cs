@@ -38,6 +38,7 @@ namespace CalDavSynchronizer.ProfileTypes.ConcreteTypes
       var data = base.CreateOptions();
       data.CalenderUrl = "https://your-ox-domain.com/caldav/";
       data.EnableChangeTriggeredSynchronization = true;
+      data.ConflictResolution = Implementation.ConflictResolution.ServerWins;
       data.MappingConfiguration = CreateEventMappingConfiguration();
       return data;
     }
