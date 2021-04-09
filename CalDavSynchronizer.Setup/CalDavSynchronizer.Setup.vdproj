@@ -27,6 +27,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_04BB107B710AA4CBA634C0FA3600BF12"
+        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_0563483A3A5A7578EA50FDDD9599D5F5"
         "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
         "MsmSig" = "8:_UNDEFINED"
@@ -52,7 +58,7 @@
         "Entry"
         {
         "MsmKey" = "8:_0A1BEF0D1DC0A780AA306708C8965FC4"
-        "OwnerKey" = "8:_F33D02530303161804E2E148521B1C18"
+        "OwnerKey" = "8:_42D80F9BA6436C06FF141081E2E4DB9B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -123,12 +129,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_17E5A762422512F323656C942A0499EA"
-        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_192A9E8C35E64627A221D252893E5027"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -154,7 +154,7 @@
         "Entry"
         {
         "MsmKey" = "8:_1F77B1C459F9A600188831112B70AD43"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -303,6 +303,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_42D80F9BA6436C06FF141081E2E4DB9B"
+        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_43A886470C5EAC3F815F6D80A5DA3F22"
         "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
         "MsmSig" = "8:_UNDEFINED"
@@ -424,7 +430,7 @@
         "Entry"
         {
         "MsmKey" = "8:_55907ED6021BC3E4442401F0FA888816"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -442,13 +448,13 @@
         "Entry"
         {
         "MsmKey" = "8:_59807CD3EE04ED0CD355B5CB1F671260"
-        "OwnerKey" = "8:_851CCAEDAA099D0B3CAA6E96CBB615DE"
+        "OwnerKey" = "8:_F5E7FDF04E965A59AC2244FBC6EF4BD0"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_59807CD3EE04ED0CD355B5CB1F671260"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -550,7 +556,7 @@
         "Entry"
         {
         "MsmKey" = "8:_6CA7FBAFB30DE85FC3F017D899D6DB15"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -663,19 +669,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
-        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_84FDB1CD00AC08DEAB3DA72322EAF2CD"
-        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_851CCAEDAA099D0B3CAA6E96CBB615DE"
         "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -724,7 +718,7 @@
         "Entry"
         {
         "MsmKey" = "8:_91BF384B887F99C5332FBD2E848AEC41"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -808,7 +802,7 @@
         "Entry"
         {
         "MsmKey" = "8:_9E5208469E28DBE9758650C672D95A8E"
-        "OwnerKey" = "8:_F33D02530303161804E2E148521B1C18"
+        "OwnerKey" = "8:_42D80F9BA6436C06FF141081E2E4DB9B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -879,6 +873,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_B1C251441D6092D5AEEE36F6909587C8"
+        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_B2361AE4FF9F0E97999456BF4DC9FBD7"
         "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
         "MsmSig" = "8:_UNDEFINED"
@@ -916,7 +916,7 @@
         "Entry"
         {
         "MsmKey" = "8:_BE104BDC233CAA7C75FAADF23886F9C8"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -946,7 +946,7 @@
         "Entry"
         {
         "MsmKey" = "8:_BE19E980D75C18D8F10A9DA2B0C6AF25"
-        "OwnerKey" = "8:_F33D02530303161804E2E148521B1C18"
+        "OwnerKey" = "8:_42D80F9BA6436C06FF141081E2E4DB9B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1006,7 +1006,7 @@
         "Entry"
         {
         "MsmKey" = "8:_C45BC78AD5599D1AF9B699C2E9E98EFB"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1053,12 +1053,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_D3EFB2BA90FF0F793248CD731968E57F"
-        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_D7043DC25C04386B9DC11ECD970F557D"
         "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
         "MsmSig" = "8:_UNDEFINED"
@@ -1090,7 +1084,7 @@
         "Entry"
         {
         "MsmKey" = "8:_DEB614B3DC7920DB0DF73479C3C9B75D"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1179,6 +1173,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_E8BFD262316C23666C9E3094B8635548"
+        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_E9115CF528643CFA2DA69D7E1F50CC53"
         "OwnerKey" = "8:_480149722CE19A3FC2265FA4321368CB"
         "MsmSig" = "8:_UNDEFINED"
@@ -1215,12 +1215,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_F33D02530303161804E2E148521B1C18"
-        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_F50589CA8E83CD6B1BF5BE5B0A582EA3"
         "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
         "MsmSig" = "8:_UNDEFINED"
@@ -1228,6 +1222,12 @@
         "Entry"
         {
         "MsmKey" = "8:_F50850C83C34BDCF67DE793FCFA0BD40"
+        "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F5E7FDF04E965A59AC2244FBC6EF4BD0"
         "OwnerKey" = "8:_71A5BA7C36384A6FA76D693EB014974D"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -1294,7 +1294,7 @@
         "Entry"
         {
         "MsmKey" = "8:_FF2119D7EC4E4D499ED80B69DF1457B9"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1312,31 +1312,31 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_D3EFB2BA90FF0F793248CD731968E57F"
+        "OwnerKey" = "8:_04BB107B710AA4CBA634C0FA3600BF12"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_851CCAEDAA099D0B3CAA6E96CBB615DE"
+        "OwnerKey" = "8:_F5E7FDF04E965A59AC2244FBC6EF4BD0"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_F33D02530303161804E2E148521B1C18"
+        "OwnerKey" = "8:_42D80F9BA6436C06FF141081E2E4DB9B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_7DDB8E9E4000C0303892B20148E26A56"
+        "OwnerKey" = "8:_E8BFD262316C23666C9E3094B8635548"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_17E5A762422512F323656C942A0499EA"
+        "OwnerKey" = "8:_B1C251441D6092D5AEEE36F6909587C8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -2410,6 +2410,37 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_04BB107B710AA4CBA634C0FA3600BF12"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Thought.vCards, Version=4.0.2.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_04BB107B710AA4CBA634C0FA3600BF12"
+                    {
+                    "Name" = "8:Thought.vCards.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Thought.vCards.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0563483A3A5A7578EA50FDDD9599D5F5"
             {
             "AssemblyRegister" = "3:1"
@@ -2847,37 +2878,6 @@
                     }
                 }
             "SourcePath" = "8:System.Diagnostics.Tracing.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_17E5A762422512F323656C942A0499EA"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:CalDavSynchronizer.Conversions, Version=3.8.2.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_17E5A762422512F323656C942A0499EA"
-                    {
-                    "Name" = "8:CalDavSynchronizer.Conversions.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:CalDavSynchronizer.Conversions.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
@@ -3487,6 +3487,37 @@
                     }
                 }
             "SourcePath" = "8:Microsoft.Office.Tools.Outlook.v4.0.Utilities.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_42D80F9BA6436C06FF141081E2E4DB9B"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:CalDavSynchronizer.OAuth.Swisscom, Version=4.0.2.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_42D80F9BA6436C06FF141081E2E4DB9B"
+                    {
+                    "Name" = "8:CalDavSynchronizer.OAuth.Swisscom.exe"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:CalDavSynchronizer.OAuth.Swisscom.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
@@ -4651,37 +4682,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7DDB8E9E4000C0303892B20148E26A56"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:CalDavSynchronizer.OAuth.Google, Version=3.8.2.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_7DDB8E9E4000C0303892B20148E26A56"
-                    {
-                    "Name" = "8:CalDavSynchronizer.OAuth.Google.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:CalDavSynchronizer.OAuth.Google.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_84FDB1CD00AC08DEAB3DA72322EAF2CD"
             {
             "AssemblyRegister" = "3:1"
@@ -4696,37 +4696,6 @@
                     }
                 }
             "SourcePath" = "8:DDay.iCal.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_851CCAEDAA099D0B3CAA6E96CBB615DE"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:GenSync, Version=3.8.2.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_851CCAEDAA099D0B3CAA6E96CBB615DE"
-                    {
-                    "Name" = "8:GenSync.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:GenSync.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
@@ -5508,6 +5477,37 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B1C251441D6092D5AEEE36F6909587C8"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:CalDavSynchronizer.Conversions, Version=4.0.2.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_B1C251441D6092D5AEEE36F6909587C8"
+                    {
+                    "Name" = "8:CalDavSynchronizer.Conversions.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:CalDavSynchronizer.Conversions.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B2361AE4FF9F0E97999456BF4DC9FBD7"
             {
             "AssemblyRegister" = "3:1"
@@ -6159,37 +6159,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D3EFB2BA90FF0F793248CD731968E57F"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Thought.vCards, Version=3.8.2.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_D3EFB2BA90FF0F793248CD731968E57F"
-                    {
-                    "Name" = "8:Thought.vCards.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Thought.vCards.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D7043DC25C04386B9DC11ECD970F557D"
             {
             "AssemblyRegister" = "3:1"
@@ -6686,6 +6655,37 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E8BFD262316C23666C9E3094B8635548"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:CalDavSynchronizer.OAuth.Google, Version=4.0.2.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_E8BFD262316C23666C9E3094B8635548"
+                    {
+                    "Name" = "8:CalDavSynchronizer.OAuth.Google.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:CalDavSynchronizer.OAuth.Google.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E9115CF528643CFA2DA69D7E1F50CC53"
             {
             "AssemblyRegister" = "3:1"
@@ -6810,37 +6810,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F33D02530303161804E2E148521B1C18"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:CalDavSynchronizer.OAuth.Swisscom, Version=3.8.2.0, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_F33D02530303161804E2E148521B1C18"
-                    {
-                    "Name" = "8:CalDavSynchronizer.OAuth.Swisscom.exe"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:CalDavSynchronizer.OAuth.Swisscom.exe"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F50589CA8E83CD6B1BF5BE5B0A582EA3"
             {
             "AssemblyRegister" = "3:1"
@@ -6886,6 +6855,37 @@
                     }
                 }
             "SourcePath" = "8:System.Runtime.Handles.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F5E7FDF04E965A59AC2244FBC6EF4BD0"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:GenSync, Version=4.0.2.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_F5E7FDF04E965A59AC2244FBC6EF4BD0"
+                    {
+                    "Name" = "8:GenSync.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:GenSync.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
@@ -7275,16 +7275,16 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:CalDavSynchronizer"
-        "ProductCode" = "8:{030E643C-733A-4F10-9445-3A900E1E00E3}"
-        "PackageCode" = "8:{9EF81C2A-447E-4978-A24C-767C88218A9C}"
+        "ProductName" = "8:OSfO"
+        "ProductCode" = "8:{C39FFFC6-41EA-425D-B6E9-7369E23A7969}"
+        "PackageCode" = "8:{3F624477-A544-4644-8795-7C79C32251F5}"
         "UpgradeCode" = "8:{691063F4-DD9A-4264-948D-3FBD2565572C}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.8.2"
+        "ProductVersion" = "8:4.0.2"
         "Manufacturer" = "8:Gerhard Zehetbauer"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -7692,7 +7692,7 @@
                             "ContextData" = "8:"
                             "Attributes" = "3:0"
                             "Setting" = "3:2"
-                            "Value" = "8:The installer will guide you through the steps required to install [ProductName] on your computer. This addin works for Outlook 2007 - 2016, but Outlook 2013 or higher is recommended! Outlook 2007 only supports installing addins for the current user, so don't choose Everyone and install with the default option \"Just me\"."
+                            "Value" = "8:The installer will guide you through the steps required to install [ProductName] on your computer. This addin works for Outlook 2007 - 2019 and Office365, but Outlook 2013 or higher is recommended! Outlook 2007 only supports installing addins for the current user, so don't choose Everyone and install with the default option \"Just me\"."
                             "DefaultValue" = "8:#1215"
                             "UsePlugInResources" = "11:TRUE"
                             }
@@ -8084,7 +8084,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_593FC7C26DA342179AC2756B0BC5D8F9"
             {
-            "SourcePath" = "8:"
+            "SourcePath" = "8:..\\CalDavSynchronizer.CustomInstaller\\obj\\Release\\CalDavSynchronizer.CustomInstaller.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B9464A368EDA4FBF813D9C26C4B34467"
