@@ -57,12 +57,6 @@ namespace CalDavSynchronizer.Ui.Options.ViewModels
           return;
         }
 
-        if (StringComparer.InvariantCultureIgnoreCase.Equals(ProfileTypes.Single(p => p.IsSelected).ProfileType.Name, "Open-Xchange"))
-        {
-          _uiService.ShowOXInfoDialog();
-           return;
-        }
-
         SelectedProfile = ProfileTypes.Single(p => p.IsSelected).ProfileType;
       }
 
