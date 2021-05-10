@@ -318,7 +318,7 @@
   <data name="Map Distribution Lists / Contact Groups" xml:space="preserve">
     <value>Указать списки рассылки / Группы контактов</value>
   </data>
-  <data name="Add multiple profiles" xml:space="preserve">
+  <data name="Add profile with multiple folders" xml:space="preserve">
     <value>Добавить множественные профили</value>
   </data>
   <data name="Create DAV resource" xml:space="preserve">
@@ -624,7 +624,7 @@
   <data name="Synchronization profile '{0}' executed with warning(s)." xml:space="preserve">
     <value>Профиль синхронизации '{0}' завершился с ошибкой(ами).</value>
   </data>
-  <data name="Add new profile" xml:space="preserve">
+  <data name="Add profile with single folder" xml:space="preserve">
     <value>Добавить новый профиль</value>
   </data>
   <data name="Synchronization interval (minutes):" xml:space="preserve">

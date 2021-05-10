@@ -243,10 +243,10 @@ Se non sussistono impostazioni provvedere a crearle.
 Quando entrambi attivati, il mapping manuale prevale su quello generale di tutte le impostazioni Outlook personali dell‘utente. 
 Gli attributi DAV DEVONO iniziare con X.</value>
   </data>
-  <data name="Add multiple profiles" xml:space="preserve">
+  <data name="Add profile with multiple folders" xml:space="preserve">
     <value>Aggiungi più profili</value>
   </data>
-  <data name="Add new profile" xml:space="preserve">
+  <data name="Add profile with single folder" xml:space="preserve">
     <value>Aggiungi profilo</value>
   </data>
   <data name="Add resource" xml:space="preserve">
