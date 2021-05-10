@@ -243,10 +243,10 @@ Se as propriedades não existirem, elas serão criadas.
 O mapeamento manual anula o mapeamento geral de todos os atributos personalizados do Outlook, se ambos estiverem ativados.
 Atributos DAV devem começar com X-</value>
   </data>
-  <data name="Add multiple profiles" xml:space="preserve">
+  <data name="Add profile with multiple folders" xml:space="preserve">
     <value>Adicionar perfis múltiplos</value>
   </data>
-  <data name="Add new profile" xml:space="preserve">
+  <data name="Add profile with single folder" xml:space="preserve">
     <value>Adicionar novo perfil</value>
   </data>
   <data name="Add resource" xml:space="preserve">

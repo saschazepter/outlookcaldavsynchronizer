@@ -331,8 +331,8 @@ Nur anwendbar wenn erweiterte Einstellungen eingeschalten sind.</value>
   <data name="Map Distribution Lists / Contact Groups" xml:space="preserve">
     <value>Synchronisiere Outlook Verteilerlisten / Kontaktgruppen</value>
   </data>
-  <data name="Add multiple profiles" xml:space="preserve">
-    <value>Füge mehrere Profile hinzu</value>
+  <data name="Add profile with multiple folders" xml:space="preserve">
+    <value>Füge Profil mit mehreren Ordnern hinzu</value>
   </data>
   <data name="Create DAV resource" xml:space="preserve">
     <value>Erstelle DAV Ressource</value>
@@ -651,8 +651,8 @@ Verwende Standard 'Speichern unter' Einstellung von den globalen Outlook Adressb
   <data name="Synchronization profile '{0}' executed with warning(s)." xml:space="preserve">
     <value>Synchronisationsprofil '{0}' ausgeführt mit Warnung(en).</value>
   </data>
-  <data name="Add new profile" xml:space="preserve">
-    <value>Füge Profil hinzu</value>
+  <data name="Add profile with single folder" xml:space="preserve">
+    <value>Füge Profil mit einem Ordner hinzu</value>
   </data>
   <data name="Synchronization interval (minutes):" xml:space="preserve">
     <value>Synchronisationsintervall (in Minuten):</value>

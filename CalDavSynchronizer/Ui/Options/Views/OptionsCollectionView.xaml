@@ -269,11 +269,11 @@
 
 
         <ToolBar DockPanel.Dock="Top">
-            <Button Command="{Binding AddCommand}" ToolTip="{g:Localize Add new profile}">
-                <Image Stretch="None" Source="pack://application:,,,/CalDavSynchronizer;component/Resources/Add.png" />
-            </Button>
-            <Button Command="{Binding AddMultipleCommand}" ToolTip="{g:Localize Add multiple profiles}">
+            <Button Command="{Binding AddMultipleCommand}" ToolTip="{g:Localize Add profile with multiple folders}">
                 <Image Stretch="None" Source="pack://application:,,,/CalDavSynchronizer;component/Resources/AddMultiple.png" />
+            </Button>
+            <Button Command="{Binding AddCommand}" ToolTip="{g:Localize Add profile with single folder}">
+                <Image Stretch="None" Source="pack://application:,,,/CalDavSynchronizer;component/Resources/Add.png" />
             </Button>
             <Button Command="{Binding DeleteSelectedCommand}" ToolTip="{g:Localize Delete selected profile}">
                 <Image Stretch="None" Source="pack://application:,,,/CalDavSynchronizer;component/Resources/Delete.png" />

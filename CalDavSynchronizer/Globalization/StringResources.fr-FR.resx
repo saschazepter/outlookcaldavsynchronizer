@@ -243,10 +243,10 @@ Les propriétés inexistantes sont créées.
 Le mappage manuel prévaut sur le mappage général de toutes les propriétés  personnalisées Outlook si les deux mappage sont activés. 
 Les attributs DAV DOIVENT commencer par X-.</value>
   </data>
-  <data name="Add multiple profiles" xml:space="preserve">
+  <data name="Add profile with multiple folders" xml:space="preserve">
     <value>Ajouter plusieurs profils</value>
   </data>
-  <data name="Add new profile" xml:space="preserve">
+  <data name="Add profile with single folder" xml:space="preserve">
     <value>Ajouter un profil</value>
   </data>
   <data name="Add resource" xml:space="preserve">
