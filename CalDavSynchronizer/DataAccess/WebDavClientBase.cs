@@ -17,6 +17,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 
@@ -31,9 +32,9 @@ namespace CalDavSynchronizer.DataAccess
             _acceptInvalidChars = acceptInvalidChars;
         }
 
-        protected XmlDocumentWithNamespaceManager CreateXmlDocument(Stream webDavXmlStream, Uri uri)
+        protected XmlDocumentWithNamespaceManager CreateXmlDocument(string webDavXmlString, Uri uri)
         {
-            var responseBody = DeserializeXmlStream(webDavXmlStream);
+            var responseBody = DeserializeXmlStream(webDavXmlString);
 
             return CreateXmlDocumentWithNamespaceManager(uri, responseBody);
         }
@@ -51,28 +52,29 @@ namespace CalDavSynchronizer.DataAccess
             return new XmlDocumentWithNamespaceManager(responseBody, namespaceManager, uri);
         }
 
-        private XmlDocument DeserializeXmlStream(Stream webDavXmlStream)
+        public static string RemoveInvalidXmlChars(string content)
         {
-            using (var reader = new StreamReader(webDavXmlStream, Encoding.UTF8))
+            return new string(content.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray());
+        }
+        private XmlDocument DeserializeXmlStream(string webDavXmlString)
+        {
+            if (_acceptInvalidChars)
             {
-                if (_acceptInvalidChars)
-                {
-                    var settings = new XmlReaderSettings();
-                    settings.CheckCharacters = false;
-                    using (var xmlReader = XmlReader.Create(reader, settings))
-                    {
-                        XmlDocument responseBody = new XmlDocument();
-                        responseBody.Load(xmlReader);
-                        return responseBody;
-                    }
-                }
-                else
+                var settings = new XmlReaderSettings();
+                settings.CheckCharacters = false;
+                using (var xmlReader = XmlReader.Create(new StringReader(RemoveInvalidXmlChars(webDavXmlString)), settings))
                 {
                     XmlDocument responseBody = new XmlDocument();
-                    responseBody.Load(reader);
+                    responseBody.Load(xmlReader);
                     return responseBody;
                 }
             }
+            else
+            {
+                XmlDocument responseBody = new XmlDocument();
+                responseBody.LoadXml(webDavXmlString);
+                return responseBody;
+            }   
         }
     }
 }

@@ -71,10 +71,8 @@ namespace CalDavSynchronizer.DataAccess.HttpClientBasedClient
                 var response = await ExecuteWebDavRequest(url, httpMethod, depth, ifMatch, ifNoneMatch, mediaType, requestBody);
                 using (response.Item2)
                 {
-                    using (var responseStream = await response.Item2.Content.ReadAsStreamAsync())
-                    {
-                        return CreateXmlDocument(responseStream, response.Item3);
-                    }
+                    var responseString = await response.Item2.Content.ReadAsStringAsync();
+                    return CreateXmlDocument(responseString, response.Item3);
                 }
             }
             catch (HttpRequestException x)
