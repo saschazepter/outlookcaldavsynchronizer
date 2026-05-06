@@ -40,6 +40,7 @@ using NodaTime;
 using Exception = Microsoft.Office.Interop.Outlook.Exception;
 using Period = DDay.iCal.Period;
 using RecurrencePattern = DDay.iCal.RecurrencePattern;
+using System.Net.Mail;
 
 namespace CalDavSynchronizer.Implementation.Events
 {
@@ -2035,7 +2036,7 @@ namespace CalDavSynchronizer.Implementation.Events
                         {
                             if (!string.IsNullOrEmpty(attendee.CommonName))
                             {
-                                targetRecipient = target.Recipients.Add(attendee.CommonName + "<" + attendeeEmail.Substring(s_mailtoSchemaLength) + ">");
+                                 targetRecipient = target.Recipients.Add(new MailAddress(attendeeEmail.Substring(s_mailtoSchemaLength), attendee.CommonName).ToString());
                             }
                             else
                             {
@@ -2089,7 +2090,7 @@ namespace CalDavSynchronizer.Implementation.Events
 
                         if (!string.IsNullOrEmpty(sourceOrganizerEmail) && !string.IsNullOrEmpty(source.Organizer.CommonName) && source.Organizer.CommonName != sourceOrganizerEmail)
                         {
-                            targetRecipient = target.Recipients.Add(source.Organizer.CommonName + "<" + sourceOrganizerEmail + ">");
+                            targetRecipient = target.Recipients.Add(new MailAddress(sourceOrganizerEmail, source.Organizer.CommonName).ToString());
                         }
                         else if (!string.IsNullOrEmpty(sourceOrganizerEmail))
                         {
