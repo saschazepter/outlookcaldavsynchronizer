@@ -70,6 +70,7 @@ namespace CalDavSynchronizer.ProfileTypes
             all.Add(new FastMailProfile());
             all.Add(new untermStrichProfile());
             all.Add(new ArubaProfile());
+            all.Add(new PostasslProfile());
 
             return new ProfileTypeRegistry(all, generic, google);
         }
