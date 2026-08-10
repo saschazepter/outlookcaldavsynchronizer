@@ -126,6 +126,17 @@ We recommend updating to the latest .Net Framework but the minimal required vers
 
 ### Changelog ###
 
+#### 4.7.0 ####
+- Released 2026/08/10
+- Security fix
+	- harden XML parsing logic to avoid XML External Entity (XXE) injection.
+- New features
+	- Upsate NuGet packages.
+	- Add Postassl profile.
+- Bug fixes
+	- Properly quote display name when using e-mail address syntax
+to specify an attendee or organizer to Outlook.
+
 #### 4.6.0 ####
 - Released 2025/06/04
 - New features
