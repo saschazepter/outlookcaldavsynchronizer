@@ -55,21 +55,19 @@ namespace CalDavSynchronizer.DataAccess
         {
             using (var reader = _acceptInvalidChars ? new RemoveInvalidXmlCharacterStreamReader(webDavXmlStream, Encoding.UTF8) : new StreamReader(webDavXmlStream, Encoding.UTF8))
             {
+                var settings = new XmlReaderSettings();
+                settings.DtdProcessing = DtdProcessing.Prohibit;
+                settings.XmlResolver = null;
+
                 if (_acceptInvalidChars)
-                {
-                    var settings = new XmlReaderSettings();
-                    settings.CheckCharacters = false;
-                    using (var xmlReader = XmlReader.Create(reader, settings))
-                    {
-                        XmlDocument responseBody = new XmlDocument();
-                        responseBody.Load(xmlReader);
-                        return responseBody;
-                    }
+                {   
+                    settings.CheckCharacters = false;   
                 }
-                else
+
+                using (var xmlReader = XmlReader.Create(reader, settings))
                 {
                     XmlDocument responseBody = new XmlDocument();
-                    responseBody.Load(reader);
+                    responseBody.Load(xmlReader);
                     return responseBody;
                 }
             }
