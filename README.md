@@ -126,6 +126,11 @@ We recommend updating to the latest .Net Framework but the minimal required vers
 
 ### Changelog ###
 
+#### 4.7.1 ####
+- Released 2026/08/17
+- Bug fixes
+	- Fix gh issue 478,479, SourceForge #2181,#2179 empty address strings in Attendee Mapping.
+
 #### 4.7.0 ####
 - Released 2026/08/10
 - Security fix

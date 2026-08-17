@@ -2012,7 +2012,7 @@ namespace CalDavSynchronizer.Implementation.Events
                     if (attendee.Parameters.ContainsKey("EMAIL"))
                     {
                         attendeeEmail = attendee.Parameters.Get("EMAIL");
-                        if (!attendeeEmail.StartsWith("mailto:", StringComparison.InvariantCultureIgnoreCase))
+                        if (!string.IsNullOrEmpty(attendeeEmail) && !attendeeEmail.StartsWith("mailto:", StringComparison.InvariantCultureIgnoreCase))
                         {
                             attendeeEmail = "mailto:" + attendeeEmail;
                         }
@@ -2036,7 +2036,16 @@ namespace CalDavSynchronizer.Implementation.Events
                         {
                             if (!string.IsNullOrEmpty(attendee.CommonName))
                             {
-                                 targetRecipient = target.Recipients.Add(new MailAddress(attendeeEmail.Substring(s_mailtoSchemaLength), attendee.CommonName).ToString());
+                                try
+                                {
+                                    targetRecipient = target.Recipients.Add(new MailAddress(attendeeEmail.Substring(s_mailtoSchemaLength), attendee.CommonName).ToString());
+                                }
+                                catch (SystemException ex) when (ex is ArgumentException || ex is FormatException)
+                                {
+                                    s_logger.Warn("Ignoring invalid Uri in attendee email.", ex);
+                                    logger.LogWarning("Ignoring invalid Uri in attendee email.", ex);
+                                    targetRecipient = target.Recipients.Add(attendee.CommonName);
+                                }
                             }
                             else
                             {
@@ -2090,7 +2099,16 @@ namespace CalDavSynchronizer.Implementation.Events
 
                         if (!string.IsNullOrEmpty(sourceOrganizerEmail) && !string.IsNullOrEmpty(source.Organizer.CommonName) && source.Organizer.CommonName != sourceOrganizerEmail)
                         {
-                            targetRecipient = target.Recipients.Add(new MailAddress(sourceOrganizerEmail, source.Organizer.CommonName).ToString());
+                            try
+                            {
+                                targetRecipient = target.Recipients.Add(new MailAddress(sourceOrganizerEmail, source.Organizer.CommonName).ToString());
+                            }
+                            catch (SystemException ex) when (ex is ArgumentException || ex is FormatException)
+                            {
+                                s_logger.Warn("Ignoring invalid Uri in organizer email.", ex);
+                                logger.LogWarning("Ignoring invalid Uri in organizer email.", ex);
+                                targetRecipient = target.Recipients.Add(source.Organizer.CommonName);
+                            }
                         }
                         else if (!string.IsNullOrEmpty(sourceOrganizerEmail))
                         {
